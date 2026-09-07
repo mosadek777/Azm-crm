@@ -1,4 +1,5 @@
 import { BASE_URL, BREAKGLASS_EMAIL, BREAKGLASS_PASSWORD, FIXTURE_PASSWORD } from './env.js'
+import { createChecker } from './check.js'
 const B = BASE_URL
 const call = async (method, path, { token, body } = {}) => {
   const res = await fetch(B + path, {
@@ -12,12 +13,8 @@ const call = async (method, path, { token, body } = {}) => {
 }
 const login = async (e, p) => (await call('POST', '/auth/login', { body: { email: e, password: p } })).body?.token
 
-let fail = 0
-const chk = (label, actual, expected) => {
-  const ok = String(actual) === String(expected)
-  if (!ok) fail++
-  console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${label.padEnd(60)} ${actual}${ok ? '' : `  (expected ${expected})`}`)
-}
+const checker = createChecker({ width: 60 })
+const chk = checker.chk
 
 const root = await login(BREAKGLASS_EMAIL, BREAKGLASS_PASSWORD)
 const mk = async (p, b) => (await call('POST', p, { token: root, body: b })).body
@@ -34,7 +31,7 @@ const nour = await login('nour@azmsquad.com', FIXTURE_PASSWORD)
 console.log('\n--- FR-001: display name + one contact point, nothing else required ---')
 const min = await call('POST', '/customer', { token: sara, body: { displayName: 'Ahmed Hassan', contactPoints: [{ channelType: 'phone', value: '+201001234567' }] } })
 chk('minimal create', min.status, 201)
-chk('scope written from the caller, not the body', String(min.body?.customer?.branchId), String(bB._id))
+chk('scope written from the caller, not the body', min.body?.customer?.branchId, bB._id)
 chk('preferredLanguage defaulted from the agent (AS-01)', min.body?.customer?.preferredLanguage, 'ar')
 chk('type defaults to person', min.body?.customer?.type, 'person')
 
@@ -71,6 +68,15 @@ chk('value stored as entered', bad.body?.contactPoints?.[0]?.value, 'ring the sh
 chk('surfaced to the caller', bad.body?.unnormalised?.length, 1)
 
 console.log('\n--- §3: at most one primary per channel type ---')
+// The refusal alone proves nothing: an endpoint that rejected isPrimary
+// outright would pass it just as well, and this constraint has already gone
+// silently missing once — two indexes collided on a generated name and mongoose
+// warned that `unique` "will not be applied". So assert the permitted case too,
+// and that ONE primary per channel type is genuinely accepted and stored.
+const onePrimary = await call('POST', '/customer', { token: sara, body: { displayName: 'One Primary', contactPoints: [{ channelType: 'phone', value: '+201110000010', isPrimary: true }, { channelType: 'email', value: 'one.primary@azm.example', isPrimary: true }] } })
+chk('one primary phone AND one primary email accepted', onePrimary.status, 201)
+chk('the phone is stored as primary', onePrimary.body?.contactPoints?.find(c => c.channelType === 'phone')?.isPrimary, true)
+chk('the email is stored as primary', onePrimary.body?.contactPoints?.find(c => c.channelType === 'email')?.isPrimary, true)
 chk('two primary phones refused', (await call('POST', '/customer', { token: sara, body: { displayName: 'Two Primaries', contactPoints: [{ channelType: 'phone', value: '+201110000001', isPrimary: true }, { channelType: 'phone', value: '+201110000002', isPrimary: true }] } })).status, 400)
 
 console.log('\n--- §3: the organisation-target type check ---')
@@ -96,5 +102,4 @@ const aud = await login('aya@azmsquad.com', FIXTURE_PASSWORD)
 chk('AUD refused', (await call('POST', '/customer', { token: aud, body: { displayName: 'By Auditor', contactPoints: [{ channelType: 'phone', value: '+201550000001' }] } })).status, 403)
 chk('no token refused', (await call('POST', '/customer', { body: { displayName: 'Anon', contactPoints: [{ channelType: 'phone', value: '+201550000002' }] } })).status, 401)
 
-console.log(`\n${fail === 0 ? 'ALL CHECKS PASSED' : fail + ' CHECK(S) FAILED'}`)
-process.exit(fail === 0 ? 0 : 1)
+process.exit(checker.report())

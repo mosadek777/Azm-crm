@@ -13,13 +13,15 @@ isn't.
 
 ## 1. Broken or half-done
 
-Nothing is broken in the sense of "fails its own tests" — the 46+31+23
-acceptance checks and `audit:reconcile` all pass, and that was true at every
-commit today, not just the last one. "Half-done" here means: a requirement is
-partially covered and the uncovered half is easy to miss unless it's named.
+Nothing is broken in the sense of "fails its own tests" — 126 acceptance checks
+across three suites and `audit:reconcile` all pass. Read that with the caveat in
+§5 about what a passing suite did and did not establish before 2026-09-08.
+"Half-done" here means: a requirement is partially covered and the uncovered
+half is easy to miss unless it's named.
 
 | What | State | Why it's only half |
 |---|---|---|
+| Role assignment after user creation | Missing | `POST /user` creates a user with their role assignments and there is **no endpoint to add or revoke one afterwards**. An administrator cannot promote an agent to lead, move someone between branches, or withdraw a role, short of deleting and recreating the account — which changes their id and orphans their history. Found while writing the FR-005 composition test, which has to insert the second assignment directly into the database (`tests/db.js`) because the API affords no route. |
 | `001 FR-001` user creation | Partial | Deactivation doesn't return the user's assigned tickets to a team queue (spec `002` `E-12`) — because there's no `Team` to return them to. The audit entry records `ticketsReassigned: null`, not `0`, specifically so the log doesn't claim a reassignment happened. |
 | `002 FR-031` resolved→closed | Partial | The confirmation path works. The automatic grace-period path does not exist — it's blocked on the SLA engine (constitution III forbids computing a business duration outside spec `005`). |
 | `010 FR-006` SSO | Uncovered MUST | Only the local-password path is built. `FR-006` requires SAML/OIDC support outright; nothing here satisfies it. Recorded as uncovered, not as "done, SSO optional" — it isn't optional, it's just not built yet. |

@@ -1,5 +1,6 @@
 // Verifies the spec 010 / 012 scope acceptance scenarios against the live API.
 import { BASE_URL, BREAKGLASS_EMAIL, BREAKGLASS_PASSWORD, FIXTURE_PASSWORD } from './env.js'
+import { createChecker } from './check.js'
 const B = BASE_URL
 
 const call = async (method, path, { token, body } = {}) => {
@@ -21,14 +22,8 @@ const login = async (email, password) => {
   return r.body?.token
 }
 
-const line = (label, actual, expected) => {
-  const pass = String(actual) === String(expected)
-  console.log(`${pass ? 'PASS' : 'FAIL'}  ${label.padEnd(62)} ${actual}${pass ? '' : `  (expected ${expected})`}`)
-  return pass
-}
-
-let failures = 0
-const check = (...args) => { if (!line(...args)) failures++ }
+const checker = createChecker({ indent: '' })
+const check = checker.chk
 
 const root = await login(BREAKGLASS_EMAIL, BREAKGLASS_PASSWORD)
 if (!root) { console.error('root sign-in failed'); process.exit(1) }
@@ -50,7 +45,14 @@ const badAr = await call('POST', '/platform/branches', {
 check('...and identically with Arabic only (AS-02 second half)', badAr.status, 400)
 
 console.log('\n--- setup: two branches, two departments ---')
-const mk = async (path, body) => (await call('POST', path, { token: root, body })).body
+// mk asserts its own status. A refusal check ("English only is rejected") proves
+// nothing if the endpoint rejects everything, and a silently failed fixture
+// otherwise surfaces later as a confusing auth error rather than here.
+const mk = async (path, body) => {
+  const r = await call('POST', path, { token: root, body })
+  check(`setup: POST ${path} succeeds with both languages`, r.status, 201)
+  return r.body
+}
 const branchB = (await mk('/platform/branches', { name: { ar: 'فرع القاهرة', en: 'Cairo Branch' }, timezone: 'Africa/Cairo', defaultLocale: 'ar' })).branch
 const branchC = (await mk('/platform/branches', { name: { ar: 'فرع الإسكندرية', en: 'Alexandria Branch' }, timezone: 'Africa/Cairo', defaultLocale: 'ar' })).branch
 const deptSupport = (await mk('/platform/departments', { name: { ar: 'الدعم الفني', en: 'Technical Support' } })).department
@@ -84,7 +86,6 @@ check('create LEAD scoped to branch C / Billing', leadCRes.status, 201)
 
 console.log('\n--- spec 010 AS-04: a granting admin cannot exceed their own scope ---')
 const omar = await login('omar@azmsquad.com', FIXTURE_PASSWORD)
-const overreach = await mkUser({})
 const omarOverreach = await call('POST', '/user', {
   token: omar,
   body: {
@@ -127,6 +128,10 @@ check('AGT reads branch C, which is NOT in scope', outOfScope.status, 404)
 
 const nonExistent = await call('GET', '/platform/branches/6a9e000000000000000000aa', { token: sara })
 check('AGT reads an id that does not exist at all', nonExistent.status, 404)
+// Comparing two stringified bodies passes when BOTH are null, so the presence
+// of a real refusal is asserted first — otherwise "identical" can mean
+// "identically empty".
+check('the out-of-scope 404 carries a bilingual refusal', Boolean(outOfScope.body?.message?.ar && outOfScope.body?.message?.en), true)
 const identical = JSON.stringify(outOfScope.body) === JSON.stringify(nonExistent.body)
 check('the two 404 bodies are byte-identical', identical, true)
 console.log(`      both answer: ${JSON.stringify(outOfScope.body)}`)
@@ -141,11 +146,14 @@ const saraDepts = await call('GET', '/platform/departments', { token: sara })
 check('AGT department list length', saraDepts.body?.departments?.length, 1)
 
 console.log('\n--- spec 010 AS-05: dangerous actions are separately held ---')
+// Requesting roles: ['ADM'] made this ambiguous — the refusal could be the
+// role gate OR the no-escalation rule, and it passed either way. Asking for the
+// least privileged role possible isolates the role gate.
 const saraCreate = await call('POST', '/user', {
   token: sara,
-  body: { displayName: 'X', email: 'x@y.com', password: FIXTURE_PASSWORD, defaultLanguage: 'en', roles: ['ADM'] }
+  body: { displayName: 'X', email: 'x@y.com', password: FIXTURE_PASSWORD, defaultLanguage: 'en', roles: ['AGT'], scope: { branchIds: [branchB._id], departmentIds: [deptSupport._id] } }
 })
-check('AGT attempts POST /user', saraCreate.status, 403)
+check('AGT attempts POST /user, even within their own scope', saraCreate.status, 403)
 
 const saraList = await call('GET', '/user', { token: sara })
 check('AGT attempts GET /user (lead and above)', saraList.status, 403)
@@ -158,10 +166,18 @@ console.log(`      ${omarEmails.join(', ')}`)
 const leakedNour = omarEmails.includes('nour@azmsquad.com')
 check('branch-C lead is NOT visible to the branch-B admin', leakedNour, false)
 
-console.log('\n--- spec 010 AS-03: roles compose without widening scope (FR-005) ---')
-// Give the branch-B agent a LEAD role in branch C as well.
+console.log('\n--- UNIT: rolesForTarget composes without widening (FR-005) ---')
+// These four are a UNIT test of a pure function, not an acceptance test, and
+// they are labelled that way because the distinction matters: the input below is
+// hand-written, so nothing here proves the API ever calls rolesForTarget or
+// feeds it the right coordinate. They would all pass with the middleware wired
+// to something else entirely.
+//
+// The API-level proof lives in ticket.test.js under "FR-005: roles compose per
+// record" — an agent holding LEAD in another branch is still refused a
+// lead-only action in the branch where they are only an agent. Keep both: this
+// one localises a failure to the function, that one proves the system uses it.
 const scopeMod = await import('file:///' + process.cwd().replace(/\\/g, '/') + '/src/utils/scope.js')
-const saraId = agentRes.body.user._id
 const assignments = [
   { role: 'AGT', branchIds: [branchB._id], departmentIds: [deptSupport._id], unrestricted: false },
   { role: 'LEAD', branchIds: [branchC._id], departmentIds: [deptBilling._id], unrestricted: false }
@@ -175,5 +191,4 @@ check('LEAD is never held on a branch B record (the union bug)', onBranchB.inclu
 const crossed = scopeMod.rolesForTarget(assignments, { branchId: branchB._id, departmentId: deptBilling._id })
 check('branch B + department Billing is covered by neither', JSON.stringify(crossed), '[]')
 
-console.log(`\n${failures === 0 ? 'ALL CHECKS PASSED' : failures + ' CHECK(S) FAILED'}`)
-process.exit(failures === 0 ? 0 : 1)
+process.exit(checker.report())
