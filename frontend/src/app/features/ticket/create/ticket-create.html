@@ -1,0 +1,88 @@
+<div class="page">
+  <div class="page__head">
+    <h1>{{ 'ticket.new' | translate: i18n.lang() }}</h1>
+  </div>
+
+  @if (refusal(); as m) {
+    <p class="refusal" role="alert">
+      {{ m[i18n.lang()] }}
+      @if (fields().length) { <span class="note"> ({{ fields().join(', ') }})</span> }
+    </p>
+  }
+
+  <div class="card">
+    <h2>{{ 'ticket.customer' | translate: i18n.lang() }}</h2>
+    <div class="page__head">
+      <input
+        type="search"
+        [ngModel]="customerTerm()"
+        (ngModelChange)="customerTerm.set($event)"
+        (keyup.enter)="findCustomer()"
+        [placeholder]="'customer.searchHint' | translate: i18n.lang()" />
+      <button (click)="findCustomer()">{{ 'action.search' | translate: i18n.lang() }}</button>
+    </div>
+
+    @if (candidates().length) {
+      <table class="grid">
+        <tbody>
+          @for (c of candidates(); track c._id) {
+            <tr (click)="choose(c)">
+              <td>{{ c.displayName }}</td>
+              <td><span class="ltr">{{ c.nationalId || '—' }}</span></td>
+              <td><span class="chip">{{ c.matchedOn }}</span></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+
+    @if (chosen(); as c) {
+      <p class="note">{{ 'ticket.selected' | translate: i18n.lang() }}: {{ c.displayName }}</p>
+    }
+  </div>
+
+  <div class="card">
+    <h2>{{ 'ticket.details' | translate: i18n.lang() }}</h2>
+    <div class="cards">
+      <label class="field">
+        <span>{{ 'ticket.subject' | translate: i18n.lang() }}</span>
+        <input [ngModel]="subject()" (ngModelChange)="subject.set($event)" maxlength="300" />
+      </label>
+      <label class="field">
+        <!-- Decision 21: category is a flat string, not a tree. This deviates
+             from FR-004 (MUST) and is recorded in decisions-pending §0. -->
+        <span>{{ 'ticket.category' | translate: i18n.lang() }}</span>
+        <input [ngModel]="category()" (ngModelChange)="category.set($event)" maxlength="120" />
+      </label>
+      <label class="field">
+        <span>{{ 'ticket.priority' | translate: i18n.lang() }}</span>
+        <!-- Blank by default: §3 makes priority required, and a silent
+             'normal' is a judgement the agent should make. -->
+        <select [ngModel]="priority()" (ngModelChange)="priority.set($event)">
+          <option value="">—</option>
+          @for (p of meta()?.priorities ?? []; track p) { <option [value]="p">{{ p }}</option> }
+        </select>
+      </label>
+      <label class="field">
+        <span>{{ 'ticket.tags' | translate: i18n.lang() }}</span>
+        <input [ngModel]="tags()" (ngModelChange)="tags.set($event)" />
+      </label>
+    </div>
+    <p></p>
+    <label class="field">
+      <span>{{ 'ticket.description' | translate: i18n.lang() }}</span>
+      <!-- AS-01 submits a description. It becomes the first customer-visible
+           message on the thread — §3 has no description field because the
+           thread is where it belongs. -->
+      <textarea rows="4" [ngModel]="description()" (ngModelChange)="description.set($event)"></textarea>
+    </label>
+    <p class="note">{{ 'ticket.descriptionNote' | translate: i18n.lang() }}</p>
+  </div>
+
+  <div class="page__head">
+    <button class="primary" (click)="submit()" [disabled]="!ready || busy()">
+      {{ 'ticket.create' | translate: i18n.lang() }}
+    </button>
+    <span class="note">{{ 'ticket.createNote' | translate: i18n.lang() }}</span>
+  </div>
+</div>

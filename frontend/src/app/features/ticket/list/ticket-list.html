@@ -1,0 +1,72 @@
+<div class="page">
+  <div class="page__head">
+    <h1>{{ 'ticket.queue' | translate: i18n.lang() }}</h1>
+    <span class="chip">{{ total() }}</span>
+    <span class="spacer"></span>
+    <button class="primary" (click)="create()">{{ 'ticket.new' | translate: i18n.lang() }}</button>
+  </div>
+
+  <div class="page__head">
+    <select [ngModel]="status()" (ngModelChange)="status.set($event); load()">
+      <option value="">{{ 'ticket.allStatuses' | translate: i18n.lang() }}</option>
+      @for (s of meta()?.statuses ?? []; track s.key) {
+        <option [value]="s.key">{{ s.key }}</option>
+      }
+    </select>
+    <select [ngModel]="priority()" (ngModelChange)="priority.set($event); load()">
+      <option value="">{{ 'ticket.allPriorities' | translate: i18n.lang() }}</option>
+      @for (p of meta()?.priorities ?? []; track p) { <option [value]="p">{{ p }}</option> }
+    </select>
+    <input type="search" [ngModel]="q()" (ngModelChange)="q.set($event)" (keyup.enter)="load()"
+           [placeholder]="'ticket.searchHint' | translate: i18n.lang()" />
+    <label class="note">
+      <input type="checkbox" [ngModel]="unassigned()" (ngModelChange)="unassigned.set($event); load()" />
+      {{ 'ticket.unassignedOnly' | translate: i18n.lang() }}
+    </label>
+    <button (click)="load()">{{ 'action.apply' | translate: i18n.lang() }}</button>
+  </div>
+
+  @if (rows().length === 0) {
+    <p class="note">{{ 'ticket.none' | translate: i18n.lang() }}</p>
+  } @else {
+    <table class="grid">
+      <thead>
+        <tr>
+          <th>{{ 'ticket.reference' | translate: i18n.lang() }}</th>
+          <th>{{ 'ticket.subject' | translate: i18n.lang() }}</th>
+          <th>{{ 'customer.name' | translate: i18n.lang() }}</th>
+          <th>{{ 'ticket.status' | translate: i18n.lang() }}</th>
+          <th>{{ 'ticket.priority' | translate: i18n.lang() }}</th>
+          <th>{{ 'ticket.assignee' | translate: i18n.lang() }}</th>
+          <th>{{ 'ticket.sla' | translate: i18n.lang() }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (t of rows(); track t._id) {
+          <tr (click)="open(t)">
+            <!-- A reference is direction-neutral: always LTR, never reversed
+                 inside an Arabic layout (spec 012 FR-002, AS-04). -->
+            <td><span class="ltr">{{ t.reference }}</span></td>
+            <td>{{ t.subject }}</td>
+            <td>{{ t.customerName || '—' }}</td>
+            <td>
+              <span class="chip">{{ t.status }}</span>
+              @if (t.pausesSla) { <span class="chip chip--paused">{{ 'ticket.paused' | translate: i18n.lang() }}</span> }
+            </td>
+            <td>{{ t.priority }}</td>
+            <td>{{ t.assignedAgentName || ('ticket.unassigned' | translate: i18n.lang()) }}</td>
+            <!-- FR-034 / constitution III: the client renders whichever branch
+                 the engine returned. It never subtracts dates as a fallback. -->
+            <td>
+              @if (t.sla?.status === 'unavailable') {
+                <span class="note">{{ 'common.unavailable' | translate: i18n.lang() }}</span>
+              } @else {
+                <span class="ltr">{{ t.sla?.minutes }}</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

@@ -1,0 +1,57 @@
+<div class="page">
+  <div class="page__head">
+    <h1>{{ 'customer.search' | translate: i18n.lang() }}</h1>
+    <span class="spacer"></span>
+  </div>
+
+  <div class="page__head">
+    <input
+      type="search"
+      [ngModel]="term()"
+      (ngModelChange)="term.set($event)"
+      (keyup.enter)="search()"
+      [placeholder]="'customer.searchHint' | translate: i18n.lang()" />
+    <button class="primary" (click)="search()" [disabled]="busy()">
+      {{ 'action.search' | translate: i18n.lang() }}
+    </button>
+  </div>
+
+  @if (term().trim().length > 0 && term().trim().length < 3) {
+    <p class="note">{{ 'customer.minChars' | translate: i18n.lang() }}</p>
+  }
+
+  @if (searched() && rows().length === 0) {
+    <p class="note">{{ 'customer.noResults' | translate: i18n.lang() }}</p>
+  }
+
+  @if (rows().length) {
+    <table class="grid">
+      <thead>
+        <tr>
+          <th>{{ 'customer.name' | translate: i18n.lang() }}</th>
+          <th>{{ 'customer.type' | translate: i18n.lang() }}</th>
+          <th>{{ 'customer.nationalId' | translate: i18n.lang() }}</th>
+          <th>{{ 'customer.matchedOn' | translate: i18n.lang() }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of rows(); track c._id) {
+          <tr (click)="open(c)">
+            <!-- User-authored, single language, direction detected by the
+                 browser per value — never translated (spec 012 §8). -->
+            <td>
+              {{ c.displayName }}
+              @if (c.sensitiveFlag) {
+                <span class="chip chip--sensitive">{{ 'customer.sensitive' | translate: i18n.lang() }}</span>
+              }
+            </td>
+            <td>{{ c.type }}</td>
+            <!-- Direction-neutral: always LTR (FR-002, AS-04). -->
+            <td><span class="ltr">{{ c.nationalId || '—' }}</span></td>
+            <td><span class="chip">{{ c.matchedOn }}</span></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

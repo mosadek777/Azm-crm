@@ -1,0 +1,21 @@
+<div class="main-layout">
+  <header class="main-layout__bar">
+    <span class="main-layout__name">{{ 'app.name' | translate: i18n.lang() }}</span>
+    <a routerLink="/tickets" routerLinkActive="active">{{ 'nav.tickets' | translate: i18n.lang() }}</a>
+    <a routerLink="/customers" routerLinkActive="active">{{ 'nav.customers' | translate: i18n.lang() }}</a>
+    <span class="main-layout__spacer"></span>
+    <!-- The signed-in user's display name is user-authored content: single
+         language, direction detected by the browser, never translated
+         (spec 012 §8). -->
+    <span>{{ auth.user()?.displayName }}</span>
+    <button type="button" (click)="i18n.toggle()">
+      {{ 'lang.switchTo' | translate: i18n.lang() }}
+    </button>
+    <button type="button" (click)="auth.signOut()">
+      {{ 'workspace.signOut' | translate: i18n.lang() }}
+    </button>
+  </header>
+  <main class="main-layout__content">
+    <router-outlet />
+  </main>
+</div>

@@ -1,0 +1,210 @@
+# state.md — read this first
+
+The session-start briefing. Read this instead of the constitution and all
+thirteen specs. Updated at the end of every step.
+
+**Last updated:** 2026-09-07 · **after:** step 4 (customers + tickets),
+Angular UI, ClickUp sync, API docs, first GitHub push — 23 ratified decisions,
+constitution 0.4.0
+
+---
+
+## NEXT ACTION
+
+**Step 4 shipped today under an explicit delivery-compression instruction —
+"working software on GitHub today."** Two simplifications were authorised and
+are deviations, not resolved questions:
+
+- **`Team` scoped out** (decision 20) — tickets assign directly to an agent.
+  The `Team` defect (§7) is **NOT resolved**, it is stepped around.
+- **Category is a flat string** (decision 21), deviating from `FR-004`'s
+  **MUST** that categories form a tree.
+
+**What was NOT compromised, on explicit instruction:** the scope predicate
+applies to every ticket and customer read and write, and every mutation writes
+an audit entry through `utils/audit.js` inside a transaction. Both proven by
+test, not asserted.
+
+**Next candidates, not started, no obligation yet:**
+
+1. Define `Team` properly and reverse decision 20 before any ticket-heavy work grows on top of it
+2. Root-cause / resolution-code lists, to enable `FR-029` (currently unenforced — decision 23)
+3. Convert the flat category string to the real tree (decision 21) if the client confirms the category list is stable enough to model
+4. Everything in the "Scoped out today" table below
+
+**Unbuilt MUST created today:** `001 E-15` (outbound-on-shared-contact-point
+refusal) is specified but there is no outbound code to enforce it against yet —
+see `trace.md`.
+
+---
+
+## Scoped out today, by instruction — one task each in ClickUp
+
+Not blocked by a marker; simply not attempted in this pass. Each has one
+top-level ClickUp task under list `901525782663`, workspace `90152504892`,
+tagged `backend`/`frontend`, with a one-line note on what would need answering
+first. Run `node tools/sync-clickup.js` after changing `tools/tasks.json` —
+idempotent, updates existing tasks rather than duplicating.
+
+| Module | Blocked on |
+|---|---|
+| Email / WhatsApp / SMS / chat (spec 003) | `003 [CLARIFY-1]` — which channels ship in phase one |
+| SLA & automation engine (spec 005) | `005 [CLARIFY-1]` SLA numbers, `[CLARIFY-2]` calendars |
+| Knowledge base (spec 006) | `006 [CLARIFY-1]`, and `012 [CLARIFY-1]` |
+| Customer portal (spec 008) | `008 [CLARIFY-1]` — auth method, anonymous submission |
+| Reports & management (spec 009) | The SLA engine, for every duration figure |
+| ERP integration (spec 011) | Ownership resolved (decision 6); `011 [CLARIFY-2]` — which ERP |
+| AI features (spec 007) | `007 [CLARIFY-1]` blocks the whole spec; constitution V |
+
+## Other blockers, unrelated to today's scope compression
+
+| Blocker | Effect |
+|---|---|
+| **`Team` is undefined in every spec** | `002` §3 makes `owning_team_id` **Required** on Ticket. Scoped out today (decision 20), **not resolved** — see `decisions-pending.md` §7. |
+| `001 [CLARIFY-4]` privacy regime / retention | Blocks `FR-021` erasure |
+| `001 [CLARIFY-5]` consent scope | Blocks `FR-022`, and keeps `E-15` refusing |
+| `002 [CLARIFY-6]` may a customer see the individual agent | Blocks §9 customer history redaction |
+| `005 [CLARIFY-1]` SLA numbers, `[CLARIFY-2]` calendars | Spec `005` buildable but untestable. `elapsed-time.js` returns `unavailable` |
+| `010 [CLARIFY-2]` which IdP, whose MFA, mandatory? | `FR-006` (SSO) is an **uncovered MUST** |
+| `013 [CLARIFY-1]` volumes | Every `NFR` table unacceptable-because-unquantified |
+
+**Marker state: 70 unresolved · 12 resolved · 3 provisional** (from 82).
+
+```bash
+grep -rEn '^- \[ \] .\[CLARIFY-[0-9]' specs/ | wc -l    # the gate
+```
+
+---
+
+## What is built and passing
+
+**Backend** — Express 5, ES modules, MongoDB `rs0` single-node replica set.
+
+| Area | Covered |
+|---|---|
+| Auth | `010 FR-006` local path, `FR-008`, `E-04`, `E-07` break-glass |
+| Users | `FR-001` (minus the ticket-reassign clause), `FR-002`, `FR-003`, `E-01`, `E-02` |
+| Scope | `FR-004` (**branch + department only**), `FR-005`, `FR-021`, `AS-01`, `AS-03`, `AS-04` |
+| Audit | `FR-008`, `AS-08` append-only, `E-11` **atomic** via transactions, `NFR-005` |
+| Platform | `012 FR-004` localised values, `FR-007`, `FR-008`, `AS-02` refuses single-language |
+| Bilingual | `012 FR-001`, `FR-002`, `AS-03` no-fallback, `AS-06` Arabic typography (Cairo, self-hosted) |
+| Customer | `001 FR-001`, `FR-002`, `FR-003`, `FR-004` (decision 16), `FR-010`, `FR-020`, `AS-01`–`AS-04`, `E-05`, `E-06` |
+| Ticket | `002 FR-001`, `FR-002`, `FR-007`–`FR-010`, `FR-013`, `FR-014`, `FR-021`, `FR-033`, `FR-034`, `AS-01`, `AS-03`, `AS-05`–`AS-07`, `E-11`, `E-12`, `E-16` — deviations: no Team (decision 20), flat category (decision 21) |
+| API docs | `/api-docs` (Swagger UI), `docs/openapi.json`, Postman collection + environment with auto-token-save on login |
+
+**Frontend** — Angular 22, standalone, SCSS, runtime language switching, five
+screens: customer list/detail, ticket list/detail/create.
+
+**Verification:** 46-check customer+ticket acceptance suite · 23/23 platform
+suite · 6/6 frontend tests · `npm run audit:reconcile` clean, including
+`Ticket`/`Message` coverage (added after the same false-clean trap recurred).
+
+```bash
+# backend/          npm run seed:admin (once) · npm run dev · npm run audit:reconcile
+# backend/          npm run docs:build · npm run docs:postman
+# frontend/         npm start · npm test
+# tools/            node sync-clickup.js   — idempotent, see tasks.json
+```
+
+Break-glass administrator credentials are in `backend/.env`
+(`BREAKGLASS_EMAIL`, `BREAKGLASS_PASSWORD`), which is gitignored. **No
+credential belongs in a tracked file** — once committed it survives in history
+even after removal.
+
+---
+
+## Ratified decisions — the short list
+
+Full text and evidence in `decisions-pending.md` §0.
+
+| # | Decision |
+|---|---|
+| 1 | Isolated entities **not supported** (`012 FR-011` dropped) |
+| 2 | Departments **flat**, no nesting |
+| 3 | Reference: unique, immutable, never reused |
+| 4 | Category tree **multi-level, depth unbounded**, leaf-only selection. The earlier "fixed depth 3" was withdrawn as invented |
+| 5 | **SSO required as a capability**; local password permitted alongside |
+| 6 | **CRM is the system of record**; ERP read-only. No CRM→ERP writes |
+| 7 | **No single identity key** — a ranked match list instead |
+| 8 | Status list: **ten** statuses, admin-editable — the spec's original nine, with `pending_third_party` split by decision 15 |
+| 9 | **No auto-close** — customer confirmation only, until `005` unblocks |
+| 10 | Reopen window **14 calendar days, from `closed`** |
+| 11 | Reference format **`TKT-YYYY-NNNNN`** |
+| 12 | *Duplicate of 4 — same decision (unbounded category depth). Number retained rather than renumbered, because `decisions-pending.md` §0 and the spec annotations cite these numbers.* |
+| 13 | `stories/001` corrected — blocks `FR-014`/`FR-019` |
+| 14 | `pauses_sla` ratified for all ten statuses |
+| 15 | `pending_third_party` **split** → `pending_supplier` (pauses) / `pending_internal` (does not) |
+| 16 | **Shared contact points permitted** — `FR-004` unique-by-default, overridable |
+| 17 | **Outbound on a shared contact point refused** (`001 E-15`) — specified, unbuilt (no outbound code exists yet) |
+| 18 | `nationalId`/`accountRef` uniqueness scoped to **active** customers only, by analogy to `FR-004`'s own population |
+| 19 | `DEFAULT_COUNTRY_CODE=+20`, inferred from `AS-02`'s worked examples |
+| 20 | **`Team` SCOPED OUT** — direct agent assignment. Defect NOT resolved, stepped around |
+| 21 | **Category is a flat string**, not a tree — deviates from `FR-004` **MUST** |
+| 22 | A default status-transition graph was authored (`FR-008` supplies none) |
+| 23 | `requiresResolutionFields` false everywhere — `FR-029`/`AS-13` unenforced |
+
+### Which of these are judgement, not readings
+
+**Decisions 1, 6, 9, 10 and 11 are the developer's own choices.** The sources do
+not settle them; they were decided on balance and are annotated as such in the
+specs.
+
+- **6 — CRM is the system of record.** The evidence review found the sources
+  genuinely divided: the entity model reads CRM-native (optional ERP join key,
+  unlinked customers a normal state) while the integration spec assumes
+  negotiated two-way sync (`INT-06` conflict rules, `E-10` sync loop). Nothing
+  resolves it, and the deciding facts — which ERP, what surface it exposes, who
+  maintains customers today — are absent. **A1 was a judgement call.**
+- **9, 10, 11 — no auto-close, 14 calendar days, `TKT-YYYY-NNNNN`.** Fill
+  silences. `14` and the format each appear once, as illustrations inside
+  unrelated acceptance scenarios.
+- **1 — isolation not supported.** Judgement, but of a *weaker* kind than the
+  others: `PLT-11` is `Could` and `FR-011` is `MAY`, and declining to build a
+  `MAY` is discretion the spec itself grants. What is missing is the business
+  fact that would make it a requirement — whether a subsidiary exists. So the
+  decision is authorised by the spec's own level, while the fact behind it is
+  unknown.
+
+**Decisions 2, 3, 4, 5, 7, 8, 13, 14, 15, 16 and 17 rest on quoted evidence.**
+Decision 2 (flat departments) is the strongest of them: *no story asks for
+nesting at all*, so under constitution VIII the capability had no upstream
+reason to exist.
+
+**And a caveat over all of them:** the source document *Customer Support CRM ·
+Core Features* is **not in this repository**, so no decision here traces to the
+client's own words — only to derived material the README itself calls
+*"Nothing here is client-approved."*
+
+---
+
+## Constraints that outrank everything
+
+| | Rule |
+|---|---|
+| **I** | Bilingual is architecture. Admin-authored labels carry `{ ar, en }`, both required, refuse on missing. **No fallback ever.** User-authored content is single-language; references/phones/emails/durations always LTR |
+| **II** | Every mutation writes an immutable audit entry. `utils/audit.js` is the only writer, and `session` is a **required** parameter |
+| **III** | `utils/elapsed-time.js` is the sole duration implementation. Nothing else subtracts dates. Returns `{status:'unavailable'}` until `005` unblocks |
+| **IV** | Scope is enforced server-side per request. Out-of-scope is **404, not 403** |
+| **V** | No AI feature is to be built |
+| **VII** | Unknowns are marked and block the requirement, never guessed |
+| **VIII** | Every requirement traces to a story. `009 FR-025`/`RP-21` traces to a dated amendment and says so |
+
+**Fixed structure, non-negotiable:** backend `modules/<name>/{controller,service}.js`,
+ES modules, `.js` on every relative import. No TypeScript on the backend.
+
+---
+
+## Known defects, distinct from open markers
+
+Neither is a `[CLARIFY]` marker — nobody wrote one, so the gate cannot see them.
+
+| Defect | Status |
+|---|---|
+| **`Team` undefined** while `002`/`012` make required references to it | **OPEN, stepped around by decision 20 today — not resolved.** `decisions-pending.md` §7 |
+| **`FR-004` forbade shared contact points** | **RESOLVED** by decision 16. `decisions-pending.md` §11 |
+| **`002 FR-004` category tree deviation** | **KNOWN, accepted by instruction today.** Category is a flat string (decision 21). |
+
+## Do not trust these numbers yet
+
+`009`'s **reopen rate** and any metric whose denominator is *tickets closed* is
+degenerate while decision 9 (no auto-close) stands. See `trace.md`.

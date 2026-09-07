@@ -1,0 +1,232 @@
+{
+  "_comment": "Source of truth for tools/sync-clickup.js. Derived from docs/state.md and docs/trace.md on 2026-09-07. Each task's `clickupId` is written back by the sync script — never edit that field by hand, or the next run will create a duplicate instead of updating.",
+  "workspaceId": "90152504892",
+  "listId": "901525782663",
+  "tasks": [
+    {
+      "key": "platform-auth",
+      "name": "Platform & Auth — scaffold, users, roles, JWT",
+      "tags": [
+        "backend"
+      ],
+      "status": "done",
+      "description": "Express bootstrap, MongoDB single-node replica set (rs0), User + RoleAssignment models, local login (spec 010 FR-006, FR-007), the break-glass administrator (E-07). SSO (SAML/OIDC) is an uncovered MUST — see docs/trace.md.",
+      "clickupId": "86cbetqtb"
+    },
+    {
+      "key": "audit",
+      "name": "Audit writer — append-only, atomic, reconciled",
+      "tags": [
+        "backend"
+      ],
+      "status": "done",
+      "description": "utils/audit.js: every mutation writes an immutable entry inside the same transaction as the mutation (spec 010 FR-008, E-11). Append-only enforced by mongoose hooks (AS-08). tools: npm run audit:reconcile detects orphaned entries and unaudited records; not a stub, verified with injected faults.",
+      "clickupId": "86cbetqtg"
+    },
+    {
+      "key": "scope",
+      "name": "Scope predicate — branch + department (Team scoped out)",
+      "tags": [
+        "backend"
+      ],
+      "status": "done",
+      "description": "utils/scope.js: the single place scope is decided (constitution IV, spec 010 FR-004/FR-005/FR-021). Out-of-scope reads answer 404, never 403 (AS-01). Team is scoped out per decision 20 — tickets assign directly to an agent. See docs/decisions-pending.md §7 and §0 decision 20.",
+      "clickupId": "86cbetqtk"
+    },
+    {
+      "key": "platform-module",
+      "name": "Platform module — branches, departments, localised values",
+      "tags": [
+        "backend"
+      ],
+      "status": "done",
+      "description": "Branch and Department models, bilingual localized-text subdocument (spec 012 FR-004, constitution I — refuses a single-language save). Departments are flat (decision 2); isolated entities not supported (decision 1).",
+      "clickupId": "86cbetqtm"
+    },
+    {
+      "key": "i18n",
+      "name": "Bilingual UI — runtime language switch, Arabic typography",
+      "tags": [
+        "frontend"
+      ],
+      "status": "done",
+      "description": "LanguageService + translate pipe, no reload, no @angular/localize (spec 012 FR-001, AS-01). No-fallback rule enforced (AS-03). Cairo self-hosted for correct Arabic joining (AS-06).",
+      "clickupId": "86cbetqtq"
+    },
+    {
+      "key": "customer-model",
+      "name": "Customer model — bilingual split, scope, decision 16",
+      "tags": [
+        "backend"
+      ],
+      "status": "done",
+      "description": "Customer + ContactPoint models. displayName is user-authored single-language, not localised. FR-004 relaxed to unique-by-default-overridable (decision 16) rather than a hard unique index. scopeCoordinate() declared, not inferred.",
+      "clickupId": "86cbetqtv"
+    },
+    {
+      "key": "customer-crud",
+      "name": "Customer CRUD — create, search, detail, update",
+      "tags": [
+        "backend"
+      ],
+      "status": "done",
+      "description": "POST /customer (FR-001, FR-010 collision override, organisation-target type check), GET /customer search (ranked match list, decision 7), GET /customer/:id, PATCH /customer/:id (FR-020, one audit entry per changed field).",
+      "clickupId": "86cbetqu2"
+    },
+    {
+      "key": "shared-contact-refusal",
+      "name": "Outbound-on-shared-contact-point refusal (E-15)",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "001 E-15: outbound on a shared contact point MUST be refused, no fallback to any one customer's consent. Specified, not built — there is no outbound messaging code yet (spec 003 is out of scope). Blocked on 001 [CLARIFY-5] (consent scope).",
+      "clickupId": "86cbetqu4"
+    },
+    {
+      "key": "ticket-model",
+      "name": "Ticket model — status set, transition graph, reference sequence",
+      "tags": [
+        "backend"
+      ],
+      "status": "done",
+      "description": "Ticket + Message + Counter models. Ten ratified statuses (decisions 14-15), decision-22 default transition graph, TKT-YYYY-NNNNN atomic reference counter (E-16). Team dropped (decision 20), category is a flat string (decision 21).",
+      "clickupId": "86cbetqu7"
+    },
+    {
+      "key": "ticket-crud",
+      "name": "Ticket CRUD — create, list/filter, detail, assign, status",
+      "tags": [
+        "backend"
+      ],
+      "status": "done",
+      "description": "POST /ticket (FR-001/AS-01), GET /ticket with filters, GET /ticket/:id (thread + history), PATCH /ticket/:id/assign (FR-009/FR-010/AS-06, reason required), PATCH /ticket/:id/status (FR-007/FR-008/AS-03), POST /ticket/:id/message (FR-014/AS-07).",
+      "clickupId": "86cbetqua"
+    },
+    {
+      "key": "resolution-fields",
+      "name": "Root cause / resolution code lists (FR-029)",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "requiresResolutionFields is false on every status today (decision 23) — the two admin-authored bilingual lists were not built. FR-029/AS-13 are unenforced until they exist.",
+      "clickupId": "86cbetque"
+    },
+    {
+      "key": "ui-customer",
+      "name": "Angular — customer list & detail",
+      "tags": [
+        "frontend"
+      ],
+      "status": "done",
+      "description": "Search (ranked match, E-13 floor at 3 chars), detail with contact points, entitlement panel rendering 'unavailable' honestly (constitution III), in-place field edit.",
+      "clickupId": "86cbetqug"
+    },
+    {
+      "key": "ui-ticket",
+      "name": "Angular — ticket list, detail, create",
+      "tags": [
+        "frontend"
+      ],
+      "status": "done",
+      "description": "List with server-side filters, detail with thread/status/assignment/history, create form. Status options and reachable transitions always read from the server (FR-008) — the client holds no local copy of the graph.",
+      "clickupId": "86cbetquk"
+    },
+    {
+      "key": "team-entity",
+      "name": "SPEC DEFECT — Team entity undefined",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "Team is referenced as Required on Ticket.owning_team_id and Department.default_team_id by specs 002 and 012, and defined as an entity by none of the 13 specs. No [CLARIFY] marker exists for it. Scoped out for today's build (decision 20); NOT resolved. See docs/decisions-pending.md §7.",
+      "clickupId": "86cbetquv"
+    },
+    {
+      "key": "channels",
+      "name": "SCOPED OUT — Email / WhatsApp / SMS / chat (spec 003)",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "Blocked by 003 [CLARIFY-1]: which channels ship in phase one. Six open markers total in spec 003.",
+      "clickupId": "86cbetqux"
+    },
+    {
+      "key": "sla-engine",
+      "name": "SCOPED OUT — SLA & automation engine (spec 005)",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "Blocked by 005 [CLARIFY-1] (SLA hours/minutes) and [CLARIFY-2] (business calendars per branch). utils/elapsed-time.js exists and returns { status: 'unavailable' } by design until these unblock.",
+      "clickupId": "86cbetqv0"
+    },
+    {
+      "key": "knowledge-base",
+      "name": "SCOPED OUT — Knowledge base (spec 006)",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "Not started this pass. Five open markers, led by 006 [CLARIFY-1] (peer languages vs primary+translation for articles), which also depends on 012 [CLARIFY-1].",
+      "clickupId": "86cbetqv3"
+    },
+    {
+      "key": "customer-portal",
+      "name": "SCOPED OUT — Customer portal (spec 008)",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "Blocked by 008 [CLARIFY-1]: portal authentication method (one-time code, password, or SSO) and whether anonymous submission is permitted.",
+      "clickupId": "86cbetqv7"
+    },
+    {
+      "key": "reports",
+      "name": "SCOPED OUT — Reports & management (spec 009)",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "Not started. Depends on the SLA engine (spec 005) for every duration figure, per constitution III. Reopen rate is flagged degenerate while decision 9 (no auto-close) stands — see docs/trace.md.",
+      "clickupId": "86cbetqvc"
+    },
+    {
+      "key": "erp-integration",
+      "name": "SCOPED OUT — ERP integration (spec 011)",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "Ownership resolved (decision 6: CRM is the system of record, ERP read-only). The integration itself is not built — blocked by 011 [CLARIFY-2]: which ERP, which version, what surface it exposes.",
+      "clickupId": "86cbetqvg"
+    },
+    {
+      "key": "ai-features",
+      "name": "SCOPED OUT — AI features (spec 007)",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "Nothing to be built. 007 [CLARIFY-1] blocks the entire spec, and constitution V (AI proposes, a human disposes) forbids planning it further until model, hosting and residency are answered.",
+      "clickupId": "86cbetqvn"
+    },
+    {
+      "key": "api-docs",
+      "name": "API documentation — Swagger/OpenAPI + Postman",
+      "tags": [
+        "backend"
+      ],
+      "status": "done",
+      "description": "swagger-jsdoc + swagger-ui-express at /api-docs, JSDoc above each route. npm run docs:build -> docs/openapi.json, npm run docs:postman -> Postman collection + environment via openapi-to-postmanv2. Login test script auto-saves the token.",
+      "clickupId": "86cbetqvr"
+    }
+  ]
+}

@@ -1,0 +1,1186 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "azm-crm API",
+    "version": "0.1.0",
+    "description": "Customer Support CRM — backend API. Endpoints reflect what is built today only. See docs/state.md and docs/trace.md in the repository root for what is deliberately not yet built, and docs/decisions-pending.md for the ratified decisions and deviations behind the shapes below (Team is scoped out; category is a flat string, not a tree)."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "LocalizedText": {
+        "type": "object",
+        "description": "Bilingual refusal/label text (constitution I). Every error response uses this shape for `message`.",
+        "properties": {
+          "ar": {
+            "type": "string"
+          },
+          "en": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ar",
+          "en"
+        ]
+      },
+      "Refusal": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "summary": "Local sign-in (spec 010 FR-006, on the provisional local-password path)",
+        "tags": [
+          "Auth"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "description": "JWT bearer token"
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "defaultLanguage": {
+                          "type": "string",
+                          "enum": [
+                            "ar",
+                            "en"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing email or password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials — the same body for a wrong password, an unknown email, or a deactivated account (spec 010 §8 discloses nothing)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user": {
+      "get": {
+        "summary": "List users within the caller's scope (spec 010 FR-004, AS-01)",
+        "tags": [
+          "User"
+        ],
+        "responses": {
+          "200": {
+            "description": "Users overlapping the caller's branch and department scope. Out-of-scope users are absent, not marked hidden."
+          },
+          "403": {
+            "description": "Requires LEAD",
+            "MGR": null,
+            "ADM or AUD": null
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a staff user (spec 010 FR-001). Administrator-only — there is no self-registration (E-08).",
+        "tags": [
+          "User"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "displayName",
+                  "email",
+                  "password",
+                  "defaultLanguage",
+                  "roles"
+                ],
+                "properties": {
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  },
+                  "defaultLanguage": {
+                    "type": "string",
+                    "enum": [
+                      "ar",
+                      "en"
+                    ]
+                  },
+                  "roles": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "AGT",
+                        "LEAD",
+                        "MGR",
+                        "ADM",
+                        "AUD"
+                      ]
+                    }
+                  },
+                  "scope": {
+                    "type": "object",
+                    "description": "Omitted resolves to the granter's own scope, never to \"all\" (FR-021, AS-04)",
+                    "properties": {
+                      "branchIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "departmentIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Missing or invalid fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Refused: role is not ADM, or the requested scope exceeds the granter's own (FR-021)"
+          }
+        }
+      }
+    },
+    "/user/{id}/deactivate": {
+      "patch": {
+        "summary": "Deactivate a user (spec 010 FR-001, E-01, E-02)",
+        "tags": [
+          "User"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deactivated"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "409": {
+            "description": "Refused — last administrator (E-01) or self-deactivation (E-02)"
+          }
+        }
+      }
+    },
+    "/user/{id}/reactivate": {
+      "patch": {
+        "summary": "Reactivate a deactivated user (spec 010 FR-001)",
+        "tags": [
+          "User"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reactivated"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    },
+    "/platform/branches": {
+      "get": {
+        "summary": "List branches in the caller's scope (spec 012 FR-008)",
+        "tags": [
+          "Platform"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a branch (spec 012 FR-008, FR-004 bilingual name)",
+        "tags": [
+          "Platform"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "timezone",
+                  "defaultLocale"
+                ],
+                "properties": {
+                  "name": {
+                    "$ref": "#/components/schemas/LocalizedText"
+                  },
+                  "timezone": {
+                    "type": "string",
+                    "example": "Africa/Cairo"
+                  },
+                  "defaultLocale": {
+                    "type": "string",
+                    "enum": [
+                      "ar",
+                      "en"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "A single-language name is refused, not warned (spec 012 AS-02)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/departments": {
+      "get": {
+        "summary": "List departments in the caller's scope (spec 012 FR-007)",
+        "tags": [
+          "Platform"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a department (spec 012 FR-007). Flat — no nesting (decision 2).",
+        "tags": [
+          "Platform"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "$ref": "#/components/schemas/LocalizedText"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Single-language name refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/branches/{id}": {
+      "get": {
+        "summary": "Get one branch (spec 010 AS-01 — out of scope is 404, never 403)",
+        "tags": [
+          "Platform"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not found — identical body whether out of scope or genuinely absent"
+          }
+        }
+      }
+    },
+    "/customer": {
+      "get": {
+        "summary": "Ranked-match customer search (spec 001 FR-002; the single-identity-key question was closed as malformed — see decisions-pending §0 decision 7)",
+        "tags": [
+          "Customer"
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Minimum 3 characters (E-13) — matched against phone, email, national ID, account reference and display name, in that rank order"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Results scope-filtered; below 3 characters returns an empty, non-error result (E-13)"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a customer from a display name and one contact point (spec 001 FR-001, AS-01)",
+        "tags": [
+          "Customer"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "displayName",
+                  "contactPoints"
+                ],
+                "properties": {
+                  "displayName": {
+                    "type": "string",
+                    "description": "User-authored, single language — not a localised value"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "person",
+                      "organisation"
+                    ],
+                    "default": "person"
+                  },
+                  "nationalId": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "accountRef": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "The ERP join key. Optional — the CRM is the system of record (decision 6)."
+                  },
+                  "preferredLanguage": {
+                    "type": "string",
+                    "enum": [
+                      "ar",
+                      "en"
+                    ]
+                  },
+                  "organisationId": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "contactPoints": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "channelType",
+                        "value"
+                      ],
+                      "properties": {
+                        "channelType": {
+                          "type": "string",
+                          "enum": [
+                            "phone",
+                            "email",
+                            "whatsapp"
+                          ]
+                        },
+                        "value": {
+                          "type": "string"
+                        },
+                        "isPrimary": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  },
+                  "confirmCollision": {
+                    "type": "boolean",
+                    "description": "Repeat the request with this set to true to proceed past a 409 collision (decision 16 — FR-004 unique-by-default, overridable)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Missing or invalid fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "organisationId does not resolve to a visible organisation"
+          },
+          "409": {
+            "description": "A matching customer already exists (FR-010, AS-04). Not blocked — resend with confirmCollision true.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matches": {
+                      "type": "array",
+                      "description": "In-scope matches",
+                      "named": null
+                    },
+                    "outOfScopeMatches": {
+                      "type": "integer",
+                      "description": "Out-of-scope collisions",
+                      "counted but never named (spec 010 §8)": null
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customer/{id}": {
+      "get": {
+        "summary": "Get one customer (spec 001 FR-003, AS-03 — out of scope is 404, never 403)",
+        "tags": [
+          "Customer"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not found — identical whether out of scope or genuinely absent"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Edit customer fields (spec 001 FR-020 — one audit entry per changed field)",
+        "tags": [
+          "Customer"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "nationalId": {
+                    "type": "string"
+                  },
+                  "accountRef": {
+                    "type": "string"
+                  },
+                  "preferredLanguage": {
+                    "type": "string",
+                    "enum": [
+                      "ar",
+                      "en"
+                    ]
+                  },
+                  "preferredChannel": {
+                    "type": "string",
+                    "enum": [
+                      "phone",
+                      "email",
+                      "whatsapp"
+                    ]
+                  },
+                  "sensitiveFlag": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated"
+          },
+          "400": {
+            "description": "No changes supplied"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/ticket/meta": {
+      "get": {
+        "summary": "The ratified status set and transition graph (spec 002 FR-008; decisions 14, 15, 22). Clients read this rather than holding their own copy.",
+        "tags": [
+          "Ticket"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statuses": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "key": {
+                            "type": "string"
+                          },
+                          "pausesSla": {
+                            "type": "boolean",
+                            "nullable": true
+                          },
+                          "terminal": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    },
+                    "priorities": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "transitions": {
+                      "type": "object",
+                      "description": "status key -> array of reachable status keys"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ticket": {
+      "get": {
+        "summary": "List tickets, scope-filtered (spec 002 FR-033, AS-01)",
+        "tags": [
+          "Ticket"
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated status keys"
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assignedAgentId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "unassigned",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "customerId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Exact match — category is a flat string, not a tree (decision 21)"
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Subject or reference prefix",
+            "minimum 3 characters": null
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 25,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Out-of-scope tickets are absent from the list AND the count (AS-01)"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a ticket (spec 002 FR-001, AS-01)",
+        "tags": [
+          "Ticket"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "customerId",
+                  "subject",
+                  "description",
+                  "category",
+                  "priority"
+                ],
+                "properties": {
+                  "customerId": {
+                    "type": "string"
+                  },
+                  "subject": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 300
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Becomes the first customer-visible message on the thread — there is no separate description field in storage (§3)."
+                  },
+                  "category": {
+                    "type": "string",
+                    "description": "Flat string, leaf-only in spirit but not enforced as a tree (decision 21, deviates from FR-004 MUST)"
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": [
+                      "low",
+                      "normal",
+                      "high",
+                      "urgent"
+                    ]
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created. Reference format TKT-YYYY-NNNNN (decision 11), status \"new\", prioritySource \"manual\"."
+          },
+          "400": {
+            "description": "Missing or invalid fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Customer not found or out of scope"
+          }
+        }
+      }
+    },
+    "/ticket/{id}": {
+      "get": {
+        "summary": "Ticket detail — thread, history, reachable transitions (spec 002 FR-013, AS-15; constitution II)",
+        "tags": [
+          "Ticket"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ticket": {
+                      "type": "object"
+                    },
+                    "messages": {
+                      "type": "array",
+                      "description": "Both visibilities — every caller here is staff (FR-014)"
+                    },
+                    "history": {
+                      "type": "array",
+                      "description": "Read from the append-only audit log, not rebuilt"
+                    },
+                    "reachableStatuses": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "sla": {
+                      "type": "object",
+                      "description": "constitution III — { status: 'unavailable' } until spec 005 unblocks"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found — identical whether out of scope or genuinely absent (AS-01)"
+          }
+        }
+      }
+    },
+    "/ticket/{id}/assign": {
+      "patch": {
+        "summary": "Assign, reassign or unassign (spec 002 FR-009, FR-010, AS-06). Team is dropped — assignment is directly to an agent (decision 20).",
+        "tags": [
+          "Ticket"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "reason"
+                ],
+                "properties": {
+                  "assignedAgentId": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Omit or null to unassign"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "description": "Required for every assignment and reassignment (AS-06) — never defaulted"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Assigned"
+          },
+          "400": {
+            "description": "Reason missing"
+          },
+          "403": {
+            "description": "Reassigning another agent's ticket requires LEAD or above (§9)"
+          },
+          "404": {
+            "description": "Ticket or target agent not found"
+          },
+          "409": {
+            "description": "Terminal ticket accepts no assignment, or the target agent is not scoped to this ticket"
+          }
+        }
+      }
+    },
+    "/ticket/{id}/status": {
+      "patch": {
+        "summary": "Transition status (spec 002 FR-007, FR-008, AS-03). Undefined transitions are refused with the reachable set named, and write no history entry.",
+        "tags": [
+          "Ticket"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "new",
+                      "assigned",
+                      "in_progress",
+                      "pending_customer",
+                      "pending_supplier",
+                      "pending_internal",
+                      "resolved",
+                      "closed",
+                      "merged",
+                      "cancelled"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "description": "Required when transitioning to cancelled"
+                  },
+                  "followUpAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Only valid on a status whose pausesSla is true (FR-021)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transitioned"
+          },
+          "400": {
+            "description": "Unknown status",
+            "or followUpAt on a non-pausing status": null
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Already in that status, or the transition is not defined (AS-03)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "$ref": "#/components/schemas/LocalizedText"
+                    },
+                    "reachableStatuses": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ticket/{id}/message": {
+      "post": {
+        "summary": "Add a reply or internal note (spec 002 FR-014, AS-07). AUD is read-only; visibility has no default.",
+        "tags": [
+          "Ticket"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "body",
+                  "visibility"
+                ],
+                "properties": {
+                  "body": {
+                    "type": "string"
+                  },
+                  "visibility": {
+                    "type": "string",
+                    "enum": [
+                      "customer",
+                      "internal"
+                    ],
+                    "description": "No default — a defaulted value is how an internal note becomes a customer reply by accident"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Added"
+          },
+          "400": {
+            "description": "Body or visibility missing"
+          },
+          "403": {
+            "description": "Requires AGT",
+            "LEAD or MGR": null
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Terminal ticket accepts no reply"
+          }
+        }
+      }
+    }
+  },
+  "tags": []
+}

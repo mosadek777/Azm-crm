@@ -1,0 +1,78 @@
+<div class="page">
+  @if (refusal(); as m) { <p class="refusal" role="alert">{{ m[i18n.lang()] }}</p> }
+
+  @if (customer(); as c) {
+    <div class="page__head">
+      <h1>{{ c.displayName }}</h1>
+      @if (c.sensitiveFlag) {
+        <span class="chip chip--sensitive">{{ 'customer.sensitive' | translate: i18n.lang() }}</span>
+      }
+      <span class="spacer"></span>
+      <button (click)="openTickets()">{{ 'customer.tickets' | translate: i18n.lang() }}</button>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <h2>{{ 'customer.identity' | translate: i18n.lang() }}</h2>
+        <p class="note">{{ 'customer.type' | translate: i18n.lang() }}: {{ c.type }}</p>
+        <p class="note">{{ 'customer.nationalId' | translate: i18n.lang() }}: <span class="ltr">{{ c.nationalId || '—' }}</span></p>
+        <p class="note">{{ 'customer.accountRef' | translate: i18n.lang() }}: <span class="ltr">{{ c.accountRef || '—' }}</span></p>
+        @if (organisation(); as org) {
+          <p class="note">{{ 'customer.organisation' | translate: i18n.lang() }}: {{ org.displayName }}</p>
+        }
+      </div>
+
+      <div class="card">
+        <h2>{{ 'customer.contactPoints' | translate: i18n.lang() }}</h2>
+        @for (cp of contactPoints(); track cp._id) {
+          <p class="note">
+            {{ cp.channelType }}: <span class="ltr">{{ cp.value }}</span>
+            @if (cp.isPrimary) { <span class="chip">{{ 'customer.primary' | translate: i18n.lang() }}</span> }
+            @if (!cp.normalised) { <span class="chip chip--sensitive">{{ 'customer.unnormalised' | translate: i18n.lang() }}</span> }
+            @if (cp.collisionConfirmedAt) { <span class="chip chip--paused">{{ 'customer.shared' | translate: i18n.lang() }}</span> }
+          </p>
+        }
+      </div>
+
+      <div class="card">
+        <h2>{{ 'customer.entitlement' | translate: i18n.lang() }}</h2>
+        <!-- E-07 / constitution III: 'unavailable' is rendered as itself. The
+             client never substitutes a computed or stale value. -->
+        @if (entitlement()?.status === 'unavailable') {
+          <p class="note">{{ 'common.unavailable' | translate: i18n.lang() }} — {{ entitlement()?.reason }}</p>
+        } @else {
+          <p class="note">{{ entitlement()?.minutes }}</p>
+        }
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>{{ 'customer.edit' | translate: i18n.lang() }}</h2>
+      <div class="cards">
+        <label class="field">
+          <span>{{ 'customer.name' | translate: i18n.lang() }}</span>
+          <input [ngModel]="editName()" (ngModelChange)="editName.set($event)" />
+        </label>
+        <label class="field">
+          <span>{{ 'customer.preferredLanguage' | translate: i18n.lang() }}</span>
+          <select [ngModel]="editLang()" (ngModelChange)="editLang.set($event)">
+            <option value="ar">العربية</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>{{ 'customer.sensitive' | translate: i18n.lang() }}</span>
+          <select [ngModel]="editSensitive()" (ngModelChange)="editSensitive.set($event === 'true' || $event === true)">
+            <option [value]="false">{{ 'common.no' | translate: i18n.lang() }}</option>
+            <option [value]="true">{{ 'common.yes' | translate: i18n.lang() }}</option>
+          </select>
+        </label>
+      </div>
+      <p></p>
+      <button class="primary" (click)="save()">{{ 'action.save' | translate: i18n.lang() }}</button>
+      @if (saved().length) {
+        <p class="note">{{ 'customer.savedFields' | translate: i18n.lang() }}: {{ saved().join(', ') }}</p>
+      }
+    </div>
+  }
+</div>

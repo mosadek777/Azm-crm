@@ -1,0 +1,30 @@
+{
+  "name": "azm-crm-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "seed:admin": "node src/utils/seed-admin.js",
+    "audit:reconcile": "node src/utils/reconcile-audit.js",
+    "docs:build": "node src/docs/build-openapi.js",
+    "docs:postman": "node src/docs/build-postman.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongodb": "^7.6.0",
+    "mongoose": "^9.9.5",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "openapi-to-postmanv2": "^6.3.3"
+  }
+}

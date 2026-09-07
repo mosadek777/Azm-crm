@@ -1,0 +1,142 @@
+<div class="page">
+  @if (refusal(); as m) { <p class="refusal" role="alert">{{ m[i18n.lang()] }}</p> }
+
+  @if (ticket(); as t) {
+    <div class="page__head">
+      <h1><span class="ltr">{{ t.reference }}</span> — {{ t.subject }}</h1>
+      <span class="chip">{{ t.status }}</span>
+      @if (t.pausesSla) { <span class="chip chip--paused">{{ 'ticket.paused' | translate: i18n.lang() }}</span> }
+      <span class="spacer"></span>
+      <span class="note">{{ 'ticket.priority' | translate: i18n.lang() }}: {{ t.priority }} ({{ t.prioritySource }})</span>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <h2>{{ 'ticket.details' | translate: i18n.lang() }}</h2>
+        <p class="note">{{ 'customer.name' | translate: i18n.lang() }}: {{ customer()?.displayName || '—' }}</p>
+        <p class="note">{{ 'ticket.category' | translate: i18n.lang() }}: {{ t.category }}</p>
+        <p class="note">{{ 'ticket.assignee' | translate: i18n.lang() }}: {{ agent()?.displayName || ('ticket.unassigned' | translate: i18n.lang()) }}</p>
+        @if (t.followUpAt) {
+          <p class="note">{{ 'ticket.followUp' | translate: i18n.lang() }}: <span class="ltr">{{ t.followUpAt }}</span></p>
+        }
+        <p class="note">
+          {{ 'ticket.sla' | translate: i18n.lang() }}:
+          @if (sla()?.status === 'unavailable') {
+            {{ 'common.unavailable' | translate: i18n.lang() }} — {{ sla()?.reason }}
+          } @else {
+            <span class="ltr">{{ sla()?.minutes }}</span>
+          }
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>{{ 'ticket.changeStatus' | translate: i18n.lang() }}</h2>
+        @if (reachable().length === 0) {
+          <p class="note">{{ 'ticket.terminal' | translate: i18n.lang() }}</p>
+        } @else {
+          <label class="field">
+            <span>{{ 'ticket.status' | translate: i18n.lang() }}</span>
+            <!-- Options come from the server's transition graph, never a local copy. -->
+            <select [ngModel]="nextStatus()" (ngModelChange)="nextStatus.set($event)">
+              <option value="">—</option>
+              @for (s of reachable(); track s) { <option [value]="s">{{ s }}</option> }
+            </select>
+          </label>
+          <label class="field">
+            <span>{{ 'ticket.reason' | translate: i18n.lang() }}</span>
+            <input [ngModel]="statusReason()" (ngModelChange)="statusReason.set($event)" />
+          </label>
+          <label class="field">
+            <span>{{ 'ticket.followUp' | translate: i18n.lang() }}</span>
+            <input type="datetime-local" [ngModel]="followUpAt()" (ngModelChange)="followUpAt.set($event)" />
+          </label>
+          <p></p>
+          <button class="primary" (click)="applyStatus()" [disabled]="!nextStatus()">
+            {{ 'action.apply' | translate: i18n.lang() }}
+          </button>
+        }
+      </div>
+
+      <div class="card">
+        <h2>{{ 'ticket.assignment' | translate: i18n.lang() }}</h2>
+        <!-- AS-06 / FR-009: a reason is required, so the button stays disabled
+             without one rather than letting the API refuse it. -->
+        <label class="field">
+          <span>{{ 'ticket.reason' | translate: i18n.lang() }}</span>
+          <input [ngModel]="assignReason()" (ngModelChange)="assignReason.set($event)" />
+        </label>
+        <p></p>
+        <button (click)="release()" [disabled]="!assignReason().trim()">
+          {{ 'ticket.release' | translate: i18n.lang() }}
+        </button>
+        <p class="note">{{ 'ticket.assignNote' | translate: i18n.lang() }}</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>{{ 'ticket.thread' | translate: i18n.lang() }}</h2>
+      <div class="thread">
+        @for (m of messages(); track m._id) {
+          <div class="msg" [class.msg--internal]="m.visibility === 'internal'">
+            <div class="msg__meta">
+              <span class="ltr">{{ m.sentAt }}</span>
+              <span>{{ m.authorKind }}</span>
+              @if (m.visibility === 'internal') {
+                <span class="chip chip--internal">{{ 'ticket.internal' | translate: i18n.lang() }}</span>
+              } @else {
+                <span class="chip">{{ 'ticket.customerVisible' | translate: i18n.lang() }}</span>
+              }
+            </div>
+            <!-- User-authored: single language, direction detected per message
+                 by the browser (spec 012 AS-05). -->
+            <p>{{ m.body }}</p>
+          </div>
+        }
+      </div>
+
+      @if (!t.terminal) {
+        <p></p>
+        <label class="field">
+          <span>{{ 'ticket.reply' | translate: i18n.lang() }}</span>
+          <textarea rows="3" [ngModel]="reply()" (ngModelChange)="reply.set($event)"></textarea>
+        </label>
+        <label class="field">
+          <span>{{ 'ticket.visibility' | translate: i18n.lang() }}</span>
+          <!-- Deliberately blank by default. FR-014 has no safe default. -->
+          <select [ngModel]="visibility()" (ngModelChange)="visibility.set($event)">
+            <option value="">{{ 'ticket.chooseVisibility' | translate: i18n.lang() }}</option>
+            <option value="customer">{{ 'ticket.customerVisible' | translate: i18n.lang() }}</option>
+            <option value="internal">{{ 'ticket.internal' | translate: i18n.lang() }}</option>
+          </select>
+        </label>
+        <p></p>
+        <button class="primary" (click)="send()" [disabled]="!reply().trim() || !visibility()">
+          {{ 'action.send' | translate: i18n.lang() }}
+        </button>
+      }
+    </div>
+
+    <div class="card">
+      <h2>{{ 'ticket.history' | translate: i18n.lang() }}</h2>
+      <!-- Constitution II: this is the append-only audit log, read not rebuilt. -->
+      <table class="grid">
+        <thead>
+          <tr>
+            <th>{{ 'history.when' | translate: i18n.lang() }}</th>
+            <th>{{ 'history.action' | translate: i18n.lang() }}</th>
+            <th>{{ 'history.actor' | translate: i18n.lang() }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (h of history(); track $index) {
+            <tr>
+              <td><span class="ltr">{{ h.occurredAt }}</span></td>
+              <td>{{ h.action }}</td>
+              <td><span class="ltr">{{ h.actorRef }}</span></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

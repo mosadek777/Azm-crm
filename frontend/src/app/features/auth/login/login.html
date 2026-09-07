@@ -1,0 +1,42 @@
+<!-- spec 012 FR-002: the layout mirrors via `dir` on <html> and CSS logical
+     properties. Email addresses are direction-neutral values and stay LTR in
+     both languages — hence dir="ltr" on that one input. -->
+<form class="login" (ngSubmit)="submit()">
+  <div class="login__head">
+    <h1>{{ 'login.title' | translate: i18n.lang() }}</h1>
+    <button type="button" class="login__lang" (click)="i18n.toggle()">
+      {{ 'lang.switchTo' | translate: i18n.lang() }}
+    </button>
+  </div>
+
+  <label class="login__field">
+    <span>{{ 'login.email' | translate: i18n.lang() }}</span>
+    <input
+      type="email"
+      name="email"
+      dir="ltr"
+      required
+      [ngModel]="email()"
+      (ngModelChange)="email.set($event)" />
+  </label>
+
+  <label class="login__field">
+    <span>{{ 'login.password' | translate: i18n.lang() }}</span>
+    <input
+      type="password"
+      name="password"
+      required
+      [ngModel]="password()"
+      (ngModelChange)="password.set($event)" />
+  </label>
+
+  @if (refusal(); as message) {
+    <p class="login__refusal" role="alert">{{ message[i18n.lang()] }}</p>
+  }
+
+  <button type="submit" class="login__submit" [disabled]="submitting()">
+    {{ (submitting() ? 'login.submitting' : 'login.submit') | translate: i18n.lang() }}
+  </button>
+
+  <p class="login__note">{{ 'login.noAccount' | translate: i18n.lang() }}</p>
+</form>
