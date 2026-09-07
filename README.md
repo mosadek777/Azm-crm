@@ -121,6 +121,14 @@ enforced on every read and write, including on tickets and customers.
   from spec with its undo cost.
 - **`docs/trace.md`** — spec requirement → code, both directions: what's built
   with no requirement, and what's required with no code yet.
+- **`docs/next-steps.md`** — what's broken or half-done, what's blocked on a
+  client decision, unbuilt MUSTs, effort estimates for every scoped-out module,
+  the technical debt from today's delivery compression, and a recommended
+  order for the next two weeks.
+- **`docs/methodology.md`** — the original spec-driven-development index: the
+  thirteen epics, the eighty-two open questions distilled to thirteen client
+  decisions, and the constitution's eight principles. This *was* the root
+  README before it was rewritten to describe the build rather than the method.
 
 ## Spec-driven development
 
