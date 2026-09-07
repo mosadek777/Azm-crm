@@ -1,6 +1,9 @@
 // spec 010 — implements SEC-06, FR-006 (local path), client side
 // spec 012 — implements FR-001, FR-002, AS-01 (this screen's surface)
 //
+// Tailwind only — no component library. See docs/decisions-pending.md
+// decision 24 for why PrimeNG was removed.
+//
 // There is no register screen and no link to one. Spec 010 FR-001 makes user
 // creation an administrator action and E-08 forbids automatic account creation,
 // so the screen says so rather than leaving the user hunting for a link.
@@ -22,8 +25,7 @@ import { ApiRefusal, LocalizedText } from '../../../core/models/user.model';
 @Component({
   selector: 'app-login',
   imports: [FormsModule, TranslatePipe],
-  templateUrl: './login.html',
-  styleUrl: './login.scss'
+  templateUrl: './login.html'
 })
 export class Login {
   private readonly auth = inject(AuthService);
@@ -32,6 +34,7 @@ export class Login {
 
   protected readonly email = signal('');
   protected readonly password = signal('');
+  protected readonly showPassword = signal(false);
   protected readonly submitting = signal(false);
   protected readonly refusal = signal<LocalizedText | null>(null);
 

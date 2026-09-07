@@ -11,6 +11,15 @@ Most of the product (channels, SLA automation, knowledge base, the customer
 portal, reports, ERP integration, AI features) is **not built** — see
 [What's not built](#whats-not-built).
 
+## Links
+
+| | |
+|---|---|
+| **API documentation** | https://mosadek777.github.io/Azm-crm/ — Swagger UI over `docs/openapi.json`, published from `main` / `docs` |
+| **Live API docs** | `http://localhost:3000/api-docs` — **local only**, requires the backend running. There is no hosted environment |
+| **Postman** | `docs/azm-crm.postman_collection.json` and `docs/azm-crm.postman_environment.json` — import both by hand (File → Import). Nothing is pushed to Postman's cloud |
+| **Project board** | *TODO* — the ClickUp list is private to the workspace; a shareable public link has not been created |
+
 ## Stack
 
 | | |
@@ -18,7 +27,7 @@ portal, reports, ERP integration, AI features) is **not built** — see
 | Backend | Node.js, Express 5, ES modules only (`.js` imports, no TypeScript) |
 | Database | MongoDB, single-node replica set — **required**, not optional (transactions back the audit trail) |
 | Auth | JWT, bcrypt, local email/password (SSO is specified, not built — see below) |
-| Frontend | Angular 22, standalone components, SCSS, no `@angular/localize` (runtime language switching instead) |
+| Frontend | Angular 22, standalone components, signals, Tailwind CSS v4 (no component library — see `docs/decisions-pending.md` §24), no `@angular/localize` (runtime language switching instead) |
 | Docs | Swagger/OpenAPI + Postman, generated from JSDoc above the routes |
 
 ## Setup
@@ -40,6 +49,14 @@ npm install
 npm start                   # http://localhost:4200
 ```
 
+> **Never commit `backend/.env`.** It is gitignored and must stay that way —
+> `.env.example` is the only one of the pair that belongs in the repository.
+> Generate your own `JWT_SECRET` rather than reusing one from anywhere
+> (`node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`),
+> and set your own `BREAKGLASS_PASSWORD` and `DEMO_AGENT_PASSWORD`. A secret that
+> has ever been committed is public from that commit onward, whether or not the
+> file is later removed — rotating it is the only fix, deleting it is not.
+
 Sign in with the email/password from `backend/.env` (`BREAKGLASS_EMAIL` /
 `BREAKGLASS_PASSWORD`). That account is the break-glass administrator (spec
 `010` `E-07`) — its every sign-in is a high-severity audit event, and its
@@ -55,20 +72,27 @@ npm run audit:reconcile  # report-only: finds audit entries with no record,
                           # and records with no audit entry (constitution II)
 npm run docs:build       # writes docs/openapi.json from the JSDoc routes
 npm run docs:postman     # docs/openapi.json -> Postman collection + environment
+npm run seed:demo        # idempotent demo data, driven through the real HTTP
+                          # API so it cannot bypass scope or the audit trail.
+                          # Needs DEMO_AGENT_PASSWORD in .env
+npm run seed:demo:clear  # removes it again — localhost only, and it knowingly
+                          # breaks the append-only rule (decision 25)
 
 # frontend/
 npm start
 npm test
 
-# tools/
-node sync-clickup.js     # idempotent — syncs tools/tasks.json to ClickUp,
-                          # updating existing tasks rather than duplicating
+# from the repository root
+node tools/sync-clickup.js   # idempotent — syncs the tools/tasks.json tree to
+                              # ClickUp, updating existing tasks rather than
+                              # duplicating. Needs CLICKUP_TOKEN in backend/.env
 ```
 
 ## API docs
 
-Live: `http://localhost:3000/api-docs` (Swagger UI) while the backend is
-running. Static: `docs/openapi.json`.
+Published: https://mosadek777.github.io/Azm-crm/ (GitHub Pages, served from
+`main` / `docs`). Live: `http://localhost:3000/api-docs` (Swagger UI) while the
+backend is running — local only. Static: `docs/openapi.json`.
 
 **Postman:** import `docs/azm-crm.postman_collection.json` and
 `docs/azm-crm.postman_environment.json`. Requests use `{{baseUrl}}` and

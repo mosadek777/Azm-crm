@@ -36,6 +36,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/customer/list/customer-list').then(m => m.CustomerList)
       },
       {
+        // Declared BEFORE ':id', or 'new' is read as an identifier.
+        path: 'customers/new',
+        loadComponent: () => import('./features/customer/create/customer-create').then(m => m.CustomerCreate)
+      },
+      {
         path: 'customers/:id',
         loadComponent: () => import('./features/customer/detail/customer-detail').then(m => m.CustomerDetail)
       },

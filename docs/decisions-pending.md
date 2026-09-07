@@ -125,6 +125,129 @@ unscoped form would wrongly protect.
 **Reversal cost: low.** Two index definitions in `customer.model.js`, plus a
 reindex. No application code reads the filter.
 
+### Seventh batch — ratified 2026-09-08, demo data
+
+| # | Decision | Kind | Undo cost |
+|---|---|---|---|
+| 25 | **`seed:demo:clear` may delete records and their audit entries**, bypassing both the no-delete rule and the append-only rule. Development-only, local databases only | **Deliberate, bounded violation** of spec 001 §3 and spec 010 `FR-008`/`AS-08` | Delete the script; demo data then accumulates or is cleared by dropping the database |
+
+**This is the only place in the codebase permitted to break these two rules, and
+it is recorded here rather than only in a code comment so that anyone auditing
+the constitution finds it.**
+
+**What it violates.**
+
+- **Spec 001 §3** — a customer *"Lives forever; is never deleted, only erased or
+  merged away."* No service exposes a delete path for customers, by design.
+  This script deletes them.
+- **Spec 010 `FR-008` / `AS-08`** — audit entries are append-only, enforced by
+  mongoose hooks that refuse every update and delete. This script removes the
+  demo records' audit entries through the **raw driver collection**, which
+  bypasses those hooks entirely.
+
+**Why deleting the audit entries is the right call, and leaving them is not.**
+The alternative was considered and rejected. If the domain records are deleted
+and their audit entries are left behind, `npm run audit:reconcile` reports every
+one of them as an **ORPHANED ENTRY** — an audit entry whose record does not
+exist. That is not a cosmetic complaint: it is the precise signal meaning *"a
+mutation failed after its audit entry was written"*, the one residual failure
+mode the atomic-audit work (decision, §10) was unable to eliminate by
+construction. Filling that report with dozens of entries of deliberate noise
+teaches whoever reads it to skim past the exact line that catches real
+corruption. A report nobody trusts is worse than no report.
+
+**What bounds it.**
+
+1. **One line.** The hook-bypassing deletion is a single `deleteMany` on the raw
+   `auditentries` collection, in one file, commented as the rule-breaking line.
+   It is not repeated anywhere and must not be.
+2. **Local databases only.** The script refuses to run when `MONGO_URI` does not
+   point at `localhost` or `127.0.0.1`, and masks credentials in the refusal:
+   `REFUSED: seed:demo:clear only runs against a local database.`
+3. **Marked data only.** It touches nothing without a demo marker — customers by
+   `accountRef` prefix `DEMO-`, tickets by the `demo` tag, users by the `demo.`
+   email prefix, branch and department by name. The break-glass administrator
+   survives a clear, verified.
+
+**What it is not.** It is not a precedent for a delete endpoint, an audit
+correction tool, or anything that ships. Spec 010 `FR-008` still stands: in the
+application, an audit entry is never edited or deleted, and a correction is an
+**append** of a compensating entry made by a person who has understood the
+discrepancy.
+
+**Also in this batch, not a violation but worth recording:** the demo agent
+password moved from a literal in `seed-demo.js` to `DEMO_AGENT_PASSWORD` in
+`.env`. The seed **refuses to run** without it rather than falling back to a
+default, because a default in a tracked file is a known credential on every
+machine that ever runs the seed. `.env.example` carries the key with no value.
+
+### Sixth batch — ratified 2026-09-07, UI component library
+
+| # | Decision | Kind | Undo cost |
+|---|---|---|---|
+| 24 | **No component library. The UI is Tailwind CSS v4 only.** PrimeNG was installed, evaluated, and removed the same day | **Judgement**, forced by a vendor licensing change discovered during Phase 1 | Reinstalling means either buying a PrimeUI licence or accepting the version wall below |
+
+**⚠ DO NOT REINSTALL PRIMENG WITHOUT READING THIS.** The obvious future move —
+"this UI is plain, let's add a component library, PrimeNG is the Angular
+standard" — walks into the same wall. The evidence, gathered from the installed
+packages rather than from documentation:
+
+**PrimeNG v22 requires a paid licence for every component.** `primeng@22.0.0`
+(published 2026-07-15) added a dependency on `@primeui/license-manager`, which
+`primeng@21.1.9` does not have:
+
+```
+npm view primeng@22.0.0 dependencies   ->  ..., "@primeui/license-manager": "^1.0.0"
+npm view primeng@21.1.9 dependencies   ->  tslib, @primeuix/{utils,motion,styled,styles}
+```
+
+Without a valid key, every component renders an unremovable banner.
+`node_modules/primeng/fesm2022/primeng-basecomponent.mjs:245` calls it from
+`ngAfterViewInit`, so it fires for *any* component, including ones that were
+free under MIT for years (`Button`, `Card`, `InputText`):
+
+```js
+if (this.config?.verified() === false) { showInvalidLicenseBanner(); }
+```
+
+And `primeng-license.mjs` is explicit that it is built to resist removal — the
+banner lives in a **closed** shadow root, with `all:initial` on the host and a
+deliberately unmemorable id, "slowing down trivial hide-by-selector attempts".
+It is not a console warning; it is a red box over the running application.
+Verified rendering on the login page at the time of the decision.
+
+**The v21 escape route is blocked by Angular.** `primeng@21.1.9` — the last
+licence-free release — peer-depends on Angular 21:
+
+```
+npm view primeng@21.1.9 peerDependencies
+  ->  "@angular/core": "^21.0.7", "@angular/cdk": "^21.0.0", ...
+```
+
+This app is on Angular **22.1.5**. Installed with `--legacy-peer-deps`, the
+banner still appeared *and* components broke rather than merely warning — the
+submit button rendered as an empty input. So the choice was: downgrade the
+entire Angular framework by a major version to keep a component library, buy a
+licence for a project whose scope is not settled, or drop the library.
+
+**What was chosen and why.** Tailwind alone. The page shell, layout, palette,
+type scale and RTL behaviour were already working in Tailwind before PrimeNG
+was wired in, and the components actually needed here are tables, inputs and
+buttons — a few hours of styling, not a framework. The cost of the alternative
+was hours of version-matrix archaeology for a red banner and a missing button.
+
+**What this costs.** Data tables, date pickers, multi-selects and overlays are
+hand-built. The first two are already written as plain tables; a date picker
+and a proper combobox are the two places this will be felt, and both are
+`<input type="date">` and a filtered list respectively for now.
+
+**If a component library is revisited**, the live options are: a PrimeUI
+licence (cost unknown, needs a scope decision first); Angular Material, which
+is first-party and versioned in lockstep with Angular; or staying with Tailwind
+and adding headless primitives (Angular CDK is already installed as a
+transitive dependency and provides overlays, focus traps and a11y helpers
+without any styling opinion).
+
 ### Fifth batch — ratified 2026-09-07, delivery compression
 
 The user required working software on GitHub the same day and authorised two

@@ -5,7 +5,7 @@
 import { writeFileSync, mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { openapiSpec } from './openapi.js'
+import { openapiSpec } from '../utils/swagger.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const outPath = join(__dirname, '../../../docs/openapi.json')

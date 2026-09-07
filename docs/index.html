@@ -1,0 +1,119 @@
+<!doctype html>
+<!--
+  GitHub Pages entry point for the AZM CRM API documentation.
+
+  Pages is configured to serve from `main` / `docs`, so this file is the site
+  root and `openapi.json` sits beside it — the same file `npm run docs:build`
+  writes from the JSDoc blocks above the routes. There is no second copy and no
+  build step here: regenerating the spec and committing it updates the site.
+
+  Swagger UI comes from a CDN rather than being vendored, so this repository
+  does not carry a megabyte of third-party dist files that nothing here builds
+  against. The version is pinned; an unpinned CDN tag would silently change the
+  documentation renderer under a spec that never changed.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AZM CRM API</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/swagger-ui.css">
+<style>
+  :root {
+    --ink: #1c1917;
+    --muted: #57534e;
+    --line: #e7e5e4;
+    --bg: #fafaf9;
+    --accent: #6d28d9;
+    --warn-bg: #fffbeb;
+    --warn-line: #fcd34d;
+    --warn-ink: #78350f;
+  }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.6 ui-sans-serif, system-ui, "Segoe UI", sans-serif; }
+  header { background: #fff; border-bottom: 1px solid var(--line); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+  header .wrap { padding-block: 28px 24px; }
+  h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: -0.01em; }
+  .sub { margin: 0; color: var(--muted); max-width: 62ch; }
+  nav { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 14px; }
+  nav a { color: var(--accent); text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  .note { border: 1px solid var(--warn-line); background: var(--warn-bg);
+          color: var(--warn-ink); border-radius: 8px; padding: 14px 16px;
+          margin: 20px auto 0; max-width: 1132px; }
+  .note strong { display: block; margin-bottom: 4px; }
+  .note p { margin: 0; }
+  main { padding-bottom: 48px; }
+  /* Swagger UI ships its own <h2> banner and a scheme picker that is
+     meaningless on a static page with one server. */
+  .swagger-ui .topbar { display: none; }
+  .swagger-ui .information-container { padding-top: 24px; }
+  footer { border-top: 1px solid var(--line); background: #fff;
+           color: var(--muted); font-size: 13px; }
+  footer .wrap { padding-block: 20px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>AZM CRM API</h1>
+    <p class="sub">
+      Bilingual, multi-branch, scope-enforced, fully audited customer support.
+      Generated from the JSDoc blocks above the routes themselves — a route with
+      no block is absent here rather than documented with a guessed shape.
+    </p>
+    <nav>
+      <a href="https://github.com/mosadek777/Azm-crm">Repository</a>
+      <a href="./openapi.json">openapi.json</a>
+      <a href="./azm-crm.postman_collection.json">Postman collection</a>
+      <a href="./azm-crm.postman_environment.json">Postman environment</a>
+      <a href="https://github.com/mosadek777/Azm-crm/blob/main/docs/next-steps.md">What isn't built</a>
+    </nav>
+  </div>
+</header>
+
+<div class="note">
+  <strong>A 404 does not always mean the record is absent.</strong>
+  <p>
+    Every read and write applies a scope predicate over the caller's branch and
+    department. A record outside that scope is indistinguishable from one that
+    does not exist: the API answers <code>404</code>, never <code>403</code>, and
+    the body is byte-identical in both cases. Do not build retry or
+    reconciliation logic that reads a 404 as deletion.
+  </p>
+</div>
+
+<main>
+  <div id="swagger-ui"></div>
+</main>
+
+<footer>
+  <div class="wrap">
+    This page is generated documentation. The API it describes runs locally at
+    <code>http://localhost:3000</code> — there is no hosted environment.
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/swagger-ui-bundle.js" crossorigin></script>
+<script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/swagger-ui-standalone-preset.js" crossorigin></script>
+<script>
+  window.ui = SwaggerUIBundle({
+    url: './openapi.json',
+    dom_id: '#swagger-ui',
+    deepLinking: true,
+    presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+    layout: 'BaseLayout',
+    docExpansion: 'list',
+    defaultModelsExpandDepth: 1,
+    // "Try it out" would fire at localhost:3000 from a github.io origin: the
+    // browser blocks it on CORS and the reader sees a failure that says nothing
+    // about the API. Off by default, with the reason stated above rather than
+    // left as a mystery.
+    supportedSubmitMethods: []
+  })
+</script>
+
+</body>
+</html>

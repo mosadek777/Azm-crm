@@ -1,21 +1,82 @@
-<div class="main-layout">
-  <header class="main-layout__bar">
-    <span class="main-layout__name">{{ 'app.name' | translate: i18n.lang() }}</span>
-    <a routerLink="/tickets" routerLinkActive="active">{{ 'nav.tickets' | translate: i18n.lang() }}</a>
-    <a routerLink="/customers" routerLinkActive="active">{{ 'nav.customers' | translate: i18n.lang() }}</a>
-    <span class="main-layout__spacer"></span>
-    <!-- The signed-in user's display name is user-authored content: single
-         language, direction detected by the browser, never translated
-         (spec 012 §8). -->
-    <span>{{ auth.user()?.displayName }}</span>
-    <button type="button" (click)="i18n.toggle()">
+<div class="min-h-screen flex flex-col bg-surface-50">
+  <!-- Header. All directional spacing is logical (ps-/pe-/ms-/me-, start/end),
+       so the bar mirrors under dir="rtl" with no override sheet — FR-002. -->
+  <header class="sticky top-0 z-20 flex items-center gap-3 border-b border-surface-200
+                 bg-surface-0/95 backdrop-blur ps-4 pe-4 py-3">
+    <span class="text-lg font-semibold tracking-tight text-primary-700">
+      {{ 'app.name' | translate: i18n.lang() }}
+    </span>
+
+    <nav class="flex items-center gap-1 ms-6">
+      <a routerLink="/tickets"
+         routerLinkActive="bg-primary-50 text-primary-700 font-medium"
+         class="rounded-md px-3 py-1.5 text-sm text-surface-600 no-underline
+                hover:bg-surface-100 hover:text-surface-900 transition-colors">
+        {{ 'nav.tickets' | translate: i18n.lang() }}
+      </a>
+      <a routerLink="/customers"
+         routerLinkActive="bg-primary-50 text-primary-700 font-medium"
+         class="rounded-md px-3 py-1.5 text-sm text-surface-600 no-underline
+                hover:bg-surface-100 hover:text-surface-900 transition-colors">
+        {{ 'nav.customers' | translate: i18n.lang() }}
+      </a>
+    </nav>
+
+    <span class="flex-1"></span>
+
+    <button
+      type="button"
+      class="rounded-md px-2.5 py-1.5 text-sm font-medium text-primary-600
+             hover:bg-primary-50 hover:text-primary-700 transition-colors"
+      (click)="i18n.toggle()">
       {{ 'lang.switchTo' | translate: i18n.lang() }}
     </button>
-    <button type="button" (click)="auth.signOut()">
-      {{ 'workspace.signOut' | translate: i18n.lang() }}
-    </button>
+
+    <!-- User menu, once signed in. -->
+    @if (auth.isSignedIn()) {
+      <div class="relative ms-1">
+        <button
+          type="button"
+          class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-600
+                 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
+          [attr.aria-expanded]="userMenuOpen()"
+          [attr.aria-label]="auth.user()?.displayName"
+          (click)="userMenuOpen.set(!userMenuOpen())">
+          {{ initials(auth.user()?.displayName) }}
+        </button>
+
+        @if (userMenuOpen()) {
+          <!-- end-0: the panel hangs from the trailing edge in both directions. -->
+          <div class="absolute end-0 top-11 z-30 w-56 overflow-hidden rounded-lg border
+                      border-surface-200 bg-surface-0 shadow-lg">
+            <div class="border-b border-surface-200 px-3 py-2">
+              <!-- User-authored name: single language, direction detected by the
+                   browser per value, never translated (spec 012 §8). -->
+              <p class="m-0 truncate text-sm font-medium text-surface-900">
+                {{ auth.user()?.displayName }}
+              </p>
+              <p class="m-0 truncate text-xs text-surface-500"><span class="ltr">{{ auth.user()?.email }}</span></p>
+            </div>
+            <button
+              type="button"
+              class="w-full px-3 py-2 text-start text-sm text-surface-700 hover:bg-surface-100"
+              (click)="signOut()">
+              {{ 'workspace.signOut' | translate: i18n.lang() }}
+            </button>
+          </div>
+        }
+      </div>
+    }
   </header>
-  <main class="main-layout__content">
+
+  <!-- Content, centred with a readable max width. Every screen renders here. -->
+  <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
     <router-outlet />
   </main>
+
+  <!-- Footer: minimal — product name and version. -->
+  <footer class="border-t border-surface-200 bg-surface-0 ps-4 pe-4 py-3 text-center
+                 text-sm text-surface-500">
+    {{ 'app.name' | translate: i18n.lang() }} — v0.1.0
+  </footer>
 </div>

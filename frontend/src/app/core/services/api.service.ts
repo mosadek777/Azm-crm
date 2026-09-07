@@ -14,9 +14,19 @@ export class ApiService {
   private readonly http = inject(HttpClient);
 
   // --- customers ---
-  searchCustomers(q: string) {
-    return this.http.get<{ customers: Customer[]; searched: boolean; count?: number; minimumLength?: number }>(
-      `${API}/customer`, { params: new HttpParams().set('q', q) });
+  // An empty or <3-character `q` browses a scope-filtered page instead of
+  // searching (spec 001 E-13 — no search runs, and no error either).
+  searchCustomers(q: string, page = 1, limit = 25) {
+    return this.http.get<{
+      customers: Customer[]; searched: boolean; browsed?: boolean;
+      count?: number; minimumLength?: number;
+      page?: number; limit?: number; total?: number;
+    }>(`${API}/customer`, {
+      params: new HttpParams()
+        .set('q', q)
+        .set('page', String(page))
+        .set('limit', String(limit))
+    });
   }
 
   getCustomer(id: string) {

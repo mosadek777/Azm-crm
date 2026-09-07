@@ -1,142 +1,248 @@
-<div class="page">
-  @if (refusal(); as m) { <p class="refusal" role="alert">{{ m[i18n.lang()] }}</p> }
+<div class="flex flex-col gap-5">
+
+  @if (notFound()) {
+    <div class="rounded-xl border border-dashed border-surface-300 px-4 py-10 text-center">
+      <p class="m-0 text-sm text-surface-600">{{ 'ticket.notFound' | translate: i18n.lang() }}</p>
+    </div>
+  }
+
+  @if (refusal(); as message) {
+    <p class="m-0 rounded-lg border-s-4 border-red-600 bg-red-50 px-3 py-2 text-sm text-red-800"
+       role="alert">{{ message[i18n.lang()] }}</p>
+  }
 
   @if (ticket(); as t) {
-    <div class="page__head">
-      <h1><span class="ltr">{{ t.reference }}</span> — {{ t.subject }}</h1>
-      <span class="chip">{{ t.status }}</span>
-      @if (t.pausesSla) { <span class="chip chip--paused">{{ 'ticket.paused' | translate: i18n.lang() }}</span> }
-      <span class="spacer"></span>
-      <span class="note">{{ 'ticket.priority' | translate: i18n.lang() }}: {{ t.priority }} ({{ t.prioritySource }})</span>
+    <div class="flex flex-wrap items-center gap-3">
+      <span class="ltr rounded-md bg-surface-100 px-2 py-1 font-mono text-sm text-surface-700">
+        {{ t.reference }}
+      </span>
+      <h1 class="m-0 text-xl font-semibold tracking-tight text-surface-900">{{ t.subject }}</h1>
+      <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" [class]="t.status | statusTone">
+        {{ t.status }}
+      </span>
+      @if (t.pausesSla) {
+        <span class="rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+          {{ 'ticket.paused' | translate: i18n.lang() }}
+        </span>
+      }
     </div>
 
-    <div class="cards">
-      <div class="card">
-        <h2>{{ 'ticket.details' | translate: i18n.lang() }}</h2>
-        <p class="note">{{ 'customer.name' | translate: i18n.lang() }}: {{ customer()?.displayName || '—' }}</p>
-        <p class="note">{{ 'ticket.category' | translate: i18n.lang() }}: {{ t.category }}</p>
-        <p class="note">{{ 'ticket.assignee' | translate: i18n.lang() }}: {{ agent()?.displayName || ('ticket.unassigned' | translate: i18n.lang()) }}</p>
-        @if (t.followUpAt) {
-          <p class="note">{{ 'ticket.followUp' | translate: i18n.lang() }}: <span class="ltr">{{ t.followUpAt }}</span></p>
-        }
-        <p class="note">
-          {{ 'ticket.sla' | translate: i18n.lang() }}:
-          @if (sla()?.status === 'unavailable') {
-            {{ 'common.unavailable' | translate: i18n.lang() }} — {{ sla()?.reason }}
-          } @else {
-            <span class="ltr">{{ sla()?.minutes }}</span>
+    <div class="grid gap-4 lg:grid-cols-3">
+      <!-- Facts -->
+      <section class="rounded-xl border border-surface-200 bg-surface-0 p-4">
+        <h2 class="m-0 mb-3 text-sm font-semibold text-surface-900">
+          {{ 'ticket.details' | translate: i18n.lang() }}
+        </h2>
+        <dl class="m-0 flex flex-col gap-2 text-sm">
+          <div class="flex justify-between gap-3">
+            <dt class="text-surface-500">{{ 'customer.name' | translate: i18n.lang() }}</dt>
+            <dd class="m-0 text-surface-800">{{ customer()?.displayName || '—' }}</dd>
+          </div>
+          <div class="flex justify-between gap-3">
+            <dt class="text-surface-500">{{ 'ticket.category' | translate: i18n.lang() }}</dt>
+            <dd class="m-0 text-surface-800">{{ t.category }}</dd>
+          </div>
+          <div class="flex justify-between gap-3">
+            <dt class="text-surface-500">{{ 'ticket.priority' | translate: i18n.lang() }}</dt>
+            <dd class="m-0 text-surface-800">{{ t.priority }}
+              <span class="text-xs text-surface-400">({{ t.prioritySource }})</span>
+            </dd>
+          </div>
+          <div class="flex justify-between gap-3">
+            <dt class="text-surface-500">{{ 'ticket.assignee' | translate: i18n.lang() }}</dt>
+            <dd class="m-0 text-surface-800">
+              {{ agent()?.displayName || ('ticket.unassigned' | translate: i18n.lang()) }}
+            </dd>
+          </div>
+          @if (t.followUpAt) {
+            <div class="flex justify-between gap-3">
+              <dt class="text-surface-500">{{ 'ticket.followUp' | translate: i18n.lang() }}</dt>
+              <dd class="m-0"><span class="ltr text-surface-800">{{ t.followUpAt }}</span></dd>
+            </div>
           }
-        </p>
-      </div>
+          <div class="flex justify-between gap-3">
+            <dt class="text-surface-500">{{ 'ticket.sla' | translate: i18n.lang() }}</dt>
+            <!-- FR-034 / constitution III: read from the engine, never computed
+                 here. 'unavailable' is rendered as itself. -->
+            <dd class="m-0">
+              @if (sla()?.status === 'unavailable') {
+                <span class="text-surface-400">{{ 'common.unavailable' | translate: i18n.lang() }}</span>
+              } @else {
+                <span class="ltr text-surface-800">{{ sla()?.minutes }}</span>
+              }
+            </dd>
+          </div>
+        </dl>
+      </section>
 
-      <div class="card">
-        <h2>{{ 'ticket.changeStatus' | translate: i18n.lang() }}</h2>
+      <!-- Status control: options are ONLY what the server says is reachable -->
+      <section class="rounded-xl border border-surface-200 bg-surface-0 p-4">
+        <h2 class="m-0 mb-3 text-sm font-semibold text-surface-900">
+          {{ 'ticket.changeStatus' | translate: i18n.lang() }}
+        </h2>
+
         @if (reachable().length === 0) {
-          <p class="note">{{ 'ticket.terminal' | translate: i18n.lang() }}</p>
+          <p class="m-0 text-sm text-surface-500">
+            {{ 'ticket.terminal' | translate: i18n.lang() }}
+          </p>
         } @else {
-          <label class="field">
-            <span>{{ 'ticket.status' | translate: i18n.lang() }}</span>
-            <!-- Options come from the server's transition graph, never a local copy. -->
-            <select [ngModel]="nextStatus()" (ngModelChange)="nextStatus.set($event)">
+          <div class="flex flex-col gap-3">
+            <select [ngModel]="nextStatus()" (ngModelChange)="nextStatus.set($event)"
+              class="w-full rounded-lg border border-surface-300 bg-surface-0 px-3 py-2 text-sm
+                     focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25">
               <option value="">—</option>
               @for (s of reachable(); track s) { <option [value]="s">{{ s }}</option> }
             </select>
-          </label>
-          <label class="field">
-            <span>{{ 'ticket.reason' | translate: i18n.lang() }}</span>
-            <input [ngModel]="statusReason()" (ngModelChange)="statusReason.set($event)" />
-          </label>
-          <label class="field">
-            <span>{{ 'ticket.followUp' | translate: i18n.lang() }}</span>
-            <input type="datetime-local" [ngModel]="followUpAt()" (ngModelChange)="followUpAt.set($event)" />
-          </label>
-          <p></p>
-          <button class="primary" (click)="applyStatus()" [disabled]="!nextStatus()">
-            {{ 'action.apply' | translate: i18n.lang() }}
-          </button>
-        }
-      </div>
 
-      <div class="card">
-        <h2>{{ 'ticket.assignment' | translate: i18n.lang() }}</h2>
-        <!-- AS-06 / FR-009: a reason is required, so the button stays disabled
-             without one rather than letting the API refuse it. -->
-        <label class="field">
-          <span>{{ 'ticket.reason' | translate: i18n.lang() }}</span>
-          <input [ngModel]="assignReason()" (ngModelChange)="assignReason.set($event)" />
-        </label>
-        <p></p>
-        <button (click)="release()" [disabled]="!assignReason().trim()">
-          {{ 'ticket.release' | translate: i18n.lang() }}
-        </button>
-        <p class="note">{{ 'ticket.assignNote' | translate: i18n.lang() }}</p>
-      </div>
+            <input [ngModel]="statusReason()" (ngModelChange)="statusReason.set($event)"
+              [placeholder]="'ticket.reason' | translate: i18n.lang()"
+              class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm text-start
+                     focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25" />
+
+            <!-- FR-021: only offered when the chosen status pauses the clock. -->
+            @if (nextStatus() && pausesSla(nextStatus())) {
+              <label class="flex flex-col gap-1">
+                <span class="text-xs text-surface-500">{{ 'ticket.followUp' | translate: i18n.lang() }}</span>
+                <input type="datetime-local" [ngModel]="followUpAt()" (ngModelChange)="followUpAt.set($event)"
+                  class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm
+                         focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25" />
+              </label>
+            }
+
+            <button type="button" [disabled]="!nextStatus() || busy()"
+              class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white
+                     hover:bg-primary-700 disabled:opacity-60 disabled:cursor-default transition-colors"
+              (click)="applyStatus()">
+              {{ 'action.apply' | translate: i18n.lang() }}
+            </button>
+          </div>
+        }
+      </section>
+
+      <!-- Assignment -->
+      <section class="rounded-xl border border-surface-200 bg-surface-0 p-4">
+        <h2 class="m-0 mb-3 text-sm font-semibold text-surface-900">
+          {{ 'ticket.assignment' | translate: i18n.lang() }}
+        </h2>
+        <div class="flex flex-col gap-3">
+          <!-- AS-06 / FR-009: a reason is required for every assignment and
+               reassignment, so the buttons stay disabled without one rather
+               than letting the API refuse it. -->
+          <input [ngModel]="assignReason()" (ngModelChange)="assignReason.set($event)"
+            [placeholder]="'ticket.reason' | translate: i18n.lang()"
+            class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm text-start
+                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25" />
+          <div class="flex flex-wrap gap-2">
+            @if (!t.assignedAgentId) {
+              <button type="button" [disabled]="!assignReason().trim() || busy() || t.terminal"
+                class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white
+                       hover:bg-primary-700 disabled:opacity-60 transition-colors"
+                (click)="claim()">
+                {{ 'ticket.claim' | translate: i18n.lang() }}
+              </button>
+            } @else {
+              <button type="button" [disabled]="!assignReason().trim() || busy() || t.terminal"
+                class="rounded-lg border border-surface-300 bg-surface-0 px-4 py-2 text-sm
+                       font-medium text-surface-700 hover:bg-surface-100 disabled:opacity-60
+                       transition-colors"
+                (click)="release()">
+                {{ 'ticket.release' | translate: i18n.lang() }}
+              </button>
+            }
+          </div>
+          <p class="m-0 text-xs text-surface-500">
+            {{ 'ticket.assignNote' | translate: i18n.lang() }}
+          </p>
+        </div>
+      </section>
     </div>
 
-    <div class="card">
-      <h2>{{ 'ticket.thread' | translate: i18n.lang() }}</h2>
-      <div class="thread">
+    <!-- Thread -->
+    <section class="rounded-xl border border-surface-200 bg-surface-0 p-4">
+      <h2 class="m-0 mb-3 text-sm font-semibold text-surface-900">
+        {{ 'ticket.thread' | translate: i18n.lang() }}
+      </h2>
+
+      <div class="flex flex-col gap-3">
         @for (m of messages(); track m._id) {
-          <div class="msg" [class.msg--internal]="m.visibility === 'internal'">
-            <div class="msg__meta">
+          <!-- FR-014 / AS-07: an internal note is visually distinct from a
+               customer-visible reply, and labelled, so nobody posts one
+               believing it is the other. -->
+          <article class="rounded-lg border p-3"
+            [class]="m.visibility === 'internal'
+              ? 'border-primary-200 bg-primary-50/50'
+              : 'border-surface-200 bg-surface-0'">
+            <div class="mb-1 flex flex-wrap items-center gap-2 text-xs text-surface-500">
               <span class="ltr">{{ m.sentAt }}</span>
               <span>{{ m.authorKind }}</span>
               @if (m.visibility === 'internal') {
-                <span class="chip chip--internal">{{ 'ticket.internal' | translate: i18n.lang() }}</span>
+                <span class="rounded-full bg-primary-100 px-2 py-0.5 text-primary-800">
+                  {{ 'ticket.internal' | translate: i18n.lang() }}
+                </span>
               } @else {
-                <span class="chip">{{ 'ticket.customerVisible' | translate: i18n.lang() }}</span>
+                <span class="rounded-full bg-surface-100 px-2 py-0.5 text-surface-700">
+                  {{ 'ticket.customerVisible' | translate: i18n.lang() }}
+                </span>
               }
             </div>
             <!-- User-authored: single language, direction detected per message
                  by the browser (spec 012 AS-05). -->
-            <p>{{ m.body }}</p>
-          </div>
+            <p class="m-0 text-sm text-surface-800">{{ m.body }}</p>
+          </article>
         }
       </div>
 
       @if (!t.terminal) {
-        <p></p>
-        <label class="field">
-          <span>{{ 'ticket.reply' | translate: i18n.lang() }}</span>
-          <textarea rows="3" [ngModel]="reply()" (ngModelChange)="reply.set($event)"></textarea>
-        </label>
-        <label class="field">
-          <span>{{ 'ticket.visibility' | translate: i18n.lang() }}</span>
-          <!-- Deliberately blank by default. FR-014 has no safe default. -->
-          <select [ngModel]="visibility()" (ngModelChange)="visibility.set($event)">
-            <option value="">{{ 'ticket.chooseVisibility' | translate: i18n.lang() }}</option>
-            <option value="customer">{{ 'ticket.customerVisible' | translate: i18n.lang() }}</option>
-            <option value="internal">{{ 'ticket.internal' | translate: i18n.lang() }}</option>
-          </select>
-        </label>
-        <p></p>
-        <button class="primary" (click)="send()" [disabled]="!reply().trim() || !visibility()">
-          {{ 'action.send' | translate: i18n.lang() }}
-        </button>
+        <div class="mt-4 flex flex-col gap-3 border-t border-surface-200 pt-4">
+          <textarea rows="3" [ngModel]="reply()" (ngModelChange)="reply.set($event)"
+            [placeholder]="'ticket.reply' | translate: i18n.lang()"
+            class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm text-start
+                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25"></textarea>
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Deliberately blank by default — FR-014 has no safe default. -->
+            <select [ngModel]="visibility()" (ngModelChange)="visibility.set($event)"
+              class="rounded-lg border border-surface-300 bg-surface-0 px-3 py-2 text-sm
+                     focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25">
+              <option value="">{{ 'ticket.chooseVisibility' | translate: i18n.lang() }}</option>
+              <option value="customer">{{ 'ticket.customerVisible' | translate: i18n.lang() }}</option>
+              <option value="internal">{{ 'ticket.internal' | translate: i18n.lang() }}</option>
+            </select>
+            <button type="button" [disabled]="!reply().trim() || !visibility() || busy()"
+              class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white
+                     hover:bg-primary-700 disabled:opacity-60 disabled:cursor-default transition-colors"
+              (click)="send()">
+              {{ 'action.send' | translate: i18n.lang() }}
+            </button>
+          </div>
+        </div>
       }
-    </div>
+    </section>
 
-    <div class="card">
-      <h2>{{ 'ticket.history' | translate: i18n.lang() }}</h2>
-      <!-- Constitution II: this is the append-only audit log, read not rebuilt. -->
-      <table class="grid">
-        <thead>
-          <tr>
-            <th>{{ 'history.when' | translate: i18n.lang() }}</th>
-            <th>{{ 'history.action' | translate: i18n.lang() }}</th>
-            <th>{{ 'history.actor' | translate: i18n.lang() }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (h of history(); track $index) {
-            <tr>
-              <td><span class="ltr">{{ h.occurredAt }}</span></td>
-              <td>{{ h.action }}</td>
-              <td><span class="ltr">{{ h.actorRef }}</span></td>
+    <!-- History: the append-only audit log, read not rebuilt (constitution II) -->
+    <section class="rounded-xl border border-surface-200 bg-surface-0 p-4">
+      <h2 class="m-0 mb-3 text-sm font-semibold text-surface-900">
+        {{ 'ticket.history' | translate: i18n.lang() }}
+      </h2>
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse text-sm">
+          <thead>
+            <tr class="border-b border-surface-200 bg-surface-50">
+              <th class="px-3 py-2 text-start font-semibold text-surface-700">{{ 'history.when' | translate: i18n.lang() }}</th>
+              <th class="px-3 py-2 text-start font-semibold text-surface-700">{{ 'history.action' | translate: i18n.lang() }}</th>
+              <th class="px-3 py-2 text-start font-semibold text-surface-700">{{ 'history.actor' | translate: i18n.lang() }}</th>
             </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            @for (h of history(); track $index) {
+              <tr class="border-b border-surface-100 last:border-0">
+                <td class="px-3 py-2"><span class="ltr text-surface-600">{{ h.occurredAt }}</span></td>
+                <td class="px-3 py-2 text-surface-800">{{ h.action }}</td>
+                <td class="px-3 py-2"><span class="ltr text-surface-600">{{ h.actorRef }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
   }
 </div>

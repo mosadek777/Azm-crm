@@ -1,7 +1,7 @@
 {
   "item": [
     {
-      "id": "56bf615d-f6cb-4268-91e3-dd7862c1df86",
+      "id": "35e19065-9bbe-4002-90eb-bed72e9c6542",
       "name": "Auth",
       "description": {
         "content": "",
@@ -9,7 +9,7 @@
       },
       "item": [
         {
-          "id": "b3b57f4f-6eed-43bc-9b5f-0cee1c4a5c84",
+          "id": "318185c4-494f-4be4-bd29-9dd0e9e11422",
           "name": "Local sign-in (spec 010 FR-006, on the provisional local-password path)",
           "request": {
             "name": "Local sign-in (spec 010 FR-006, on the provisional local-password path)",
@@ -39,7 +39,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"qeR8dHOsndWuf@TAiMYIlcndv.zj\",\n  \"password\": \"string\"\n}",
+              "raw": "{\n  \"email\": \"vK4bHOLXuVQV@jRiZFPsjMBlPorWgGMAvDlKrHLq.us\",\n  \"password\": \"string\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -49,7 +49,7 @@
           },
           "response": [
             {
-              "id": "ae71037b-6446-42ae-a1d1-ed4f92b8baea",
+              "id": "4ea726c4-d738-4b40-9aea-99daff432cd6",
               "name": "Signed in",
               "originalRequest": {
                 "url": {
@@ -80,7 +80,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"qeR8dHOsndWuf@TAiMYIlcndv.zj\",\n  \"password\": \"string\"\n}",
+                  "raw": "{\n  \"email\": \"vK4bHOLXuVQV@jRiZFPsjMBlPorWgGMAvDlKrHLq.us\",\n  \"password\": \"string\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -96,12 +96,12 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"token\": \"string\",\n  \"user\": {\n    \"id\": \"string\",\n    \"displayName\": \"string\",\n    \"email\": \"string\",\n    \"defaultLanguage\": \"en\"\n  }\n}",
+              "body": "{\n  \"token\": \"string\",\n  \"user\": {\n    \"id\": \"string\",\n    \"displayName\": \"string\",\n    \"email\": \"string\",\n    \"defaultLanguage\": \"ar\"\n  }\n}",
               "cookie": [],
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "e31a0701-ebf6-403f-b19a-e262717c2395",
+              "id": "8133e6f4-98f8-4ab7-8e0b-9e1991eb2737",
               "name": "Missing email or password",
               "originalRequest": {
                 "url": {
@@ -132,7 +132,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"qeR8dHOsndWuf@TAiMYIlcndv.zj\",\n  \"password\": \"string\"\n}",
+                  "raw": "{\n  \"email\": \"vK4bHOLXuVQV@jRiZFPsjMBlPorWgGMAvDlKrHLq.us\",\n  \"password\": \"string\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -153,7 +153,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "6fa74d5c-44c4-4fe8-8242-3cfe14c26c19",
+              "id": "b24f019e-f6ab-4d53-9e00-4a2c26cd6f6d",
               "name": "Invalid credentials — the same body for a wrong password, an unknown email, or a deactivated account (spec 010 §8 discloses nothing)",
               "originalRequest": {
                 "url": {
@@ -184,7 +184,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"qeR8dHOsndWuf@TAiMYIlcndv.zj\",\n  \"password\": \"string\"\n}",
+                  "raw": "{\n  \"email\": \"vK4bHOLXuVQV@jRiZFPsjMBlPorWgGMAvDlKrHLq.us\",\n  \"password\": \"string\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -230,7 +230,7 @@
       "event": []
     },
     {
-      "id": "b2868085-2e46-4e7d-bc71-1846522e149b",
+      "id": "43a7afb1-f075-4f98-803f-9fc91e17c451",
       "name": "User",
       "description": {
         "content": "",
@@ -238,7 +238,7 @@
       },
       "item": [
         {
-          "id": "03227c91-080b-4da8-b8bd-3a2164706287",
+          "id": "3e63bdbe-8d1b-4a1f-85a0-d31e089224d6",
           "name": "List users within the caller's scope (spec 010 FR-004, AS-01)",
           "request": {
             "name": "List users within the caller's scope (spec 010 FR-004, AS-01)",
@@ -258,7 +258,7 @@
           },
           "response": [
             {
-              "id": "714d5a64-9358-46b5-9e80-ba12f3922898",
+              "id": "a80af975-16c7-4e21-8ead-ea141cab5e1a",
               "name": "Users overlapping the caller's branch and department scope. Out-of-scope users are absent, not marked hidden.",
               "originalRequest": {
                 "url": {
@@ -297,7 +297,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "ef08be49-8c06-455f-9f97-b193ea6f9746",
+              "id": "8421b66e-03a6-4fe9-9b69-03d6c0d092c1",
               "name": "Requires LEAD",
               "originalRequest": {
                 "url": {
@@ -342,7 +342,7 @@
           }
         },
         {
-          "id": "402a99a4-a991-479f-95da-15b26fc2abc3",
+          "id": "66290ca9-4a85-4bf5-9d81-07a9df332d2b",
           "name": "Create a staff user (spec 010 FR-001). Administrator-only — there is no self-registration (E-08).",
           "request": {
             "name": "Create a staff user (spec 010 FR-001). Administrator-only — there is no self-registration (E-08).",
@@ -371,7 +371,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"displayName\": \"string\",\n  \"email\": \"gHGz@PbRlmLWPNjbkCCiPliQMmbT.wup\",\n  \"password\": \"string\",\n  \"defaultLanguage\": \"ar\",\n  \"roles\": [\n    \"AUD\",\n    \"MGR\"\n  ],\n  \"scope\": {\n    \"branchIds\": [\n      \"string\",\n      \"string\"\n    ],\n    \"departmentIds\": [\n      \"string\",\n      \"string\"\n    ]\n  }\n}",
+              "raw": "{\n  \"displayName\": \"string\",\n  \"email\": \"drkV6SMZdaTEwq@KbFCwLByVytQzgqHuqRohH.yi\",\n  \"password\": \"string\",\n  \"defaultLanguage\": \"ar\",\n  \"roles\": [\n    \"ADM\",\n    \"LEAD\"\n  ],\n  \"scope\": {\n    \"branchIds\": [\n      \"string\",\n      \"string\"\n    ],\n    \"departmentIds\": [\n      \"string\",\n      \"string\"\n    ]\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -381,7 +381,7 @@
           },
           "response": [
             {
-              "id": "861f5d45-c344-4041-9761-c99a4a97d64a",
+              "id": "4249473b-0eed-4d62-a840-6cb681308e02",
               "name": "Created",
               "originalRequest": {
                 "url": {
@@ -407,7 +407,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"email\": \"Mc9sgF2tWo@WMp.sozv\",\n  \"password\": \"string\",\n  \"defaultLanguage\": \"ar\",\n  \"roles\": [\n    \"AUD\",\n    \"MGR\"\n  ],\n  \"scope\": {\n    \"branchIds\": [\n      \"string\",\n      \"string\"\n    ],\n    \"departmentIds\": [\n      \"string\",\n      \"string\"\n    ]\n  }\n}",
+                  "raw": "{\n  \"displayName\": \"string\",\n  \"email\": \"sgJUvjO55F6Nn@ytvJpMGTCjQvsKGmwSpIHQpTgDNpTRw.kv\",\n  \"password\": \"string\",\n  \"defaultLanguage\": \"en\",\n  \"roles\": [\n    \"AGT\",\n    \"AUD\"\n  ],\n  \"scope\": {\n    \"branchIds\": [\n      \"string\",\n      \"string\"\n    ],\n    \"departmentIds\": [\n      \"string\",\n      \"string\"\n    ]\n  }\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -428,7 +428,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "0d37be34-d565-4a32-8cab-617e081f90db",
+              "id": "f7bddf38-0276-4084-988b-400f6fba647b",
               "name": "Missing or invalid fields",
               "originalRequest": {
                 "url": {
@@ -458,7 +458,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"email\": \"Mc9sgF2tWo@WMp.sozv\",\n  \"password\": \"string\",\n  \"defaultLanguage\": \"ar\",\n  \"roles\": [\n    \"AUD\",\n    \"MGR\"\n  ],\n  \"scope\": {\n    \"branchIds\": [\n      \"string\",\n      \"string\"\n    ],\n    \"departmentIds\": [\n      \"string\",\n      \"string\"\n    ]\n  }\n}",
+                  "raw": "{\n  \"displayName\": \"string\",\n  \"email\": \"sgJUvjO55F6Nn@ytvJpMGTCjQvsKGmwSpIHQpTgDNpTRw.kv\",\n  \"password\": \"string\",\n  \"defaultLanguage\": \"en\",\n  \"roles\": [\n    \"AGT\",\n    \"AUD\"\n  ],\n  \"scope\": {\n    \"branchIds\": [\n      \"string\",\n      \"string\"\n    ],\n    \"departmentIds\": [\n      \"string\",\n      \"string\"\n    ]\n  }\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -479,7 +479,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "59dc6e5e-c5bb-4c2a-a4bf-931a9f1149b1",
+              "id": "c90946ca-a0e9-4146-9486-6e11fe0b4445",
               "name": "Refused: role is not ADM, or the requested scope exceeds the granter's own (FR-021)",
               "originalRequest": {
                 "url": {
@@ -505,7 +505,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"email\": \"Mc9sgF2tWo@WMp.sozv\",\n  \"password\": \"string\",\n  \"defaultLanguage\": \"ar\",\n  \"roles\": [\n    \"AUD\",\n    \"MGR\"\n  ],\n  \"scope\": {\n    \"branchIds\": [\n      \"string\",\n      \"string\"\n    ],\n    \"departmentIds\": [\n      \"string\",\n      \"string\"\n    ]\n  }\n}",
+                  "raw": "{\n  \"displayName\": \"string\",\n  \"email\": \"sgJUvjO55F6Nn@ytvJpMGTCjQvsKGmwSpIHQpTgDNpTRw.kv\",\n  \"password\": \"string\",\n  \"defaultLanguage\": \"en\",\n  \"roles\": [\n    \"AGT\",\n    \"AUD\"\n  ],\n  \"scope\": {\n    \"branchIds\": [\n      \"string\",\n      \"string\"\n    ],\n    \"departmentIds\": [\n      \"string\",\n      \"string\"\n    ]\n  }\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -532,7 +532,7 @@
           }
         },
         {
-          "id": "a46116d6-20b0-4c33-908d-0f08fd365d2b",
+          "id": "3570b91f-81f3-4221-8a43-a91fcbcc86c7",
           "name": "Deactivate a user (spec 010 FR-001, E-01, E-02)",
           "request": {
             "name": "Deactivate a user (spec 010 FR-001, E-01, E-02)",
@@ -562,7 +562,7 @@
           },
           "response": [
             {
-              "id": "d9bbe605-ad2a-4ed0-bda2-ee09e451f877",
+              "id": "9ce55605-4627-40d2-a8a6-0acb94e3d05b",
               "name": "Deactivated",
               "originalRequest": {
                 "url": {
@@ -611,7 +611,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "0e61c36f-59a5-4aaa-b6b1-27357d249a8f",
+              "id": "5c102a58-7099-4ee7-8505-404adfcfa297",
               "name": "User not found",
               "originalRequest": {
                 "url": {
@@ -660,7 +660,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "ceece02c-51b6-4633-8a6e-e2544c5cbc9f",
+              "id": "05cbbc89-dafe-4f68-98ec-ae865e7eaad2",
               "name": "Refused — last administrator (E-01) or self-deactivation (E-02)",
               "originalRequest": {
                 "url": {
@@ -715,7 +715,7 @@
           }
         },
         {
-          "id": "506fa2bd-eaca-4c9e-88e5-a0536adb75f7",
+          "id": "76696879-8644-475e-9f51-f1ece3f910b2",
           "name": "Reactivate a deactivated user (spec 010 FR-001)",
           "request": {
             "name": "Reactivate a deactivated user (spec 010 FR-001)",
@@ -745,7 +745,7 @@
           },
           "response": [
             {
-              "id": "64704fbc-644e-43ac-8fcd-2201a236c543",
+              "id": "1d373e8b-35da-4d39-971a-63598ceaf312",
               "name": "Reactivated",
               "originalRequest": {
                 "url": {
@@ -794,7 +794,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "873888ca-61e9-4c15-bd3d-cb480553ad62",
+              "id": "845b2fbf-a746-48ae-ad7b-03e5aae61b71",
               "name": "User not found",
               "originalRequest": {
                 "url": {
@@ -852,7 +852,7 @@
       "event": []
     },
     {
-      "id": "93875d91-48a7-4f37-8bfa-85b9cae3a38f",
+      "id": "7533eaf0-db05-4c06-8b5f-551268ef4009",
       "name": "Platform",
       "description": {
         "content": "",
@@ -860,7 +860,7 @@
       },
       "item": [
         {
-          "id": "e7ff387e-7442-4d5b-8b23-2a8cafb3c212",
+          "id": "12306681-7947-4f33-8dca-79fa1e34a6ca",
           "name": "List branches in the caller's scope (spec 012 FR-008)",
           "request": {
             "name": "List branches in the caller's scope (spec 012 FR-008)",
@@ -881,7 +881,7 @@
           },
           "response": [
             {
-              "id": "4d0f95e4-6a40-4d73-867f-c451c2be309d",
+              "id": "7a79c4be-6363-46e1-8747-4a00b3f9f7ca",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -927,7 +927,7 @@
           }
         },
         {
-          "id": "08f6b401-a841-4303-baba-f868ca04b97e",
+          "id": "e10be429-bd84-46ca-82f3-86aff8303fec",
           "name": "Create a branch (spec 012 FR-008, FR-004 bilingual name)",
           "request": {
             "name": "Create a branch (spec 012 FR-008, FR-004 bilingual name)",
@@ -957,7 +957,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  },\n  \"timezone\": \"Africa/Cairo\",\n  \"defaultLocale\": \"en\"\n}",
+              "raw": "{\n  \"name\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  },\n  \"timezone\": \"Africa/Cairo\",\n  \"defaultLocale\": \"ar\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -967,7 +967,7 @@
           },
           "response": [
             {
-              "id": "a5317c89-13a4-4218-a065-2e90d6dde5a0",
+              "id": "c2caa7f5-dd32-4682-93a6-c756c2947168",
               "name": "Created",
               "originalRequest": {
                 "url": {
@@ -994,7 +994,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  },\n  \"timezone\": \"Africa/Cairo\",\n  \"defaultLocale\": \"en\"\n}",
+                  "raw": "{\n  \"name\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  },\n  \"timezone\": \"Africa/Cairo\",\n  \"defaultLocale\": \"ar\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1015,7 +1015,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "eacb1de4-a90f-4da3-9b0c-477b8cb4501a",
+              "id": "55d3ac41-2c77-49a0-af1d-b0ef4ac085c9",
               "name": "A single-language name is refused, not warned (spec 012 AS-02)",
               "originalRequest": {
                 "url": {
@@ -1046,7 +1046,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  },\n  \"timezone\": \"Africa/Cairo\",\n  \"defaultLocale\": \"en\"\n}",
+                  "raw": "{\n  \"name\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  },\n  \"timezone\": \"Africa/Cairo\",\n  \"defaultLocale\": \"ar\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1073,7 +1073,7 @@
           }
         },
         {
-          "id": "78144846-6efd-4457-af63-9116ae183809",
+          "id": "55444cb7-0ff3-4ab0-8bdc-e66179b0426c",
           "name": "List departments in the caller's scope (spec 012 FR-007)",
           "request": {
             "name": "List departments in the caller's scope (spec 012 FR-007)",
@@ -1094,7 +1094,7 @@
           },
           "response": [
             {
-              "id": "65686420-3d37-488e-a66a-e2ac41bd9577",
+              "id": "dc8cb346-7b09-4c5c-ae0a-1cdcb1235f7a",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -1140,7 +1140,7 @@
           }
         },
         {
-          "id": "e3021d32-d222-4a94-b673-f1e689bd00f7",
+          "id": "8feb157d-f122-43d2-a34a-d371bb72a51b",
           "name": "Create a department (spec 012 FR-007). Flat — no nesting (decision 2).",
           "request": {
             "name": "Create a department (spec 012 FR-007). Flat — no nesting (decision 2).",
@@ -1180,7 +1180,7 @@
           },
           "response": [
             {
-              "id": "b3055b28-686d-4c22-b166-08bc083a322d",
+              "id": "5d9f2720-b480-4e4a-898f-f76967f038cf",
               "name": "Created",
               "originalRequest": {
                 "url": {
@@ -1228,7 +1228,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "8f26ab90-d7bb-4070-8bc4-11f0d34fe4ab",
+              "id": "ae79b673-7548-4397-863b-ea8f4c7bf625",
               "name": "Single-language name refused",
               "originalRequest": {
                 "url": {
@@ -1286,7 +1286,7 @@
           }
         },
         {
-          "id": "f22dab5e-8c16-4c72-a975-055ff5d33128",
+          "id": "7f235703-31a3-4a2d-a0b7-6ec0ce92c62f",
           "name": "Get one branch (spec 010 AS-01 — out of scope is 404, never 403)",
           "request": {
             "name": "Get one branch (spec 010 AS-01 — out of scope is 404, never 403)",
@@ -1316,7 +1316,7 @@
           },
           "response": [
             {
-              "id": "f2eca408-31f3-4e53-8d42-7d9a5dc7b76a",
+              "id": "ec618b64-40a0-4530-aef9-d50304749df2",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -1365,7 +1365,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "a4f79984-5e74-43a2-8cd9-7e80027b9cc4",
+              "id": "ce9eed8a-123e-431d-b0e5-d6a07280f3fa",
               "name": "Not found — identical body whether out of scope or genuinely absent",
               "originalRequest": {
                 "url": {
@@ -1423,7 +1423,7 @@
       "event": []
     },
     {
-      "id": "30ccb449-6865-425c-a15e-e02483c46e60",
+      "id": "f9033839-edb7-4e7e-8d44-04577dee6968",
       "name": "Customer",
       "description": {
         "content": "",
@@ -1431,7 +1431,7 @@
       },
       "item": [
         {
-          "id": "4f298d3a-5597-486f-b085-e8b09810ec90",
+          "id": "6fde7c9e-ce6d-4dbf-9c8f-d151ee362e89",
           "name": "Ranked-match customer search (spec 001 FR-002; the single-identity-key question was closed as malformed — see decisions-pending §0 decision 7)",
           "request": {
             "name": "Ranked-match customer search (spec 001 FR-002; the single-identity-key question was closed as malformed — see decisions-pending §0 decision 7)",
@@ -1458,7 +1458,7 @@
           },
           "response": [
             {
-              "id": "6ac09e41-2c33-4f6a-b89d-363fd1f64b1c",
+              "id": "65ebd06b-cf3d-4964-8506-4f8f68699bc0",
               "name": "Results scope-filtered; below 3 characters returns an empty, non-error result (E-13)",
               "originalRequest": {
                 "url": {
@@ -1508,7 +1508,7 @@
           }
         },
         {
-          "id": "35811cf9-73d5-4bb6-b3e1-b302be0806d8",
+          "id": "f90b700a-03e7-42cf-bd2c-ff1077835c3d",
           "name": "Create a customer from a display name and one contact point (spec 001 FR-001, AS-01)",
           "request": {
             "name": "Create a customer from a display name and one contact point (spec 001 FR-001, AS-01)",
@@ -1537,7 +1537,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"displayName\": \"string\",\n  \"contactPoints\": [\n    {\n      \"channelType\": \"phone\",\n      \"value\": \"string\",\n      \"isPrimary\": true\n    },\n    {\n      \"channelType\": \"whatsapp\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    }\n  ],\n  \"type\": \"person\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"organisationId\": \"string\",\n  \"confirmCollision\": true\n}",
+              "raw": "{\n  \"displayName\": \"string\",\n  \"contactPoints\": [\n    {\n      \"channelType\": \"whatsapp\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    },\n    {\n      \"channelType\": \"whatsapp\",\n      \"value\": \"string\",\n      \"isPrimary\": true\n    }\n  ],\n  \"type\": \"person\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"en\",\n  \"organisationId\": \"string\",\n  \"confirmCollision\": false\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1547,7 +1547,7 @@
           },
           "response": [
             {
-              "id": "2e027c3d-8a4d-42d0-9512-b98336aa6782",
+              "id": "4ce5fd40-c767-4f7a-9d3e-6db5afd27f0e",
               "name": "Created",
               "originalRequest": {
                 "url": {
@@ -1573,7 +1573,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"contactPoints\": [\n    {\n      \"channelType\": \"whatsapp\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    },\n    {\n      \"channelType\": \"phone\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    }\n  ],\n  \"type\": \"person\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"organisationId\": \"string\",\n  \"confirmCollision\": true\n}",
+                  "raw": "{\n  \"displayName\": \"string\",\n  \"contactPoints\": [\n    {\n      \"channelType\": \"email\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    },\n    {\n      \"channelType\": \"phone\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    }\n  ],\n  \"type\": \"person\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"organisationId\": \"string\",\n  \"confirmCollision\": true\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1594,7 +1594,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "12bf5523-3a9d-4344-a8d8-8dfdd09f09c1",
+              "id": "2d6d95b5-af83-4db5-87b7-515eba725eb8",
               "name": "Missing or invalid fields",
               "originalRequest": {
                 "url": {
@@ -1624,7 +1624,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"contactPoints\": [\n    {\n      \"channelType\": \"whatsapp\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    },\n    {\n      \"channelType\": \"phone\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    }\n  ],\n  \"type\": \"person\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"organisationId\": \"string\",\n  \"confirmCollision\": true\n}",
+                  "raw": "{\n  \"displayName\": \"string\",\n  \"contactPoints\": [\n    {\n      \"channelType\": \"email\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    },\n    {\n      \"channelType\": \"phone\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    }\n  ],\n  \"type\": \"person\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"organisationId\": \"string\",\n  \"confirmCollision\": true\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1645,7 +1645,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "58f2d5eb-cf27-407d-bf96-5f44ff6290ae",
+              "id": "ddb46643-d6a8-4f90-bfe3-6c92ed653cc0",
               "name": "organisationId does not resolve to a visible organisation",
               "originalRequest": {
                 "url": {
@@ -1671,7 +1671,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"contactPoints\": [\n    {\n      \"channelType\": \"whatsapp\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    },\n    {\n      \"channelType\": \"phone\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    }\n  ],\n  \"type\": \"person\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"organisationId\": \"string\",\n  \"confirmCollision\": true\n}",
+                  "raw": "{\n  \"displayName\": \"string\",\n  \"contactPoints\": [\n    {\n      \"channelType\": \"email\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    },\n    {\n      \"channelType\": \"phone\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    }\n  ],\n  \"type\": \"person\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"organisationId\": \"string\",\n  \"confirmCollision\": true\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1692,7 +1692,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "7b552c09-5032-4bb4-82f8-6499c0383527",
+              "id": "02233e49-b0a5-4695-9c00-55477d6ce2d8",
               "name": "A matching customer already exists (FR-010, AS-04). Not blocked — resend with confirmCollision true.",
               "originalRequest": {
                 "url": {
@@ -1722,7 +1722,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"contactPoints\": [\n    {\n      \"channelType\": \"whatsapp\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    },\n    {\n      \"channelType\": \"phone\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    }\n  ],\n  \"type\": \"person\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"organisationId\": \"string\",\n  \"confirmCollision\": true\n}",
+                  "raw": "{\n  \"displayName\": \"string\",\n  \"contactPoints\": [\n    {\n      \"channelType\": \"email\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    },\n    {\n      \"channelType\": \"phone\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    }\n  ],\n  \"type\": \"person\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"organisationId\": \"string\",\n  \"confirmCollision\": true\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1738,7 +1738,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"outOfScopeMatches\": 3268\n}",
+              "body": "{\n  \"outOfScopeMatches\": 4740\n}",
               "cookie": [],
               "_postman_previewlanguage": "json"
             }
@@ -1749,7 +1749,7 @@
           }
         },
         {
-          "id": "71f35598-19d0-485b-b92f-885bae978d33",
+          "id": "0d9491dd-21c9-4405-a0d6-aabf991082b6",
           "name": "Get one customer (spec 001 FR-003, AS-03 — out of scope is 404, never 403)",
           "request": {
             "name": "Get one customer (spec 001 FR-003, AS-03 — out of scope is 404, never 403)",
@@ -1778,7 +1778,7 @@
           },
           "response": [
             {
-              "id": "64ab2493-3f7b-4543-aa6d-57ab6a0f524c",
+              "id": "98f2a01c-8ff3-44a0-afab-d87f630f2d30",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -1826,7 +1826,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "9ab30d74-2004-4f8a-8a0d-df8bc6dea7eb",
+              "id": "f836004a-7b48-4680-8ce4-e5b1f8cefd7f",
               "name": "Not found — identical whether out of scope or genuinely absent",
               "originalRequest": {
                 "url": {
@@ -1880,7 +1880,7 @@
           }
         },
         {
-          "id": "57893240-ede6-4a85-87be-390d3bfb31b6",
+          "id": "abdfeb4f-97ce-4cc4-877a-4b584c736e0e",
           "name": "Edit customer fields (spec 001 FR-020 — one audit entry per changed field)",
           "request": {
             "name": "Edit customer fields (spec 001 FR-020 — one audit entry per changed field)",
@@ -1914,7 +1914,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"displayName\": \"string\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"preferredChannel\": \"whatsapp\",\n  \"sensitiveFlag\": false\n}",
+              "raw": "{\n  \"displayName\": \"string\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"preferredChannel\": \"email\",\n  \"sensitiveFlag\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1924,7 +1924,7 @@
           },
           "response": [
             {
-              "id": "bc1835f2-9080-48b0-91b5-be535850fe68",
+              "id": "41e43f73-064a-4f39-bacf-8f32fa301edc",
               "name": "Updated",
               "originalRequest": {
                 "url": {
@@ -1959,7 +1959,7 @@
                 "method": "PATCH",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"preferredChannel\": \"whatsapp\",\n  \"sensitiveFlag\": false\n}",
+                  "raw": "{\n  \"displayName\": \"string\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"preferredChannel\": \"email\",\n  \"sensitiveFlag\": true\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1980,7 +1980,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "81de6aae-63e5-413e-b2be-2616a5b0bf5d",
+              "id": "803e86ac-a869-4fce-8539-2050571ef9ab",
               "name": "No changes supplied",
               "originalRequest": {
                 "url": {
@@ -2015,7 +2015,7 @@
                 "method": "PATCH",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"preferredChannel\": \"whatsapp\",\n  \"sensitiveFlag\": false\n}",
+                  "raw": "{\n  \"displayName\": \"string\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"preferredChannel\": \"email\",\n  \"sensitiveFlag\": true\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -2036,7 +2036,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "d4159e4b-a93d-4cde-b726-757bf1a73f83",
+              "id": "db4ccc60-5323-42c3-977a-875b77215bb9",
               "name": "Not found",
               "originalRequest": {
                 "url": {
@@ -2071,7 +2071,7 @@
                 "method": "PATCH",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"preferredChannel\": \"whatsapp\",\n  \"sensitiveFlag\": false\n}",
+                  "raw": "{\n  \"displayName\": \"string\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"preferredChannel\": \"email\",\n  \"sensitiveFlag\": true\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -2101,7 +2101,7 @@
       "event": []
     },
     {
-      "id": "ce073093-9436-4806-a3f5-53a797ae5587",
+      "id": "0721277c-c0ac-4666-89f6-366402bc78b4",
       "name": "Ticket",
       "description": {
         "content": "",
@@ -2109,7 +2109,7 @@
       },
       "item": [
         {
-          "id": "54120405-5e5d-4c7a-88e0-a7974b6e5cf5",
+          "id": "7d64d5a7-7567-443b-9743-66c3a61d32d8",
           "name": "The ratified status set and transition graph (spec 002 FR-008; decisions 14, 15, 22). Clients read this rather than holding their own copy.",
           "request": {
             "name": "The ratified status set and transition graph (spec 002 FR-008; decisions 14, 15, 22). Clients read this rather than holding their own copy.",
@@ -2136,7 +2136,7 @@
           },
           "response": [
             {
-              "id": "b0a3c50a-4b04-44ee-a7b8-c4060a5c986e",
+              "id": "4234c228-059e-4161-8129-891d67cec87c",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -2175,7 +2175,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"statuses\": [\n    {\n      \"key\": \"string\",\n      \"pausesSla\": true,\n      \"terminal\": true\n    },\n    {\n      \"key\": \"string\",\n      \"pausesSla\": false,\n      \"terminal\": true\n    }\n  ],\n  \"priorities\": [\n    \"string\",\n    \"string\"\n  ],\n  \"transitions\": {}\n}",
+              "body": "{\n  \"statuses\": [\n    {\n      \"key\": \"string\",\n      \"pausesSla\": false,\n      \"terminal\": false\n    },\n    {\n      \"key\": \"string\",\n      \"pausesSla\": true,\n      \"terminal\": false\n    }\n  ],\n  \"priorities\": [\n    \"string\",\n    \"string\"\n  ],\n  \"transitions\": {}\n}",
               "cookie": [],
               "_postman_previewlanguage": "json"
             }
@@ -2186,7 +2186,7 @@
           }
         },
         {
-          "id": "bc12ec0f-d47d-4c6f-afef-278e260c293f",
+          "id": "a729485b-518a-4140-a597-86c6ab05d58e",
           "name": "List tickets, scope-filtered (spec 002 FR-033, AS-01)",
           "request": {
             "name": "List tickets, scope-filtered (spec 002 FR-033, AS-01)",
@@ -2260,7 +2260,7 @@
           },
           "response": [
             {
-              "id": "56b47a8b-68a1-467a-8573-6a9adecb31ca",
+              "id": "250eeae4-7311-42eb-a952-0806e7d62956",
               "name": "Out-of-scope tickets are absent from the list AND the count (AS-01)",
               "originalRequest": {
                 "url": {
@@ -2346,7 +2346,7 @@
           }
         },
         {
-          "id": "eb3af7d8-490d-49c5-9daf-8a97e6a5e322",
+          "id": "9cc272f3-2427-41f7-a4ea-fdca59664d45",
           "name": "Create a ticket (spec 002 FR-001, AS-01)",
           "request": {
             "name": "Create a ticket (spec 002 FR-001, AS-01)",
@@ -2375,7 +2375,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"customerId\": \"string\",\n  \"subject\": \"string\",\n  \"description\": \"string\",\n  \"category\": \"string\",\n  \"priority\": \"normal\",\n  \"tags\": [\n    \"string\",\n    \"string\"\n  ]\n}",
+              "raw": "{\n  \"customerId\": \"string\",\n  \"subject\": \"string\",\n  \"description\": \"string\",\n  \"category\": \"string\",\n  \"priority\": \"low\",\n  \"tags\": [\n    \"string\",\n    \"string\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2385,7 +2385,7 @@
           },
           "response": [
             {
-              "id": "d2696294-3271-4d6f-8b36-599336bfc89c",
+              "id": "571f5ec6-b6bd-417b-9ac0-856520c6e897",
               "name": "Created. Reference format TKT-YYYY-NNNNN (decision 11), status \"new\", prioritySource \"manual\".",
               "originalRequest": {
                 "url": {
@@ -2411,7 +2411,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"customerId\": \"string\",\n  \"subject\": \"string\",\n  \"description\": \"string\",\n  \"category\": \"string\",\n  \"priority\": \"urgent\",\n  \"tags\": [\n    \"string\",\n    \"string\"\n  ]\n}",
+                  "raw": "{\n  \"customerId\": \"string\",\n  \"subject\": \"string\",\n  \"description\": \"string\",\n  \"category\": \"string\",\n  \"priority\": \"low\",\n  \"tags\": [\n    \"string\",\n    \"string\"\n  ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -2432,7 +2432,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "9d099134-a1f3-4d6c-b96b-6089867f3a70",
+              "id": "27972465-386e-4fad-a317-5a6c52aadea6",
               "name": "Missing or invalid fields",
               "originalRequest": {
                 "url": {
@@ -2462,7 +2462,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"customerId\": \"string\",\n  \"subject\": \"string\",\n  \"description\": \"string\",\n  \"category\": \"string\",\n  \"priority\": \"urgent\",\n  \"tags\": [\n    \"string\",\n    \"string\"\n  ]\n}",
+                  "raw": "{\n  \"customerId\": \"string\",\n  \"subject\": \"string\",\n  \"description\": \"string\",\n  \"category\": \"string\",\n  \"priority\": \"low\",\n  \"tags\": [\n    \"string\",\n    \"string\"\n  ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -2483,7 +2483,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "3bc121a4-a1e9-4a0e-b62f-d757c1148378",
+              "id": "1453f0dd-9857-418b-9ede-f8a0c833b866",
               "name": "Customer not found or out of scope",
               "originalRequest": {
                 "url": {
@@ -2509,7 +2509,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"customerId\": \"string\",\n  \"subject\": \"string\",\n  \"description\": \"string\",\n  \"category\": \"string\",\n  \"priority\": \"urgent\",\n  \"tags\": [\n    \"string\",\n    \"string\"\n  ]\n}",
+                  "raw": "{\n  \"customerId\": \"string\",\n  \"subject\": \"string\",\n  \"description\": \"string\",\n  \"category\": \"string\",\n  \"priority\": \"low\",\n  \"tags\": [\n    \"string\",\n    \"string\"\n  ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -2536,7 +2536,7 @@
           }
         },
         {
-          "id": "5b7b2d89-c34c-4384-a2a0-2c729b98296c",
+          "id": "df3781d5-6fbc-4a41-be93-f8a7f0059581",
           "name": "Ticket detail — thread, history, reachable transitions (spec 002 FR-013, AS-15; constitution II)",
           "request": {
             "name": "Ticket detail — thread, history, reachable transitions (spec 002 FR-013, AS-15; constitution II)",
@@ -2571,7 +2571,7 @@
           },
           "response": [
             {
-              "id": "602efc82-bfe5-4864-830a-9e7365855a29",
+              "id": "deb8a88e-ce8f-4ade-8b52-31e6117fbb2b",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -2623,7 +2623,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "fdd181f9-4277-4d82-a305-10acce822510",
+              "id": "5f04132f-0b33-444a-894c-1a0445c839d1",
               "name": "Not found — identical whether out of scope or genuinely absent (AS-01)",
               "originalRequest": {
                 "url": {
@@ -2677,7 +2677,7 @@
           }
         },
         {
-          "id": "dc7bba2b-4f96-459f-a419-a302cfbbd8bc",
+          "id": "e5eeb24a-953b-4afe-9cb4-78d091fe185f",
           "name": "Assign, reassign or unassign (spec 002 FR-009, FR-010, AS-06). Team is dropped — assignment is directly to an agent (decision 20).",
           "request": {
             "name": "Assign, reassign or unassign (spec 002 FR-009, FR-010, AS-06). Team is dropped — assignment is directly to an agent (decision 20).",
@@ -2722,7 +2722,7 @@
           },
           "response": [
             {
-              "id": "4a600a0c-f6d9-40b1-95fa-e08f45e18f92",
+              "id": "37c91f55-7f2e-461f-860a-8070b8dd0670",
               "name": "Assigned",
               "originalRequest": {
                 "url": {
@@ -2779,7 +2779,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "d0a8b6d3-07bf-4940-b108-b860d3ee977e",
+              "id": "c43ed60e-be14-47b0-8f23-6a394e39eb81",
               "name": "Reason missing",
               "originalRequest": {
                 "url": {
@@ -2836,7 +2836,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "12f9a4c1-c761-49ec-bb67-6c85710f97d4",
+              "id": "760e9588-7d0e-4cf9-9669-e9d1ecfff4e0",
               "name": "Reassigning another agent's ticket requires LEAD or above (§9)",
               "originalRequest": {
                 "url": {
@@ -2893,7 +2893,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "254ee8b0-0128-4ae5-a047-107bdc97b3d9",
+              "id": "a748d1eb-c4cb-4304-b2ec-ad064ec826cf",
               "name": "Ticket or target agent not found",
               "originalRequest": {
                 "url": {
@@ -2950,7 +2950,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "484aebaf-7df9-40ea-ad41-193d321c5c2f",
+              "id": "22af3b30-f625-4cd5-96d5-c116e63ab2d0",
               "name": "Terminal ticket accepts no assignment, or the target agent is not scoped to this ticket",
               "originalRequest": {
                 "url": {
@@ -3013,7 +3013,7 @@
           }
         },
         {
-          "id": "285549a8-13bb-4513-b459-25fb592bb870",
+          "id": "d30e7f18-1a36-4745-a569-a35efb1878c1",
           "name": "Transition status (spec 002 FR-007, FR-008, AS-03). Undefined transitions are refused with the reachable set named, and write no history entry.",
           "request": {
             "name": "Transition status (spec 002 FR-007, FR-008, AS-03). Undefined transitions are refused with the reachable set named, and write no history entry.",
@@ -3052,7 +3052,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"pending_supplier\",\n  \"reason\": \"string\",\n  \"followUpAt\": \"1981-07-26T21:59:51.048Z\"\n}",
+              "raw": "{\n  \"status\": \"resolved\",\n  \"reason\": \"string\",\n  \"followUpAt\": \"1980-07-20T17:13:29.080Z\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3062,7 +3062,7 @@
           },
           "response": [
             {
-              "id": "9d361f49-7e7c-43c9-92d5-e6d619a8a349",
+              "id": "718645a6-3342-43c0-95ec-d9d8d4981376",
               "name": "Transitioned",
               "originalRequest": {
                 "url": {
@@ -3098,7 +3098,7 @@
                 "method": "PATCH",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"status\": \"pending_supplier\",\n  \"reason\": \"string\",\n  \"followUpAt\": \"1981-07-26T21:59:51.048Z\"\n}",
+                  "raw": "{\n  \"status\": \"resolved\",\n  \"reason\": \"string\",\n  \"followUpAt\": \"1980-07-20T17:13:29.080Z\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -3119,7 +3119,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "c348b3a3-6217-48ec-9f1c-3e052c9ab162",
+              "id": "383fc041-d619-4c7d-a1c1-6f3814d16f27",
               "name": "Unknown status",
               "originalRequest": {
                 "url": {
@@ -3155,7 +3155,7 @@
                 "method": "PATCH",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"status\": \"pending_supplier\",\n  \"reason\": \"string\",\n  \"followUpAt\": \"1981-07-26T21:59:51.048Z\"\n}",
+                  "raw": "{\n  \"status\": \"resolved\",\n  \"reason\": \"string\",\n  \"followUpAt\": \"1980-07-20T17:13:29.080Z\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -3176,7 +3176,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "f667ef8f-f925-4c88-8b3d-21e7b3dd6b11",
+              "id": "11202d75-0b88-4e96-be1d-6d8b41199fe9",
               "name": "Not found",
               "originalRequest": {
                 "url": {
@@ -3212,7 +3212,7 @@
                 "method": "PATCH",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"status\": \"pending_supplier\",\n  \"reason\": \"string\",\n  \"followUpAt\": \"1981-07-26T21:59:51.048Z\"\n}",
+                  "raw": "{\n  \"status\": \"resolved\",\n  \"reason\": \"string\",\n  \"followUpAt\": \"1980-07-20T17:13:29.080Z\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -3233,7 +3233,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "3115499e-8a8a-49a4-b1b7-9f165e8c5ced",
+              "id": "f95fd997-1e48-4727-bfbd-1dccbe342f8d",
               "name": "Already in that status, or the transition is not defined (AS-03)",
               "originalRequest": {
                 "url": {
@@ -3273,7 +3273,7 @@
                 "method": "PATCH",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"status\": \"pending_supplier\",\n  \"reason\": \"string\",\n  \"followUpAt\": \"1981-07-26T21:59:51.048Z\"\n}",
+                  "raw": "{\n  \"status\": \"resolved\",\n  \"reason\": \"string\",\n  \"followUpAt\": \"1980-07-20T17:13:29.080Z\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -3300,7 +3300,7 @@
           }
         },
         {
-          "id": "73bde3cc-2fe5-4fd7-88a6-5cb700bbea74",
+          "id": "4d407bd6-410f-461f-9d02-af904660c37a",
           "name": "Add a reply or internal note (spec 002 FR-014, AS-07). AUD is read-only; visibility has no default.",
           "request": {
             "name": "Add a reply or internal note (spec 002 FR-014, AS-07). AUD is read-only; visibility has no default.",
@@ -3335,7 +3335,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"body\": \"string\",\n  \"visibility\": \"customer\"\n}",
+              "raw": "{\n  \"body\": \"string\",\n  \"visibility\": \"internal\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3345,7 +3345,7 @@
           },
           "response": [
             {
-              "id": "34c114df-965d-46b9-8c5b-a6549f39b321",
+              "id": "1ec9c840-06cc-4288-b402-00b0147c521e",
               "name": "Added",
               "originalRequest": {
                 "url": {
@@ -3381,7 +3381,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"body\": \"string\",\n  \"visibility\": \"customer\"\n}",
+                  "raw": "{\n  \"body\": \"string\",\n  \"visibility\": \"internal\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -3402,7 +3402,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "ed837051-0089-464e-adb3-f37b072220c8",
+              "id": "a411cf1c-a2ed-49a6-b394-de661355c981",
               "name": "Body or visibility missing",
               "originalRequest": {
                 "url": {
@@ -3438,7 +3438,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"body\": \"string\",\n  \"visibility\": \"customer\"\n}",
+                  "raw": "{\n  \"body\": \"string\",\n  \"visibility\": \"internal\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -3459,7 +3459,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "45262b34-6eef-49fe-9e0c-65ca80631e3f",
+              "id": "909c7ef1-7e81-4dae-bda5-459bc6ac0d06",
               "name": "Requires AGT",
               "originalRequest": {
                 "url": {
@@ -3495,7 +3495,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"body\": \"string\",\n  \"visibility\": \"customer\"\n}",
+                  "raw": "{\n  \"body\": \"string\",\n  \"visibility\": \"internal\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -3516,7 +3516,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "e6c9e5a3-3709-456e-9283-8ec71dbe28b3",
+              "id": "8c780c3b-f5e4-494b-995a-9b1a8e88051e",
               "name": "Not found",
               "originalRequest": {
                 "url": {
@@ -3552,7 +3552,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"body\": \"string\",\n  \"visibility\": \"customer\"\n}",
+                  "raw": "{\n  \"body\": \"string\",\n  \"visibility\": \"internal\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -3573,7 +3573,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "0f82949c-fbf7-4754-9a8e-fdcb5d989858",
+              "id": "4b586362-d8e9-4cf4-a991-522be9ebcb83",
               "name": "Terminal ticket accepts no reply",
               "originalRequest": {
                 "url": {
@@ -3609,7 +3609,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"body\": \"string\",\n  \"visibility\": \"customer\"\n}",
+                  "raw": "{\n  \"body\": \"string\",\n  \"visibility\": \"internal\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -3658,7 +3658,7 @@
     ]
   },
   "info": {
-    "_postman_id": "bd7efab2-afb1-42ea-b6a9-4f6861c127bd",
+    "_postman_id": "8156803b-7c1a-46b0-997d-83def0d09633",
     "name": "azm-crm API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "description": "Generated from docs/openapi.json by npm run docs:postman. Re-run docs:build then docs:postman after adding a @swagger block — this file is not hand-edited."

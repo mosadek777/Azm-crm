@@ -3,7 +3,7 @@
 import express from 'express'
 import cors from 'cors'
 import swaggerUi from 'swagger-ui-express'
-import { openapiSpec } from './docs/openapi.js'
+import { openapiSpec } from './utils/swagger.js'
 import authcontroller from "./modules/auth/auth.controller.js"
 import usercontroller from "./modules/user/user.controller.js"
 import platformcontroller from "./modules/platform/platform.controller.js"

@@ -3,9 +3,10 @@
 The session-start briefing. Read this instead of the constitution and all
 thirteen specs. Updated at the end of every step.
 
-**Last updated:** 2026-09-07 · **after:** step 4 (customers + tickets),
-Angular UI, ClickUp sync, API docs, first GitHub push — 23 ratified decisions,
-constitution 0.4.0
+**Last updated:** 2026-09-08 · **after:** the eight-phase build pass — design
+system (Tailwind only, PrimeNG removed), customer and ticket screens, demo
+seed, API documentation, ClickUp board restructured into a tree, GitHub Pages
+— 25 ratified decisions, constitution 0.4.0
 
 ---
 
@@ -42,9 +43,13 @@ see `trace.md`.
 
 Not blocked by a marker; simply not attempted in this pass. Each has one
 top-level ClickUp task under list `901525782663`, workspace `90152504892`,
-tagged `backend`/`frontend`, with a one-line note on what would need answering
-first. Run `node tools/sync-clickup.js` after changing `tools/tasks.json` —
-idempotent, updates existing tasks rather than duplicating.
+tagged `backend`/`frontend`, carrying a **Blocked by** line naming what would
+have to be answered first. The board is now a tree — 19 top-level tasks, 41
+subtasks — mirroring `tools/tasks.json`. Run `node tools/sync-clickup.js` after
+changing that file: it is idempotent (a second run creates zero) and updates
+existing tasks rather than duplicating. It only ever writes, so a status changed
+by hand in ClickUp is reverted on the next run — the file is the source of
+truth, the board is its rendering.
 
 | Module | Blocked on |
 |---|---|
@@ -92,19 +97,32 @@ grep -rEn '^- \[ \] .\[CLARIFY-[0-9]' specs/ | wc -l    # the gate
 | Ticket | `002 FR-001`, `FR-002`, `FR-007`–`FR-010`, `FR-013`, `FR-014`, `FR-021`, `FR-033`, `FR-034`, `AS-01`, `AS-03`, `AS-05`–`AS-07`, `E-11`, `E-12`, `E-16` — deviations: no Team (decision 20), flat category (decision 21) |
 | API docs | `/api-docs` (Swagger UI), `docs/openapi.json`, Postman collection + environment with auto-token-save on login |
 
-**Frontend** — Angular 22, standalone, SCSS, runtime language switching, five
-screens: customer list/detail, ticket list/detail/create.
+**Frontend** — Angular 22, standalone, signals, **Tailwind v4 only** (no
+component library — decision 24), runtime language switching, six screens:
+login, customer list/detail/create, ticket list/detail/create. Every component
+is hand-rolled and **none has had an accessibility or RTL keyboard audit** —
+see `next-steps.md` §5.
 
 **Verification:** 46-check customer+ticket acceptance suite · 23/23 platform
-suite · 6/6 frontend tests · `npm run audit:reconcile` clean, including
-`Ticket`/`Message` coverage (added after the same false-clean trap recurred).
+suite · `npm run audit:reconcile` clean, including `Ticket`/`Message` coverage
+(added after the same false-clean trap recurred) · `ng build` clean · login,
+customer and ticket screens screenshotted in both languages. The acceptance
+suites are **not idempotent** — they must be preceded by a database drop and
+re-seed. They also live outside the repository, so there is still no automated
+safety net; the frontend has no tests beyond the Angular default.
 
 ```bash
 # backend/          npm run seed:admin (once) · npm run dev · npm run audit:reconcile
 # backend/          npm run docs:build · npm run docs:postman
-# frontend/         npm start · npm test
-# tools/            node sync-clickup.js   — idempotent, see tasks.json
+# backend/          npm run seed:demo   (needs DEMO_AGENT_PASSWORD) · npm run seed:demo:clear
+# frontend/         npm start · npm test · npx ng build
+# repo root/        node tools/sync-clickup.js   — idempotent, see tools/tasks.json
 ```
+
+**Published documentation:** https://mosadek777.github.io/Azm-crm/ — GitHub
+Pages serving `docs/index.html` (Swagger UI) over `docs/openapi.json`, from
+`main` / `docs`. Regenerate with `npm run docs:build` and commit; there is no
+build step on the Pages side.
 
 Break-glass administrator credentials are in `backend/.env`
 (`BREAKGLASS_EMAIL`, `BREAKGLASS_PASSWORD`), which is gitignored. **No

@@ -345,8 +345,37 @@ export const searchCustomers = async (req, res, next) => {
 
     // E-13: "Search term is a single character or empty — No search runs; no
     // error." FR-002 sets the floor at 3 characters.
+    //
+    // BROWSE, an addition beyond spec 001 §11, flagged as such. §11 contracts
+    // a `search customers` operation and a `get customer` operation, and no
+    // browse-all — but a list screen has to show something before the user has
+    // typed anything, and offering an empty grid until they guess a search term
+    // is worse than useless. So an empty term returns a scope-filtered PAGE
+    // rather than running a search: `searched` stays false, honouring E-13's
+    // "no search runs; no error", and constitution IV is untouched because the
+    // same scopeFilter applies.
     if (term.length < 3) {
-      return res.json({ customers: [], searched: false, minimumLength: 3 })
+      const browsePage = Math.max(1, Number(req.query.page) || 1)
+      const browseLimit = Math.min(100, Math.max(1, Number(req.query.limit) || 25))
+      const browseFilter = { ...scopeFilter(req.assignments), status: 'active' }
+
+      const [rows, total] = await Promise.all([
+        Customer.find(browseFilter)
+          .sort({ createdAt: -1 })
+          .skip((browsePage - 1) * browseLimit)
+          .limit(browseLimit),
+        Customer.countDocuments(browseFilter)
+      ])
+
+      return res.json({
+        customers: rows.map(r => redact(r)),
+        searched: false,
+        browsed: true,
+        minimumLength: 3,
+        page: browsePage,
+        limit: browseLimit,
+        total
+      })
     }
 
     const scoped = scopeFilter(req.assignments)

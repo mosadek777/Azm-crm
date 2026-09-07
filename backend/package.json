@@ -10,7 +10,9 @@
     "seed:admin": "node src/utils/seed-admin.js",
     "audit:reconcile": "node src/utils/reconcile-audit.js",
     "docs:build": "node src/docs/build-openapi.js",
-    "docs:postman": "node src/docs/build-postman.js"
+    "docs:postman": "node src/docs/build-postman.js",
+    "seed:demo": "node src/utils/seed-demo.js",
+    "seed:demo:clear": "node src/utils/seed-demo-clear.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

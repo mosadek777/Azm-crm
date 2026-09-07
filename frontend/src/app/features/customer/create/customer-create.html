@@ -1,0 +1,185 @@
+<div class="mx-auto flex max-w-2xl flex-col gap-5">
+
+  <h1 class="m-0 text-xl font-semibold tracking-tight text-surface-900">
+    {{ 'customer.new' | translate: i18n.lang() }}
+  </h1>
+
+  @if (refusal(); as message) {
+    <p class="m-0 rounded-lg border-s-4 px-3 py-2 text-sm"
+       [class]="collisionPrompt()
+         ? 'border-amber-500 bg-amber-50 text-amber-900'
+         : 'border-red-600 bg-red-50 text-red-800'"
+       role="alert">
+      {{ message[i18n.lang()] }}
+      @if (fields().length) {
+        <span class="ms-1 opacity-70">({{ fields().join(', ') }})</span>
+      }
+    </p>
+  }
+
+  <!-- FR-010 / AS-04: the existing customer is shown BEFORE the record is
+       saved, the agent may open it, and creating anyway is an explicit act. -->
+  @if (collisionPrompt()) {
+    <div class="rounded-xl border border-amber-300 bg-amber-50/60 p-4">
+      <h2 class="m-0 mb-2 text-sm font-semibold text-amber-900">
+        {{ 'customer.existingMatches' | translate: i18n.lang() }}
+      </h2>
+
+      <ul class="m-0 mb-3 flex list-none flex-col gap-1 p-0">
+        @for (m of matches(); track m.id) {
+          <li class="flex items-center gap-2 text-sm">
+            <button type="button"
+              class="font-medium text-primary-700 underline hover:text-primary-800"
+              (click)="openMatch(m.id)">{{ m.displayName }}</button>
+            <span class="rounded-full bg-surface-100 px-2 py-0.5 text-xs text-surface-600">
+              {{ m.matchedOn }}
+            </span>
+          </li>
+        }
+      </ul>
+
+      <!-- An out-of-scope collision is reported as a count and never named:
+           naming it would disclose that a record exists outside the caller's
+           scope (spec 010 §8). -->
+      @if (outOfScopeMatches() > 0) {
+        <p class="m-0 mb-3 text-sm text-amber-800">
+          <span class="ltr">{{ outOfScopeMatches() }}</span>
+          {{ 'customer.outOfScopeMatches' | translate: i18n.lang() }}
+        </p>
+      }
+
+      <div class="flex flex-wrap gap-2">
+        <button type="button"
+          class="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white
+                 hover:bg-amber-700 transition-colors"
+          [disabled]="busy()"
+          (click)="submit(true)">
+          {{ 'customer.createAnyway' | translate: i18n.lang() }}
+        </button>
+        <button type="button"
+          class="rounded-lg border border-surface-300 bg-surface-0 px-4 py-2 text-sm
+                 font-medium text-surface-700 hover:bg-surface-100 transition-colors"
+          (click)="collisionPrompt.set(false)">
+          {{ 'action.cancel' | translate: i18n.lang() }}
+        </button>
+      </div>
+    </div>
+  }
+
+  <form class="flex flex-col gap-5 rounded-xl border border-surface-200 bg-surface-0 p-6"
+        (ngSubmit)="submit(false)">
+
+    <label class="flex flex-col gap-1.5">
+      <span class="text-sm font-medium text-surface-700">
+        {{ 'customer.name' | translate: i18n.lang() }}
+      </span>
+      <!-- User-authored: single language, free script, NOT a localised value
+           (spec 001 §8 — stored as entered, no transliteration). -->
+      <input
+        name="displayName"
+        required
+        minlength="2"
+        maxlength="200"
+        [ngModel]="displayName()"
+        (ngModelChange)="displayName.set($event)"
+        class="w-full rounded-lg border border-surface-300 px-3 py-2 text-start
+               focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25" />
+    </label>
+
+    <div class="grid gap-5 sm:grid-cols-2">
+      <label class="flex flex-col gap-1.5">
+        <span class="text-sm font-medium text-surface-700">
+          {{ 'customer.type' | translate: i18n.lang() }}
+        </span>
+        <select
+          name="type"
+          [ngModel]="type()"
+          (ngModelChange)="type.set($event)"
+          class="w-full rounded-lg border border-surface-300 bg-surface-0 px-3 py-2
+                 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25">
+          <option value="person">{{ 'customer.person' | translate: i18n.lang() }}</option>
+          <option value="organisation">{{ 'customer.organisationType' | translate: i18n.lang() }}</option>
+        </select>
+      </label>
+
+      <label class="flex flex-col gap-1.5">
+        <span class="text-sm font-medium text-surface-700">
+          {{ 'customer.preferredLanguage' | translate: i18n.lang() }}
+        </span>
+        <select
+          name="preferredLanguage"
+          [ngModel]="preferredLanguage()"
+          (ngModelChange)="preferredLanguage.set($event)"
+          class="w-full rounded-lg border border-surface-300 bg-surface-0 px-3 py-2
+                 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25">
+          <option value="ar">العربية</option>
+          <option value="en">English</option>
+        </select>
+      </label>
+    </div>
+
+    <label class="flex flex-col gap-1.5">
+      <span class="text-sm font-medium text-surface-700">
+        {{ 'customer.nationalId' | translate: i18n.lang() }}
+        <span class="font-normal text-surface-400">({{ 'common.optional' | translate: i18n.lang() }})</span>
+      </span>
+      <input
+        name="nationalId"
+        dir="ltr"
+        [ngModel]="nationalId()"
+        (ngModelChange)="nationalId.set($event)"
+        class="w-full rounded-lg border border-surface-300 px-3 py-2 text-start
+               focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25" />
+    </label>
+
+    <!-- FR-001: at least one contact point. This form takes exactly one; more
+         are added from the detail screen. -->
+    <fieldset class="m-0 flex flex-col gap-3 rounded-lg border border-surface-200 p-4">
+      <legend class="px-1 text-sm font-medium text-surface-700">
+        {{ 'customer.contactPoint' | translate: i18n.lang() }}
+      </legend>
+      <div class="grid gap-3 sm:grid-cols-[10rem_1fr]">
+        <select
+          name="channelType"
+          [ngModel]="channelType()"
+          (ngModelChange)="channelType.set($event)"
+          class="rounded-lg border border-surface-300 bg-surface-0 px-3 py-2
+                 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25">
+          <option value="phone">{{ 'channel.phone' | translate: i18n.lang() }}</option>
+          <option value="email">{{ 'channel.email' | translate: i18n.lang() }}</option>
+          <option value="whatsapp">{{ 'channel.whatsapp' | translate: i18n.lang() }}</option>
+        </select>
+        <!-- Phone numbers and email addresses are direction-neutral values. -->
+        <input
+          name="contactValue"
+          dir="ltr"
+          required
+          [ngModel]="contactValue()"
+          (ngModelChange)="contactValue.set($event)"
+          class="w-full rounded-lg border border-surface-300 px-3 py-2 text-start
+                 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25" />
+      </div>
+    </fieldset>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <button
+        type="submit"
+        [disabled]="!ready || busy()"
+        class="rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white
+               hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500/40
+               disabled:opacity-60 disabled:cursor-default transition-colors">
+        {{ 'customer.create' | translate: i18n.lang() }}
+      </button>
+      <button
+        type="button"
+        class="rounded-lg border border-surface-300 bg-surface-0 px-4 py-2.5 text-sm
+               font-medium text-surface-700 hover:bg-surface-100 transition-colors"
+        (click)="cancel()">
+        {{ 'action.cancel' | translate: i18n.lang() }}
+      </button>
+      <span class="text-sm text-surface-500">
+        {{ 'customer.createNote' | translate: i18n.lang() }}
+      </span>
+    </div>
+  </form>
+</div>

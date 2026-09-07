@@ -1,6 +1,11 @@
-// spec 001 — CM-03, FR-003, FR-020. Detail plus in-place field edit.
-// The entitlement panel renders whatever the API returns, including
-// 'unavailable' (E-07) — never a blank and never a stale value.
+// spec 001 — CM-03, FR-003, FR-020, FR-023, AS-03, E-07
+// Tailwind only (decision 24).
+//
+// AS-03 / constitution IV: an out-of-scope customer answers 404, identical to
+// one that does not exist. This screen therefore shows "not found" and MUST
+// NOT say "forbidden" or "no permission" — the whole point of the server
+// answering 404 is that the caller cannot tell the two apart, and a UI that
+// guesses "you probably lack access" leaks exactly what the 404 protects.
 
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -27,8 +32,12 @@ export class CustomerDetail {
   protected readonly contactPoints = signal<ContactPoint[]>([]);
   protected readonly organisation = signal<Customer | null>(null);
   protected readonly entitlement = signal<Sla | null>(null);
+
+  protected readonly notFound = signal(false);
   protected readonly refusal = signal<LocalizedText | null>(null);
   protected readonly saved = signal<string[]>([]);
+  protected readonly editing = signal(false);
+  protected readonly busy = signal(false);
 
   protected readonly editName = signal('');
   protected readonly editLang = signal<'ar' | 'en'>('en');
@@ -46,26 +55,44 @@ export class CustomerDetail {
         this.editLang.set(r.customer.preferredLanguage);
         this.editSensitive.set(r.customer.sensitiveFlag);
       },
-      error: (e: HttpErrorResponse) => this.refusal.set(e.error?.message ?? null)
+      error: (e: HttpErrorResponse) => {
+        // 404 means not found — out of scope or genuinely absent, and this
+        // screen must not distinguish them (AS-03).
+        if (e.status === 404) {
+          this.notFound.set(true);
+          return;
+        }
+        this.refusal.set(e.error?.message ?? null);
+      }
     });
   }
 
-  protected save() {
+  protected save(): void {
     const c = this.customer();
     if (!c) return;
+    this.busy.set(true);
     this.refusal.set(null);
     this.saved.set([]);
+
     this.api.updateCustomer(c._id, {
       displayName: this.editName(),
       preferredLanguage: this.editLang(),
       sensitiveFlag: this.editSensitive()
     }).subscribe({
-      next: r => { this.customer.set(r.customer); this.saved.set(r.changed); },
-      error: (e: HttpErrorResponse) => this.refusal.set(e.error?.message ?? null)
+      next: r => {
+        this.customer.set(r.customer);
+        this.saved.set(r.changed);
+        this.editing.set(false);
+        this.busy.set(false);
+      },
+      error: (e: HttpErrorResponse) => {
+        this.busy.set(false);
+        this.refusal.set(e.error?.message ?? null);
+      }
     });
   }
 
-  protected openTickets() {
+  protected openTickets(): void {
     this.router.navigate(['/tickets'], { queryParams: { customerId: this.customer()?._id } });
   }
 }

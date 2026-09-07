@@ -1,8 +1,10 @@
 # next-steps.md
 
-Written 2026-09-07, immediately after the first working push. This is the
-honest accounting of what today's compressed delivery pass actually leaves
-behind — not a status report dressed up to look finished.
+Written 2026-09-07 immediately after the first working push; revised
+2026-09-08 after the UI pass, the demo seed, the API documentation, the ClickUp
+board and GitHub Pages. This is the honest accounting of what the compressed
+delivery pass actually leaves behind — not a status report dressed up to look
+finished.
 
 Read `docs/state.md` for what's built. Read this for what to do about what
 isn't.
@@ -83,8 +85,11 @@ the `key` below — `node tools/sync-clickup.js` keeps them current.
 
 | Module | `tasks.json` key | Blocked on | Rough estimate once unblocked |
 |---|---|---|---|
-| `Team` entity | `team-entity` | Nothing — this is a spec-authoring gap, not a client question. Needs someone to define it. | 2–3 days: entity, `teamIds` on `RoleAssignment`, the third scope dimension in `scope.js`, backfilling every ticket's `owningTeamId`, reversing decision 20 |
-| Email/WhatsApp/SMS/chat | `channels` | `003 [CLARIFY-1]` — which channels ship first | 2–3 weeks for the first channel (inbound threading, spec `003`'s correlation rule, is the hard part per constitution VI) plus ~1 week per additional channel |
+| `Team` entity | `scope-team` (subtask of `scope`) | Nothing — this is a spec-authoring gap, not a client question. Needs someone to define it. | 2–3 days: entity, `teamIds` on `RoleAssignment`, the third scope dimension in `scope.js`, backfilling every ticket's `owningTeamId`, reversing decision 20 |
+| Email channel | `channel-email` | `003 [CLARIFY-1]` — which channels ship first; plus a threading-identity decision (`Message-ID` headers vs. a reference in the subject) | 2–3 weeks if this is the first channel — inbound threading, spec `003`'s correlation rule, is the hard part per constitution VI |
+| WhatsApp channel | `channel-whatsapp` | `003 [CLARIFY-1]`, plus a Business API provider account and approved templates | ~1 week after the first channel lands, plus provider onboarding time that is not engineering time |
+| SMS channel | `channel-sms` | `003 [CLARIFY-1]`, plus a gateway choice and a registered sender ID | ~1 week after the first channel. Inbound has no threading key but the phone number, which is exactly the `E-15` shared-contact-point case |
+| Live chat | `channel-live-chat` | `003 [CLARIFY-1]`, plus an agent-availability model no spec defines | 1.5–2 weeks — the only channel needing a websocket transport, which nothing in the current stack provides |
 | SLA & automation engine | `sla-engine` | `005 [CLARIFY-1]`, `[CLARIFY-2]` | 2 weeks: business calendar, pause ledger, clock states, threshold notifications. Auto-assignment and the rules engine are separate and add another 1–2 weeks |
 | Knowledge base | `knowledge-base` | `006 [CLARIFY-1]`, and `012 [CLARIFY-1]` | 1.5–2 weeks for articles, review workflow, bilingual content |
 | Customer portal | `customer-portal` | `008 [CLARIFY-1]` | 2 weeks for a minimal self-service view (status, reply, confirm) once portal auth is decided |
@@ -116,6 +121,16 @@ Blunt, as asked.
 
 **`DEFAULT_COUNTRY_CODE=+20` is a real assumption baked into phone normalisation**, not a cosmetic default. If this client's customer base isn't predominantly Egyptian, every unqualified local-format phone number normalises wrong, silently, and duplicate detection (`FR-010`) degrades without any error being thrown.
 
+**Every UI component is now hand-rolled, and nobody has audited them for accessibility.** PrimeNG was installed, found to inject an unremovable licence banner, and removed (decision 24) — the right call, but the consequence is that the table, the select, the collision dialogue and the status control are all bespoke Tailwind markup written quickly. None of it has been checked for keyboard navigation, focus trapping in the dialogue, ARIA roles on the status control, or screen-reader labelling. A component library gives that away for free; hand-rolling means it is simply absent until someone writes it. This is worse than it sounds in an RTL context, because focus order and arrow-key direction are exactly where hand-rolled components get Arabic wrong, and no screenshot will reveal it.
+
+**The frontend has no tests whatsoever.** `npm test` in `frontend/` runs the Angular starter's default spec and nothing else. Every claim about the UI in this repository — that it mirrors correctly in Arabic, that the collision dialogue is wired to the 409 body, that the status control follows `reachableStatuses` — rests on screenshots I took and read by eye. That is evidence, and it is not a regression test. The next change to `styles.css` could silently break the Arabic layout and nothing would catch it.
+
+**`seed:demo:clear` is the only code in this repository that can violate constitution II, and it is guarded by a check rather than made impossible.** It deletes demo audit entries with a raw `deleteMany`, deliberately breaking the append-only rule so the reconcile report is not permanently filled with noise from throwaway data (decision 25). The reasoning holds, but the safeguard is a localhost check inside a script — an environment assertion, not a structural impossibility. Anyone who runs it against a real database with a rewritten guard destroys audit history that by design cannot be reconstructed. It should probably require a second, explicit confirmation flag before it does anything at all.
+
+**One instance of the client duplicating server truth was found and fixed; nobody has swept for the others.** The ticket detail screen hardcoded three statuses as pausing the SLA clock, duplicating a fact the server already returns from `/ticket/meta`. It was caught by accident while reading the code, not by a check, and replaced with a lookup. The same failure mode — a list of statuses, roles, or transitions retyped in the frontend because it was quicker than fetching it — is exactly the kind of thing that stays correct until the server changes and then goes silently wrong. No one has gone looking for the rest.
+
+**The ClickUp board is a snapshot, not a mirror.** `tools/sync-clickup.js` is genuinely idempotent and pushes `tools/tasks.json` faithfully, but nothing pushes reality into `tasks.json`. The board is accurate exactly as long as someone remembers to edit that file and re-run the sync after changing the code. Sync also only ever writes: a task closed by hand in ClickUp is reopened by the next run, and a status changed in ClickUp is silently reverted. Treat the file as the source of truth and the board as its rendering, or the two will diverge without warning.
+
 ---
 
 ## 6. Recommended order for the next two weeks
@@ -135,9 +150,17 @@ Move today's manual test scripts into the repository as an actual test suite,
 wire up CI (even just "run the suite on push"), and add a pre-commit or CI
 check that `docs:build`/`docs:postman` are current. This is unglamorous and it
 is the thing that prevents every future change from being a today-style manual
-verification marathon.
+verification marathon. Include at least a smoke test on the frontend, which
+currently has none at all.
 
-**Days 5–6 — resolution-code enforcement (`FR-029`).**
+**Day 5 — an accessibility and RTL pass over the hand-rolled components.**
+Half a day with a keyboard and a screen reader over the four bespoke controls
+(table, select, collision dialogue, status control), in Arabic as well as
+English. This is cheap now and expensive once more screens copy their patterns,
+and it is the one gap in section 5 that an end user meets directly rather than
+a developer.
+
+**Day 6 — resolution-code enforcement (`FR-029`).**
 Small, self-contained, no client decision needed, and it closes a currently
 unenforced MUST. Good use of a short block before a bigger dependency-bound
 piece of work.

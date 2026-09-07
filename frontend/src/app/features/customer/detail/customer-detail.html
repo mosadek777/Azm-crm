@@ -1,78 +1,177 @@
-<div class="page">
-  @if (refusal(); as m) { <p class="refusal" role="alert">{{ m[i18n.lang()] }}</p> }
+<div class="flex flex-col gap-5">
+
+  <!-- AS-03: out of scope and non-existent are indistinguishable here, on
+       purpose. This says "not found" and never "forbidden". -->
+  @if (notFound()) {
+    <div class="rounded-xl border border-dashed border-surface-300 px-4 py-10 text-center">
+      <p class="m-0 text-sm text-surface-600">{{ 'customer.notFound' | translate: i18n.lang() }}</p>
+      <button type="button"
+        class="mt-3 rounded-lg border border-surface-300 bg-surface-0 px-4 py-2 text-sm
+               font-medium text-surface-700 hover:bg-surface-100"
+        (click)="router.navigate(['/customers'])">
+        {{ 'action.back' | translate: i18n.lang() }}
+      </button>
+    </div>
+  }
+
+  @if (refusal(); as message) {
+    <p class="m-0 rounded-lg border-s-4 border-red-600 bg-red-50 px-3 py-2 text-sm text-red-800"
+       role="alert">{{ message[i18n.lang()] }}</p>
+  }
 
   @if (customer(); as c) {
-    <div class="page__head">
-      <h1>{{ c.displayName }}</h1>
+    <div class="flex flex-wrap items-center gap-3">
+      <h1 class="m-0 text-xl font-semibold tracking-tight text-surface-900">{{ c.displayName }}</h1>
       @if (c.sensitiveFlag) {
-        <span class="chip chip--sensitive">{{ 'customer.sensitive' | translate: i18n.lang() }}</span>
+        <span class="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800">
+          {{ 'customer.sensitive' | translate: i18n.lang() }}
+        </span>
       }
-      <span class="spacer"></span>
-      <button (click)="openTickets()">{{ 'customer.tickets' | translate: i18n.lang() }}</button>
+      <span class="flex-1"></span>
+      <button type="button"
+        class="rounded-lg border border-surface-300 bg-surface-0 px-4 py-2 text-sm font-medium
+               text-surface-700 hover:bg-surface-100 transition-colors"
+        (click)="openTickets()">
+        {{ 'customer.tickets' | translate: i18n.lang() }}
+      </button>
+      <button type="button"
+        class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white
+               hover:bg-primary-700 transition-colors"
+        (click)="editing.set(!editing())">
+        {{ (editing() ? 'action.cancel' : 'customer.edit') | translate: i18n.lang() }}
+      </button>
     </div>
 
-    <div class="cards">
-      <div class="card">
-        <h2>{{ 'customer.identity' | translate: i18n.lang() }}</h2>
-        <p class="note">{{ 'customer.type' | translate: i18n.lang() }}: {{ c.type }}</p>
-        <p class="note">{{ 'customer.nationalId' | translate: i18n.lang() }}: <span class="ltr">{{ c.nationalId || '—' }}</span></p>
-        <p class="note">{{ 'customer.accountRef' | translate: i18n.lang() }}: <span class="ltr">{{ c.accountRef || '—' }}</span></p>
-        @if (organisation(); as org) {
-          <p class="note">{{ 'customer.organisation' | translate: i18n.lang() }}: {{ org.displayName }}</p>
-        }
-      </div>
+    @if (saved().length) {
+      <p class="m-0 rounded-lg border-s-4 border-green-600 bg-green-50 px-3 py-2 text-sm text-green-800">
+        {{ 'customer.savedFields' | translate: i18n.lang() }}: {{ saved().join(', ') }}
+      </p>
+    }
 
-      <div class="card">
-        <h2>{{ 'customer.contactPoints' | translate: i18n.lang() }}</h2>
-        @for (cp of contactPoints(); track cp._id) {
-          <p class="note">
-            {{ cp.channelType }}: <span class="ltr">{{ cp.value }}</span>
-            @if (cp.isPrimary) { <span class="chip">{{ 'customer.primary' | translate: i18n.lang() }}</span> }
-            @if (!cp.normalised) { <span class="chip chip--sensitive">{{ 'customer.unnormalised' | translate: i18n.lang() }}</span> }
-            @if (cp.collisionConfirmedAt) { <span class="chip chip--paused">{{ 'customer.shared' | translate: i18n.lang() }}</span> }
-          </p>
-        }
-      </div>
+    <div class="grid gap-4 md:grid-cols-3">
+      <section class="rounded-xl border border-surface-200 bg-surface-0 p-4">
+        <h2 class="m-0 mb-3 text-sm font-semibold text-surface-900">
+          {{ 'customer.identity' | translate: i18n.lang() }}
+        </h2>
+        <dl class="m-0 flex flex-col gap-2 text-sm">
+          <div class="flex justify-between gap-3">
+            <dt class="text-surface-500">{{ 'customer.type' | translate: i18n.lang() }}</dt>
+            <dd class="m-0 text-surface-800">{{ c.type }}</dd>
+          </div>
+          <div class="flex justify-between gap-3">
+            <dt class="text-surface-500">{{ 'customer.nationalId' | translate: i18n.lang() }}</dt>
+            <dd class="m-0 text-surface-800"><span class="ltr">{{ c.nationalId || '—' }}</span></dd>
+          </div>
+          <div class="flex justify-between gap-3">
+            <dt class="text-surface-500">{{ 'customer.accountRef' | translate: i18n.lang() }}</dt>
+            <dd class="m-0 text-surface-800"><span class="ltr">{{ c.accountRef || '—' }}</span></dd>
+          </div>
+          <div class="flex justify-between gap-3">
+            <dt class="text-surface-500">{{ 'customer.preferredLanguage' | translate: i18n.lang() }}</dt>
+            <dd class="m-0 text-surface-800">{{ c.preferredLanguage }}</dd>
+          </div>
+          @if (organisation(); as org) {
+            <div class="flex justify-between gap-3">
+              <dt class="text-surface-500">{{ 'customer.organisation' | translate: i18n.lang() }}</dt>
+              <dd class="m-0 text-surface-800">{{ org.displayName }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
 
-      <div class="card">
-        <h2>{{ 'customer.entitlement' | translate: i18n.lang() }}</h2>
-        <!-- E-07 / constitution III: 'unavailable' is rendered as itself. The
+      <section class="rounded-xl border border-surface-200 bg-surface-0 p-4">
+        <h2 class="m-0 mb-3 text-sm font-semibold text-surface-900">
+          {{ 'customer.contactPoints' | translate: i18n.lang() }}
+        </h2>
+        <ul class="m-0 flex list-none flex-col gap-2 p-0 text-sm">
+          @for (cp of contactPoints(); track cp._id) {
+            <li class="flex flex-wrap items-center gap-2">
+              <span class="text-surface-500">{{ cp.channelType }}</span>
+              <span class="ltr font-medium text-surface-800">{{ cp.value }}</span>
+              @if (cp.isPrimary) {
+                <span class="rounded-full bg-primary-100 px-2 py-0.5 text-xs text-primary-800">
+                  {{ 'customer.primary' | translate: i18n.lang() }}
+                </span>
+              }
+              <!-- E-06: an unnormalised value is surfaced, not hidden. -->
+              @if (!cp.normalised) {
+                <span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">
+                  {{ 'customer.unnormalised' | translate: i18n.lang() }}
+                </span>
+              }
+              <!-- Decision 16: this value is shared with another customer. -->
+              @if (cp.collisionConfirmedAt) {
+                <span class="rounded-full bg-surface-200 px-2 py-0.5 text-xs text-surface-700">
+                  {{ 'customer.shared' | translate: i18n.lang() }}
+                </span>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+
+      <section class="rounded-xl border border-surface-200 bg-surface-0 p-4">
+        <h2 class="m-0 mb-3 text-sm font-semibold text-surface-900">
+          {{ 'customer.entitlement' | translate: i18n.lang() }}
+        </h2>
+        <!-- E-07 / constitution III: "unavailable" is rendered as itself. The
              client never substitutes a computed or stale value. -->
         @if (entitlement()?.status === 'unavailable') {
-          <p class="note">{{ 'common.unavailable' | translate: i18n.lang() }} — {{ entitlement()?.reason }}</p>
+          <p class="m-0 text-sm text-surface-500">
+            {{ 'common.unavailable' | translate: i18n.lang() }}
+            <span class="block text-xs opacity-70">{{ entitlement()?.reason }}</span>
+          </p>
         } @else {
-          <p class="note">{{ entitlement()?.minutes }}</p>
+          <p class="m-0 text-sm text-surface-800"><span class="ltr">{{ entitlement()?.minutes }}</span></p>
         }
-      </div>
+      </section>
     </div>
 
-    <div class="card">
-      <h2>{{ 'customer.edit' | translate: i18n.lang() }}</h2>
-      <div class="cards">
-        <label class="field">
-          <span>{{ 'customer.name' | translate: i18n.lang() }}</span>
-          <input [ngModel]="editName()" (ngModelChange)="editName.set($event)" />
-        </label>
-        <label class="field">
-          <span>{{ 'customer.preferredLanguage' | translate: i18n.lang() }}</span>
-          <select [ngModel]="editLang()" (ngModelChange)="editLang.set($event)">
-            <option value="ar">العربية</option>
-            <option value="en">English</option>
-          </select>
-        </label>
-        <label class="field">
-          <span>{{ 'customer.sensitive' | translate: i18n.lang() }}</span>
-          <select [ngModel]="editSensitive()" (ngModelChange)="editSensitive.set($event === 'true' || $event === true)">
-            <option [value]="false">{{ 'common.no' | translate: i18n.lang() }}</option>
-            <option [value]="true">{{ 'common.yes' | translate: i18n.lang() }}</option>
-          </select>
-        </label>
-      </div>
-      <p></p>
-      <button class="primary" (click)="save()">{{ 'action.save' | translate: i18n.lang() }}</button>
-      @if (saved().length) {
-        <p class="note">{{ 'customer.savedFields' | translate: i18n.lang() }}: {{ saved().join(', ') }}</p>
-      }
-    </div>
+    @if (editing()) {
+      <section class="rounded-xl border border-surface-200 bg-surface-0 p-6">
+        <h2 class="m-0 mb-4 text-sm font-semibold text-surface-900">
+          {{ 'customer.edit' | translate: i18n.lang() }}
+        </h2>
+        <div class="grid gap-4 sm:grid-cols-3">
+          <label class="flex flex-col gap-1.5">
+            <span class="text-sm font-medium text-surface-700">
+              {{ 'customer.name' | translate: i18n.lang() }}
+            </span>
+            <input [ngModel]="editName()" (ngModelChange)="editName.set($event)"
+              class="w-full rounded-lg border border-surface-300 px-3 py-2 text-start
+                     focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25" />
+          </label>
+          <label class="flex flex-col gap-1.5">
+            <span class="text-sm font-medium text-surface-700">
+              {{ 'customer.preferredLanguage' | translate: i18n.lang() }}
+            </span>
+            <select [ngModel]="editLang()" (ngModelChange)="editLang.set($event)"
+              class="w-full rounded-lg border border-surface-300 bg-surface-0 px-3 py-2
+                     focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25">
+              <option value="ar">العربية</option>
+              <option value="en">English</option>
+            </select>
+          </label>
+          <label class="flex flex-col gap-1.5">
+            <span class="text-sm font-medium text-surface-700">
+              {{ 'customer.sensitive' | translate: i18n.lang() }}
+            </span>
+            <select [ngModel]="editSensitive()"
+                    (ngModelChange)="editSensitive.set($event === 'true' || $event === true)"
+              class="w-full rounded-lg border border-surface-300 bg-surface-0 px-3 py-2
+                     focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25">
+              <option [value]="false">{{ 'common.no' | translate: i18n.lang() }}</option>
+              <option [value]="true">{{ 'common.yes' | translate: i18n.lang() }}</option>
+            </select>
+          </label>
+        </div>
+        <button type="button" [disabled]="busy()"
+          class="mt-4 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white
+                 hover:bg-primary-700 disabled:opacity-60 transition-colors"
+          (click)="save()">
+          {{ 'action.save' | translate: i18n.lang() }}
+        </button>
+      </section>
+    }
   }
 </div>
