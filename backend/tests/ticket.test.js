@@ -20,6 +20,11 @@ await mk('/user', { displayName: 'Sara Ahmed', email: 'sara@azmsquad.com', passw
 await mk('/user', { displayName: 'Omar Lead', email: 'omar@azmsquad.com', password: FIXTURE_PASSWORD, defaultLanguage: 'en', roles: ['LEAD'], scope: scB })
 await mk('/user', { displayName: 'Hana Agent', email: 'hana@azmsquad.com', password: FIXTURE_PASSWORD, defaultLanguage: 'en', roles: ['AGT'], scope: scB })
 await mk('/user', { displayName: 'Nour Other', email: 'nour@azmsquad.com', password: FIXTURE_PASSWORD, defaultLanguage: 'en', roles: ['AGT'], scope: scC })
+// A real auditor. The read-only assertion below used to be made with the
+// break-glass token, which holds ADM — so it asserted that an ADMINISTRATOR
+// could not post, mislabelled as an auditor check, and locked in the bug it
+// was supposed to guard against.
+await mk('/user', { displayName: 'Aya Audit', email: 'aya@azmsquad.com', password: FIXTURE_PASSWORD, defaultLanguage: 'en', roles: ['AUD'], scope: scB })
 const sara = await login('sara@azmsquad.com', FIXTURE_PASSWORD)
 const omar = await login('omar@azmsquad.com', FIXTURE_PASSWORD)
 const nour = await login('nour@azmsquad.com', FIXTURE_PASSWORD)
@@ -97,7 +102,12 @@ chk('internal note', (await call('POST', `/ticket/${T}/message`, { token: sara, 
 const det = await call('GET', `/ticket/${T}`, { token: sara })
 chk('thread holds description + 2 messages', det.body?.messages?.length, 3)
 chk('one is internal', det.body?.messages?.filter(m => m.visibility === 'internal').length, 1)
-chk('AUD is read-only: cannot post', (await call('POST', `/ticket/${T}/message`, { token: root, body: { body: 'x', visibility: 'internal' } })).status, 403)
+const aud = await login('aya@azmsquad.com', FIXTURE_PASSWORD)
+chk('AUD is read-only: cannot post', (await call('POST', `/ticket/${T}/message`, { token: aud, body: { body: 'x', visibility: 'internal' } })).status, 403)
+// ADM is a writer on every other ticket route, and was refused only here.
+// Without this check the message route can silently drift away from WRITERS
+// again — which is how a demo administrator ended up unable to reply at all.
+chk('ADM may reply, like every other write route', (await call('POST', `/ticket/${T}/message`, { token: root, body: { body: 'Administrator reply.', visibility: 'customer' } })).status, 201)
 
 console.log('\n--- constitution II: every mutation audited, non-negotiable ---')
 const hist = det.body.history.map(h => h.action)

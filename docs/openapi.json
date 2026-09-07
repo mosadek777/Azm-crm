@@ -162,9 +162,7 @@
             "description": "Users overlapping the caller's branch and department scope. Out-of-scope users are absent, not marked hidden."
           },
           "403": {
-            "description": "Requires LEAD",
-            "MGR": null,
-            "ADM or AUD": null
+            "description": "Requires LEAD, MGR, ADM or AUD"
           }
         }
       },
@@ -591,13 +589,11 @@
                   "properties": {
                     "matches": {
                       "type": "array",
-                      "description": "In-scope matches",
-                      "named": null
+                      "description": "In-scope matches, named"
                     },
                     "outOfScopeMatches": {
                       "type": "integer",
-                      "description": "Out-of-scope collisions",
-                      "counted but never named (spec 010 §8)": null
+                      "description": "Out-of-scope collisions, counted but never named (spec 010 §8)"
                     }
                   }
                 }
@@ -812,8 +808,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Subject or reference prefix",
-            "minimum 3 characters": null
+            "description": "Subject or reference prefix, minimum 3 characters"
           },
           {
             "name": "page",
@@ -1089,8 +1084,7 @@
             "description": "Transitioned"
           },
           "400": {
-            "description": "Unknown status",
-            "or followUpAt on a non-pausing status": null
+            "description": "Unknown status, or followUpAt on a non-pausing status"
           },
           "404": {
             "description": "Not found"
@@ -1170,8 +1164,7 @@
             "description": "Body or visibility missing"
           },
           "403": {
-            "description": "Requires AGT",
-            "LEAD or MGR": null
+            "description": "Requires a writing role. AUD is read-only and is refused here."
           },
           "404": {
             "description": "Not found"

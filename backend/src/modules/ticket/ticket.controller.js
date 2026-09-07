@@ -57,7 +57,7 @@ router.get("/meta", authenticate, authorize(...STAFF), ticketservice.getTicketMe
  *       - { name: customerId, in: query, schema: { type: string } }
  *       - { name: category, in: query, schema: { type: string }, description: 'Exact match — category is a flat string, not a tree (decision 21)' }
  *       - { name: tag, in: query, schema: { type: string } }
- *       - { name: q, in: query, schema: { type: string }, description: Subject or reference prefix, minimum 3 characters }
+ *       - { name: q, in: query, schema: { type: string }, description: 'Subject or reference prefix, minimum 3 characters' }
  *       - { name: page, in: query, schema: { type: integer, default: 1 } }
  *       - { name: limit, in: query, schema: { type: integer, default: 25, maximum: 100 } }
  *     responses:
@@ -158,7 +158,7 @@ router.patch("/:id/assign", authenticate, authorize(...WRITERS), ticketservice.a
  *               followUpAt: { type: string, format: date-time, description: 'Only valid on a status whose pausesSla is true (FR-021)' }
  *     responses:
  *       200: { description: Transitioned }
- *       400: { description: Unknown status, or followUpAt on a non-pausing status }
+ *       400: { description: 'Unknown status, or followUpAt on a non-pausing status' }
  *       404: { description: Not found }
  *       409:
  *         description: Already in that status, or the transition is not defined (AS-03)
@@ -192,10 +192,21 @@ router.patch("/:id/status", authenticate, authorize(...WRITERS), ticketservice.c
  *     responses:
  *       201: { description: Added }
  *       400: { description: Body or visibility missing }
- *       403: { description: Requires AGT, LEAD or MGR }
+ *       403: { description: 'Requires a writing role. AUD is read-only and is refused here.' }
  *       404: { description: Not found }
  *       409: { description: Terminal ticket accepts no reply }
  */
-router.post("/:id/message", authenticate, authorize('AGT', 'LEAD', 'MGR'), ticketservice.addMessage)
+// WRITERS, like every other write route on this controller. This line used to
+// spell the roles out as 'AGT', 'LEAD', 'MGR' — omitting ADM, and so refusing
+// an administrator a reply on a ticket they could open and read. No spec asks
+// for that: FR-014 governs a message's VISIBILITY, not who may author one, and
+// an administrator writes everywhere else in the product (creates tickets,
+// assigns them, moves their status, edits customers).
+//
+// The bug was not the missing role so much as the hand-written list: the
+// constant existed and this one line did not use it, so it could drift from
+// the other six without anything noticing. Excluding AUD is deliberate and
+// still holds — WRITERS omits it, which is exactly why the constant exists.
+router.post("/:id/message", authenticate, authorize(...WRITERS), ticketservice.addMessage)
 
 export default router

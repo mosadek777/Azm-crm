@@ -65,8 +65,8 @@ const WRITERS = ['AGT', 'LEAD', 'MGR', 'ADM']
  *             schema:
  *               type: object
  *               properties:
- *                 matches: { type: array, description: In-scope matches, named }
- *                 outOfScopeMatches: { type: integer, description: Out-of-scope collisions, counted but never named (spec 010 §8) }
+ *                 matches: { type: array, description: 'In-scope matches, named' }
+ *                 outOfScopeMatches: { type: integer, description: 'Out-of-scope collisions, counted but never named (spec 010 §8)' }
  */
 router.get("/", authenticate, authorize(...STAFF), customerservice.searchCustomers)
 router.post("/", authenticate, authorize(...WRITERS), customerservice.createCustomer)

@@ -639,7 +639,7 @@
                   "disabled": false,
                   "key": "q",
                   "value": "<string>",
-                  "description": "Subject or reference prefix"
+                  "description": "Subject or reference prefix, minimum 3 characters"
                 },
                 {
                   "disabled": false,

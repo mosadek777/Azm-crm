@@ -17,7 +17,7 @@ const router = Router()
  *     responses:
  *       200:
  *         description: Users overlapping the caller's branch and department scope. Out-of-scope users are absent, not marked hidden.
- *       403: { description: Requires LEAD, MGR, ADM or AUD }
+ *       403: { description: 'Requires LEAD, MGR, ADM or AUD' }
  */
 // §9: leads and above may view users in their own scope.
 router.get("/", authenticate, authorize('LEAD', 'MGR', 'ADM', 'AUD'), userservice.listUsers)
