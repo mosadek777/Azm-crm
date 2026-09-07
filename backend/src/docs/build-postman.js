@@ -27,7 +27,14 @@ const openapiJson = readFileSync(openapiPath, 'utf8')
 const convert = () => new Promise((resolve, reject) => {
   converter.convert(
     { type: 'string', data: openapiJson },
-    { requestParametersResolution: 'Example', folderStrategy: 'Tags' },
+    // 'Schema' resolves bodies from the declared types rather than inventing a
+    // plausible-looking value for each field. Under 'Example' the converter
+    // fabricates addresses like "vK4bHOLXuVQV@jRiZFPsjMBlPorWgGMAvDlKrHLq.us"
+    // for an email field, which invites someone to read a fake as a seeded
+    // account. (Note that `parametersResolution` is the real option id — the
+    // `requestParametersResolution` this script passed at first is not an
+    // option the converter recognises, so it was silently ignored.)
+    { parametersResolution: 'Schema', folderStrategy: 'Tags' },
     (err, result) => {
       if (err) return reject(err)
       if (!result.result) return reject(new Error(result.reason))
@@ -122,6 +129,29 @@ const run = async () => {
   if (!loginRequest) {
     console.warn('WARNING: no /auth/login request found in the converted collection — the auto-save test script was not attached.')
   }
+
+  // The converter stamps a fresh UUID on the collection and on every folder,
+  // request and event. Postman assigns its own ids at import time and ignores
+  // these, so their only effect here is to make every regeneration differ from
+  // the last. Strip them: what remains changes only when the API changes.
+  // The converter also attaches a saved "example response" to every request,
+  // with each field filled in by a faker: `{"outOfScopeMatches": 8993}` one run,
+  // `{"outOfScopeMatches": 860}` the next. Two reasons to drop them rather than
+  // ship them. They are invented data wearing the costume of a real response —
+  // the same objection that keeps guessed routes out of the OpenAPI document in
+  // the first place. And being re-faked on every run, they are what stops this
+  // file from ever diffing clean. The authoritative response shapes are in
+  // docs/openapi.json and rendered on the published documentation page.
+  walk(collection.item, (request) => { delete request.response })
+
+  const stripIds = (node) => {
+    if (Array.isArray(node)) return node.forEach(stripIds)
+    if (!node || typeof node !== 'object') return
+    delete node.id
+    delete node._postman_id
+    for (const value of Object.values(node)) stripIds(value)
+  }
+  stripIds(collection)
 
   writeFileSync(collectionPath, JSON.stringify(collection, null, 2) + '\n')
 

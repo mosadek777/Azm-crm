@@ -1,7 +1,6 @@
 {
   "item": [
     {
-      "id": "35e19065-9bbe-4002-90eb-bed72e9c6542",
       "name": "Auth",
       "description": {
         "content": "",
@@ -9,7 +8,6 @@
       },
       "item": [
         {
-          "id": "318185c4-494f-4be4-bd29-9dd0e9e11422",
           "name": "Local sign-in (spec 010 FR-006, on the provisional local-password path)",
           "request": {
             "name": "Local sign-in (spec 010 FR-006, on the provisional local-password path)",
@@ -39,7 +37,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"vK4bHOLXuVQV@jRiZFPsjMBlPorWgGMAvDlKrHLq.us\",\n  \"password\": \"string\"\n}",
+              "raw": "{\n  \"email\": \"<email>\",\n  \"password\": \"<password>\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -47,164 +45,6 @@
               }
             }
           },
-          "response": [
-            {
-              "id": "4ea726c4-d738-4b40-9aea-99daff432cd6",
-              "name": "Signed in",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "auth",
-                    "login"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  },
-                  {
-                    "key": "Accept",
-                    "value": "application/json"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"vK4bHOLXuVQV@jRiZFPsjMBlPorWgGMAvDlKrHLq.us\",\n  \"password\": \"string\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"token\": \"string\",\n  \"user\": {\n    \"id\": \"string\",\n    \"displayName\": \"string\",\n    \"email\": \"string\",\n    \"defaultLanguage\": \"ar\"\n  }\n}",
-              "cookie": [],
-              "_postman_previewlanguage": "json"
-            },
-            {
-              "id": "8133e6f4-98f8-4ab7-8e0b-9e1991eb2737",
-              "name": "Missing email or password",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "auth",
-                    "login"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  },
-                  {
-                    "key": "Accept",
-                    "value": "application/json"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"vK4bHOLXuVQV@jRiZFPsjMBlPorWgGMAvDlKrHLq.us\",\n  \"password\": \"string\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Bad Request",
-              "code": 400,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"message\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  },\n  \"fields\": [\n    \"string\",\n    \"string\"\n  ]\n}",
-              "cookie": [],
-              "_postman_previewlanguage": "json"
-            },
-            {
-              "id": "b24f019e-f6ab-4d53-9e00-4a2c26cd6f6d",
-              "name": "Invalid credentials — the same body for a wrong password, an unknown email, or a deactivated account (spec 010 §8 discloses nothing)",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "auth",
-                    "login"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  },
-                  {
-                    "key": "Accept",
-                    "value": "application/json"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"vK4bHOLXuVQV@jRiZFPsjMBlPorWgGMAvDlKrHLq.us\",\n  \"password\": \"string\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Unauthorized",
-              "code": 401,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"message\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  },\n  \"fields\": [\n    \"string\",\n    \"string\"\n  ]\n}",
-              "cookie": [],
-              "_postman_previewlanguage": "json"
-            }
-          ],
           "event": [
             {
               "listen": "test",
@@ -230,7 +70,6 @@
       "event": []
     },
     {
-      "id": "43a7afb1-f075-4f98-803f-9fc91e17c451",
       "name": "User",
       "description": {
         "content": "",
@@ -238,7 +77,6 @@
       },
       "item": [
         {
-          "id": "3e63bdbe-8d1b-4a1f-85a0-d31e089224d6",
           "name": "List users within the caller's scope (spec 010 FR-004, AS-01)",
           "request": {
             "name": "List users within the caller's scope (spec 010 FR-004, AS-01)",
@@ -256,93 +94,12 @@
             "method": "GET",
             "auth": null
           },
-          "response": [
-            {
-              "id": "a80af975-16c7-4e21-8ead-ea141cab5e1a",
-              "name": "Users overlapping the caller's branch and department scope. Out-of-scope users are absent, not marked hidden.",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "user"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "GET",
-                "body": {}
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "8421b66e-03a6-4fe9-9b69-03d6c0d092c1",
-              "name": "Requires LEAD",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "user"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "GET",
-                "body": {}
-              },
-              "status": "Forbidden",
-              "code": 403,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           }
         },
         {
-          "id": "66290ca9-4a85-4bf5-9d81-07a9df332d2b",
           "name": "Create a staff user (spec 010 FR-001). Administrator-only — there is no self-registration (E-08).",
           "request": {
             "name": "Create a staff user (spec 010 FR-001). Administrator-only — there is no self-registration (E-08).",
@@ -371,7 +128,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"displayName\": \"string\",\n  \"email\": \"drkV6SMZdaTEwq@KbFCwLByVytQzgqHuqRohH.yi\",\n  \"password\": \"string\",\n  \"defaultLanguage\": \"ar\",\n  \"roles\": [\n    \"ADM\",\n    \"LEAD\"\n  ],\n  \"scope\": {\n    \"branchIds\": [\n      \"string\",\n      \"string\"\n    ],\n    \"departmentIds\": [\n      \"string\",\n      \"string\"\n    ]\n  }\n}",
+              "raw": "{\n  \"displayName\": \"<string>\",\n  \"email\": \"<email>\",\n  \"password\": \"<password>\",\n  \"defaultLanguage\": \"<string>\",\n  \"roles\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"scope\": {\n    \"branchIds\": [\n      \"<string>\",\n      \"<string>\"\n    ],\n    \"departmentIds\": [\n      \"<string>\",\n      \"<string>\"\n    ]\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -379,160 +136,12 @@
               }
             }
           },
-          "response": [
-            {
-              "id": "4249473b-0eed-4d62-a840-6cb681308e02",
-              "name": "Created",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "user"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"email\": \"sgJUvjO55F6Nn@ytvJpMGTCjQvsKGmwSpIHQpTgDNpTRw.kv\",\n  \"password\": \"string\",\n  \"defaultLanguage\": \"en\",\n  \"roles\": [\n    \"AGT\",\n    \"AUD\"\n  ],\n  \"scope\": {\n    \"branchIds\": [\n      \"string\",\n      \"string\"\n    ],\n    \"departmentIds\": [\n      \"string\",\n      \"string\"\n    ]\n  }\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Created",
-              "code": 201,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "f7bddf38-0276-4084-988b-400f6fba647b",
-              "name": "Missing or invalid fields",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "user"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  },
-                  {
-                    "key": "Accept",
-                    "value": "application/json"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"email\": \"sgJUvjO55F6Nn@ytvJpMGTCjQvsKGmwSpIHQpTgDNpTRw.kv\",\n  \"password\": \"string\",\n  \"defaultLanguage\": \"en\",\n  \"roles\": [\n    \"AGT\",\n    \"AUD\"\n  ],\n  \"scope\": {\n    \"branchIds\": [\n      \"string\",\n      \"string\"\n    ],\n    \"departmentIds\": [\n      \"string\",\n      \"string\"\n    ]\n  }\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Bad Request",
-              "code": 400,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"message\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  },\n  \"fields\": [\n    \"string\",\n    \"string\"\n  ]\n}",
-              "cookie": [],
-              "_postman_previewlanguage": "json"
-            },
-            {
-              "id": "c90946ca-a0e9-4146-9486-6e11fe0b4445",
-              "name": "Refused: role is not ADM, or the requested scope exceeds the granter's own (FR-021)",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "user"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"email\": \"sgJUvjO55F6Nn@ytvJpMGTCjQvsKGmwSpIHQpTgDNpTRw.kv\",\n  \"password\": \"string\",\n  \"defaultLanguage\": \"en\",\n  \"roles\": [\n    \"AGT\",\n    \"AUD\"\n  ],\n  \"scope\": {\n    \"branchIds\": [\n      \"string\",\n      \"string\"\n    ],\n    \"departmentIds\": [\n      \"string\",\n      \"string\"\n    ]\n  }\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Forbidden",
-              "code": 403,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           }
         },
         {
-          "id": "3570b91f-81f3-4221-8a43-a91fcbcc86c7",
           "name": "Deactivate a user (spec 010 FR-001, E-01, E-02)",
           "request": {
             "name": "Deactivate a user (spec 010 FR-001, E-01, E-02)",
@@ -551,7 +160,7 @@
                 {
                   "disabled": false,
                   "type": "any",
-                  "value": "string",
+                  "value": "<string>",
                   "key": "id",
                   "description": "(Required) "
                 }
@@ -560,162 +169,12 @@
             "method": "PATCH",
             "auth": null
           },
-          "response": [
-            {
-              "id": "9ce55605-4627-40d2-a8a6-0acb94e3d05b",
-              "name": "Deactivated",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "user",
-                    ":id",
-                    "deactivate"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "PATCH",
-                "body": {}
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "5c102a58-7099-4ee7-8505-404adfcfa297",
-              "name": "User not found",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "user",
-                    ":id",
-                    "deactivate"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "PATCH",
-                "body": {}
-              },
-              "status": "Not Found",
-              "code": 404,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "05cbbc89-dafe-4f68-98ec-ae865e7eaad2",
-              "name": "Refused — last administrator (E-01) or self-deactivation (E-02)",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "user",
-                    ":id",
-                    "deactivate"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "PATCH",
-                "body": {}
-              },
-              "status": "Conflict",
-              "code": 409,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           }
         },
         {
-          "id": "76696879-8644-475e-9f51-f1ece3f910b2",
           "name": "Reactivate a deactivated user (spec 010 FR-001)",
           "request": {
             "name": "Reactivate a deactivated user (spec 010 FR-001)",
@@ -734,7 +193,7 @@
                 {
                   "disabled": false,
                   "type": "any",
-                  "value": "string",
+                  "value": "<string>",
                   "key": "id",
                   "description": "(Required) "
                 }
@@ -743,106 +202,6 @@
             "method": "PATCH",
             "auth": null
           },
-          "response": [
-            {
-              "id": "1d373e8b-35da-4d39-971a-63598ceaf312",
-              "name": "Reactivated",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "user",
-                    ":id",
-                    "reactivate"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "PATCH",
-                "body": {}
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "845b2fbf-a746-48ae-ad7b-03e5aae61b71",
-              "name": "User not found",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "user",
-                    ":id",
-                    "reactivate"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "PATCH",
-                "body": {}
-              },
-              "status": "Not Found",
-              "code": 404,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
@@ -852,7 +211,6 @@
       "event": []
     },
     {
-      "id": "7533eaf0-db05-4c06-8b5f-551268ef4009",
       "name": "Platform",
       "description": {
         "content": "",
@@ -860,7 +218,6 @@
       },
       "item": [
         {
-          "id": "12306681-7947-4f33-8dca-79fa1e34a6ca",
           "name": "List branches in the caller's scope (spec 012 FR-008)",
           "request": {
             "name": "List branches in the caller's scope (spec 012 FR-008)",
@@ -879,55 +236,12 @@
             "method": "GET",
             "auth": null
           },
-          "response": [
-            {
-              "id": "7a79c4be-6363-46e1-8747-4a00b3f9f7ca",
-              "name": "OK",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "platform",
-                    "branches"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "GET",
-                "body": {}
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           }
         },
         {
-          "id": "e10be429-bd84-46ca-82f3-86aff8303fec",
           "name": "Create a branch (spec 012 FR-008, FR-004 bilingual name)",
           "request": {
             "name": "Create a branch (spec 012 FR-008, FR-004 bilingual name)",
@@ -957,7 +271,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  },\n  \"timezone\": \"Africa/Cairo\",\n  \"defaultLocale\": \"ar\"\n}",
+              "raw": "{\n  \"name\": {\n    \"ar\": \"<string>\",\n    \"en\": \"<string>\"\n  },\n  \"timezone\": \"<string>\",\n  \"defaultLocale\": \"<string>\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -965,115 +279,12 @@
               }
             }
           },
-          "response": [
-            {
-              "id": "c2caa7f5-dd32-4682-93a6-c756c2947168",
-              "name": "Created",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "platform",
-                    "branches"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"name\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  },\n  \"timezone\": \"Africa/Cairo\",\n  \"defaultLocale\": \"ar\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Created",
-              "code": 201,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "55d3ac41-2c77-49a0-af1d-b0ef4ac085c9",
-              "name": "A single-language name is refused, not warned (spec 012 AS-02)",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "platform",
-                    "branches"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  },
-                  {
-                    "key": "Accept",
-                    "value": "application/json"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"name\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  },\n  \"timezone\": \"Africa/Cairo\",\n  \"defaultLocale\": \"ar\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Bad Request",
-              "code": 400,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"message\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  },\n  \"fields\": [\n    \"string\",\n    \"string\"\n  ]\n}",
-              "cookie": [],
-              "_postman_previewlanguage": "json"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           }
         },
         {
-          "id": "55444cb7-0ff3-4ab0-8bdc-e66179b0426c",
           "name": "List departments in the caller's scope (spec 012 FR-007)",
           "request": {
             "name": "List departments in the caller's scope (spec 012 FR-007)",
@@ -1092,55 +303,12 @@
             "method": "GET",
             "auth": null
           },
-          "response": [
-            {
-              "id": "dc8cb346-7b09-4c5c-ae0a-1cdcb1235f7a",
-              "name": "OK",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "platform",
-                    "departments"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "GET",
-                "body": {}
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           }
         },
         {
-          "id": "8feb157d-f122-43d2-a34a-d371bb72a51b",
           "name": "Create a department (spec 012 FR-007). Flat — no nesting (decision 2).",
           "request": {
             "name": "Create a department (spec 012 FR-007). Flat — no nesting (decision 2).",
@@ -1170,7 +338,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  }\n}",
+              "raw": "{\n  \"name\": {\n    \"ar\": \"<string>\",\n    \"en\": \"<string>\"\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1178,115 +346,12 @@
               }
             }
           },
-          "response": [
-            {
-              "id": "5d9f2720-b480-4e4a-898f-f76967f038cf",
-              "name": "Created",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "platform",
-                    "departments"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"name\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  }\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Created",
-              "code": 201,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "ae79b673-7548-4397-863b-ea8f4c7bf625",
-              "name": "Single-language name refused",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "platform",
-                    "departments"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  },
-                  {
-                    "key": "Accept",
-                    "value": "application/json"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"name\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  }\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Bad Request",
-              "code": 400,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"message\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  },\n  \"fields\": [\n    \"string\",\n    \"string\"\n  ]\n}",
-              "cookie": [],
-              "_postman_previewlanguage": "json"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           }
         },
         {
-          "id": "7f235703-31a3-4a2d-a0b7-6ec0ce92c62f",
           "name": "Get one branch (spec 010 AS-01 — out of scope is 404, never 403)",
           "request": {
             "name": "Get one branch (spec 010 AS-01 — out of scope is 404, never 403)",
@@ -1305,7 +370,7 @@
                 {
                   "disabled": false,
                   "type": "any",
-                  "value": "string",
+                  "value": "<string>",
                   "key": "id",
                   "description": "(Required) "
                 }
@@ -1314,106 +379,6 @@
             "method": "GET",
             "auth": null
           },
-          "response": [
-            {
-              "id": "ec618b64-40a0-4530-aef9-d50304749df2",
-              "name": "OK",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "platform",
-                    "branches",
-                    ":id"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "GET",
-                "body": {}
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "ce9eed8a-123e-431d-b0e5-d6a07280f3fa",
-              "name": "Not found — identical body whether out of scope or genuinely absent",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "platform",
-                    "branches",
-                    ":id"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "GET",
-                "body": {}
-              },
-              "status": "Not Found",
-              "code": 404,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
@@ -1423,7 +388,6 @@
       "event": []
     },
     {
-      "id": "f9033839-edb7-4e7e-8d44-04577dee6968",
       "name": "Customer",
       "description": {
         "content": "",
@@ -1431,7 +395,6 @@
       },
       "item": [
         {
-          "id": "6fde7c9e-ce6d-4dbf-9c8f-d151ee362e89",
           "name": "Ranked-match customer search (spec 001 FR-002; the single-identity-key question was closed as malformed — see decisions-pending §0 decision 7)",
           "request": {
             "name": "Ranked-match customer search (spec 001 FR-002; the single-identity-key question was closed as malformed — see decisions-pending §0 decision 7)",
@@ -1447,7 +410,7 @@
                 {
                   "disabled": false,
                   "key": "q",
-                  "value": "string",
+                  "value": "<string>",
                   "description": "(Required) Minimum 3 characters (E-13) — matched against phone, email, national ID, account reference and display name, in that rank order"
                 }
               ],
@@ -1456,59 +419,12 @@
             "method": "GET",
             "auth": null
           },
-          "response": [
-            {
-              "id": "65ebd06b-cf3d-4964-8506-4f8f68699bc0",
-              "name": "Results scope-filtered; below 3 characters returns an empty, non-error result (E-13)",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "customer"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [
-                    {
-                      "key": "q",
-                      "value": "string"
-                    }
-                  ],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "GET",
-                "body": {}
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           }
         },
         {
-          "id": "f90b700a-03e7-42cf-bd2c-ff1077835c3d",
           "name": "Create a customer from a display name and one contact point (spec 001 FR-001, AS-01)",
           "request": {
             "name": "Create a customer from a display name and one contact point (spec 001 FR-001, AS-01)",
@@ -1537,7 +453,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"displayName\": \"string\",\n  \"contactPoints\": [\n    {\n      \"channelType\": \"whatsapp\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    },\n    {\n      \"channelType\": \"whatsapp\",\n      \"value\": \"string\",\n      \"isPrimary\": true\n    }\n  ],\n  \"type\": \"person\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"en\",\n  \"organisationId\": \"string\",\n  \"confirmCollision\": false\n}",
+              "raw": "{\n  \"displayName\": \"<string>\",\n  \"contactPoints\": [\n    {\n      \"channelType\": \"<string>\",\n      \"value\": \"<string>\",\n      \"isPrimary\": \"<boolean>\"\n    },\n    {\n      \"channelType\": \"<string>\",\n      \"value\": \"<string>\",\n      \"isPrimary\": \"<boolean>\"\n    }\n  ],\n  \"type\": \"person\",\n  \"nationalId\": \"<string>\",\n  \"accountRef\": \"<string>\",\n  \"preferredLanguage\": \"<string>\",\n  \"organisationId\": \"<string>\",\n  \"confirmCollision\": \"<boolean>\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1545,211 +461,12 @@
               }
             }
           },
-          "response": [
-            {
-              "id": "4ce5fd40-c767-4f7a-9d3e-6db5afd27f0e",
-              "name": "Created",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "customer"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"contactPoints\": [\n    {\n      \"channelType\": \"email\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    },\n    {\n      \"channelType\": \"phone\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    }\n  ],\n  \"type\": \"person\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"organisationId\": \"string\",\n  \"confirmCollision\": true\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Created",
-              "code": 201,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "2d6d95b5-af83-4db5-87b7-515eba725eb8",
-              "name": "Missing or invalid fields",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "customer"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  },
-                  {
-                    "key": "Accept",
-                    "value": "application/json"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"contactPoints\": [\n    {\n      \"channelType\": \"email\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    },\n    {\n      \"channelType\": \"phone\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    }\n  ],\n  \"type\": \"person\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"organisationId\": \"string\",\n  \"confirmCollision\": true\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Bad Request",
-              "code": 400,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"message\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  },\n  \"fields\": [\n    \"string\",\n    \"string\"\n  ]\n}",
-              "cookie": [],
-              "_postman_previewlanguage": "json"
-            },
-            {
-              "id": "ddb46643-d6a8-4f90-bfe3-6c92ed653cc0",
-              "name": "organisationId does not resolve to a visible organisation",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "customer"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"contactPoints\": [\n    {\n      \"channelType\": \"email\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    },\n    {\n      \"channelType\": \"phone\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    }\n  ],\n  \"type\": \"person\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"organisationId\": \"string\",\n  \"confirmCollision\": true\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Not Found",
-              "code": 404,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "02233e49-b0a5-4695-9c00-55477d6ce2d8",
-              "name": "A matching customer already exists (FR-010, AS-04). Not blocked — resend with confirmCollision true.",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "customer"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  },
-                  {
-                    "key": "Accept",
-                    "value": "application/json"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"contactPoints\": [\n    {\n      \"channelType\": \"email\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    },\n    {\n      \"channelType\": \"phone\",\n      \"value\": \"string\",\n      \"isPrimary\": false\n    }\n  ],\n  \"type\": \"person\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"organisationId\": \"string\",\n  \"confirmCollision\": true\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Conflict",
-              "code": 409,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"outOfScopeMatches\": 4740\n}",
-              "cookie": [],
-              "_postman_previewlanguage": "json"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           }
         },
         {
-          "id": "0d9491dd-21c9-4405-a0d6-aabf991082b6",
           "name": "Get one customer (spec 001 FR-003, AS-03 — out of scope is 404, never 403)",
           "request": {
             "name": "Get one customer (spec 001 FR-003, AS-03 — out of scope is 404, never 403)",
@@ -1767,7 +484,7 @@
                 {
                   "disabled": false,
                   "type": "any",
-                  "value": "string",
+                  "value": "<string>",
                   "key": "id",
                   "description": "(Required) "
                 }
@@ -1776,111 +493,12 @@
             "method": "GET",
             "auth": null
           },
-          "response": [
-            {
-              "id": "98f2a01c-8ff3-44a0-afab-d87f630f2d30",
-              "name": "OK",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "customer",
-                    ":id"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "GET",
-                "body": {}
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "f836004a-7b48-4680-8ce4-e5b1f8cefd7f",
-              "name": "Not found — identical whether out of scope or genuinely absent",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "customer",
-                    ":id"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "GET",
-                "body": {}
-              },
-              "status": "Not Found",
-              "code": 404,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           }
         },
         {
-          "id": "abdfeb4f-97ce-4cc4-877a-4b584c736e0e",
           "name": "Edit customer fields (spec 001 FR-020 — one audit entry per changed field)",
           "request": {
             "name": "Edit customer fields (spec 001 FR-020 — one audit entry per changed field)",
@@ -1898,7 +516,7 @@
                 {
                   "disabled": false,
                   "type": "any",
-                  "value": "string",
+                  "value": "<string>",
                   "key": "id",
                   "description": "(Required) "
                 }
@@ -1914,7 +532,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"displayName\": \"string\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"preferredChannel\": \"email\",\n  \"sensitiveFlag\": true\n}",
+              "raw": "{\n  \"displayName\": \"<string>\",\n  \"nationalId\": \"<string>\",\n  \"accountRef\": \"<string>\",\n  \"preferredLanguage\": \"<string>\",\n  \"preferredChannel\": \"<string>\",\n  \"sensitiveFlag\": \"<boolean>\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1922,176 +540,6 @@
               }
             }
           },
-          "response": [
-            {
-              "id": "41e43f73-064a-4f39-bacf-8f32fa301edc",
-              "name": "Updated",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "customer",
-                    ":id"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "PATCH",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"preferredChannel\": \"email\",\n  \"sensitiveFlag\": true\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "803e86ac-a869-4fce-8539-2050571ef9ab",
-              "name": "No changes supplied",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "customer",
-                    ":id"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "PATCH",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"preferredChannel\": \"email\",\n  \"sensitiveFlag\": true\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Bad Request",
-              "code": 400,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "db4ccc60-5323-42c3-977a-875b77215bb9",
-              "name": "Not found",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "customer",
-                    ":id"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "PATCH",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"displayName\": \"string\",\n  \"nationalId\": \"string\",\n  \"accountRef\": \"string\",\n  \"preferredLanguage\": \"ar\",\n  \"preferredChannel\": \"email\",\n  \"sensitiveFlag\": true\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Not Found",
-              "code": 404,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
@@ -2101,7 +549,6 @@
       "event": []
     },
     {
-      "id": "0721277c-c0ac-4666-89f6-366402bc78b4",
       "name": "Ticket",
       "description": {
         "content": "",
@@ -2109,7 +556,6 @@
       },
       "item": [
         {
-          "id": "7d64d5a7-7567-443b-9743-66c3a61d32d8",
           "name": "The ratified status set and transition graph (spec 002 FR-008; decisions 14, 15, 22). Clients read this rather than holding their own copy.",
           "request": {
             "name": "The ratified status set and transition graph (spec 002 FR-008; decisions 14, 15, 22). Clients read this rather than holding their own copy.",
@@ -2134,59 +580,12 @@
             "method": "GET",
             "auth": null
           },
-          "response": [
-            {
-              "id": "4234c228-059e-4161-8129-891d67cec87c",
-              "name": "OK",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket",
-                    "meta"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  },
-                  {
-                    "key": "Accept",
-                    "value": "application/json"
-                  }
-                ],
-                "method": "GET",
-                "body": {}
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"statuses\": [\n    {\n      \"key\": \"string\",\n      \"pausesSla\": false,\n      \"terminal\": false\n    },\n    {\n      \"key\": \"string\",\n      \"pausesSla\": true,\n      \"terminal\": false\n    }\n  ],\n  \"priorities\": [\n    \"string\",\n    \"string\"\n  ],\n  \"transitions\": {}\n}",
-              "cookie": [],
-              "_postman_previewlanguage": "json"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           }
         },
         {
-          "id": "a729485b-518a-4140-a597-86c6ab05d58e",
           "name": "List tickets, scope-filtered (spec 002 FR-033, AS-01)",
           "request": {
             "name": "List tickets, scope-filtered (spec 002 FR-033, AS-01)",
@@ -2202,44 +601,44 @@
                 {
                   "disabled": false,
                   "key": "status",
-                  "value": "string",
+                  "value": "<string>",
                   "description": "Comma-separated status keys"
                 },
                 {
                   "disabled": false,
                   "key": "priority",
-                  "value": "string"
+                  "value": "<string>"
                 },
                 {
                   "disabled": false,
                   "key": "assignedAgentId",
-                  "value": "string"
+                  "value": "<string>"
                 },
                 {
                   "disabled": false,
                   "key": "unassigned",
-                  "value": "false"
+                  "value": "<boolean>"
                 },
                 {
                   "disabled": false,
                   "key": "customerId",
-                  "value": "string"
+                  "value": "<string>"
                 },
                 {
                   "disabled": false,
                   "key": "category",
-                  "value": "string",
+                  "value": "<string>",
                   "description": "Exact match — category is a flat string, not a tree (decision 21)"
                 },
                 {
                   "disabled": false,
                   "key": "tag",
-                  "value": "string"
+                  "value": "<string>"
                 },
                 {
                   "disabled": false,
                   "key": "q",
-                  "value": "string",
+                  "value": "<string>",
                   "description": "Subject or reference prefix"
                 },
                 {
@@ -2258,95 +657,12 @@
             "method": "GET",
             "auth": null
           },
-          "response": [
-            {
-              "id": "250eeae4-7311-42eb-a952-0806e7d62956",
-              "name": "Out-of-scope tickets are absent from the list AND the count (AS-01)",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [
-                    {
-                      "key": "status",
-                      "value": "string"
-                    },
-                    {
-                      "key": "priority",
-                      "value": "string"
-                    },
-                    {
-                      "key": "assignedAgentId",
-                      "value": "string"
-                    },
-                    {
-                      "key": "unassigned",
-                      "value": "false"
-                    },
-                    {
-                      "key": "customerId",
-                      "value": "string"
-                    },
-                    {
-                      "key": "category",
-                      "value": "string"
-                    },
-                    {
-                      "key": "tag",
-                      "value": "string"
-                    },
-                    {
-                      "key": "q",
-                      "value": "string"
-                    },
-                    {
-                      "key": "page",
-                      "value": "1"
-                    },
-                    {
-                      "key": "limit",
-                      "value": "25"
-                    }
-                  ],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "GET",
-                "body": {}
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           }
         },
         {
-          "id": "9cc272f3-2427-41f7-a4ea-fdca59664d45",
           "name": "Create a ticket (spec 002 FR-001, AS-01)",
           "request": {
             "name": "Create a ticket (spec 002 FR-001, AS-01)",
@@ -2375,7 +691,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"customerId\": \"string\",\n  \"subject\": \"string\",\n  \"description\": \"string\",\n  \"category\": \"string\",\n  \"priority\": \"low\",\n  \"tags\": [\n    \"string\",\n    \"string\"\n  ]\n}",
+              "raw": "{\n  \"customerId\": \"<string>\",\n  \"subject\": \"<string>\",\n  \"description\": \"<string>\",\n  \"category\": \"<string>\",\n  \"priority\": \"<string>\",\n  \"tags\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2383,160 +699,12 @@
               }
             }
           },
-          "response": [
-            {
-              "id": "571f5ec6-b6bd-417b-9ac0-856520c6e897",
-              "name": "Created. Reference format TKT-YYYY-NNNNN (decision 11), status \"new\", prioritySource \"manual\".",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"customerId\": \"string\",\n  \"subject\": \"string\",\n  \"description\": \"string\",\n  \"category\": \"string\",\n  \"priority\": \"low\",\n  \"tags\": [\n    \"string\",\n    \"string\"\n  ]\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Created",
-              "code": 201,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "27972465-386e-4fad-a317-5a6c52aadea6",
-              "name": "Missing or invalid fields",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  },
-                  {
-                    "key": "Accept",
-                    "value": "application/json"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"customerId\": \"string\",\n  \"subject\": \"string\",\n  \"description\": \"string\",\n  \"category\": \"string\",\n  \"priority\": \"low\",\n  \"tags\": [\n    \"string\",\n    \"string\"\n  ]\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Bad Request",
-              "code": 400,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"message\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  },\n  \"fields\": [\n    \"string\",\n    \"string\"\n  ]\n}",
-              "cookie": [],
-              "_postman_previewlanguage": "json"
-            },
-            {
-              "id": "1453f0dd-9857-418b-9ede-f8a0c833b866",
-              "name": "Customer not found or out of scope",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"customerId\": \"string\",\n  \"subject\": \"string\",\n  \"description\": \"string\",\n  \"category\": \"string\",\n  \"priority\": \"low\",\n  \"tags\": [\n    \"string\",\n    \"string\"\n  ]\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Not Found",
-              "code": 404,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           }
         },
         {
-          "id": "df3781d5-6fbc-4a41-be93-f8a7f0059581",
           "name": "Ticket detail — thread, history, reachable transitions (spec 002 FR-013, AS-15; constitution II)",
           "request": {
             "name": "Ticket detail — thread, history, reachable transitions (spec 002 FR-013, AS-15; constitution II)",
@@ -2554,7 +722,7 @@
                 {
                   "disabled": false,
                   "type": "any",
-                  "value": "string",
+                  "value": "<string>",
                   "key": "id",
                   "description": "(Required) "
                 }
@@ -2569,115 +737,12 @@
             "method": "GET",
             "auth": null
           },
-          "response": [
-            {
-              "id": "deb8a88e-ce8f-4ade-8b52-31e6117fbb2b",
-              "name": "OK",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket",
-                    ":id"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  },
-                  {
-                    "key": "Accept",
-                    "value": "application/json"
-                  }
-                ],
-                "method": "GET",
-                "body": {}
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"ticket\": {},\n  \"reachableStatuses\": [\n    \"string\",\n    \"string\"\n  ],\n  \"sla\": {}\n}",
-              "cookie": [],
-              "_postman_previewlanguage": "json"
-            },
-            {
-              "id": "5f04132f-0b33-444a-894c-1a0445c839d1",
-              "name": "Not found — identical whether out of scope or genuinely absent (AS-01)",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket",
-                    ":id"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "GET",
-                "body": {}
-              },
-              "status": "Not Found",
-              "code": 404,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           }
         },
         {
-          "id": "e5eeb24a-953b-4afe-9cb4-78d091fe185f",
           "name": "Assign, reassign or unassign (spec 002 FR-009, FR-010, AS-06). Team is dropped — assignment is directly to an agent (decision 20).",
           "request": {
             "name": "Assign, reassign or unassign (spec 002 FR-009, FR-010, AS-06). Team is dropped — assignment is directly to an agent (decision 20).",
@@ -2696,7 +761,7 @@
                 {
                   "disabled": false,
                   "type": "any",
-                  "value": "string",
+                  "value": "<string>",
                   "key": "id",
                   "description": "(Required) "
                 }
@@ -2712,7 +777,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"reason\": \"string\",\n  \"assignedAgentId\": \"string\"\n}",
+              "raw": "{\n  \"reason\": \"<string>\",\n  \"assignedAgentId\": \"<string>\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2720,300 +785,12 @@
               }
             }
           },
-          "response": [
-            {
-              "id": "37c91f55-7f2e-461f-860a-8070b8dd0670",
-              "name": "Assigned",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket",
-                    ":id",
-                    "assign"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "PATCH",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"reason\": \"string\",\n  \"assignedAgentId\": \"string\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "c43ed60e-be14-47b0-8f23-6a394e39eb81",
-              "name": "Reason missing",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket",
-                    ":id",
-                    "assign"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "PATCH",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"reason\": \"string\",\n  \"assignedAgentId\": \"string\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Bad Request",
-              "code": 400,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "760e9588-7d0e-4cf9-9669-e9d1ecfff4e0",
-              "name": "Reassigning another agent's ticket requires LEAD or above (§9)",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket",
-                    ":id",
-                    "assign"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "PATCH",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"reason\": \"string\",\n  \"assignedAgentId\": \"string\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Forbidden",
-              "code": 403,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "a748d1eb-c4cb-4304-b2ec-ad064ec826cf",
-              "name": "Ticket or target agent not found",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket",
-                    ":id",
-                    "assign"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "PATCH",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"reason\": \"string\",\n  \"assignedAgentId\": \"string\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Not Found",
-              "code": 404,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "22af3b30-f625-4cd5-96d5-c116e63ab2d0",
-              "name": "Terminal ticket accepts no assignment, or the target agent is not scoped to this ticket",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket",
-                    ":id",
-                    "assign"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "PATCH",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"reason\": \"string\",\n  \"assignedAgentId\": \"string\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Conflict",
-              "code": 409,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           }
         },
         {
-          "id": "d30e7f18-1a36-4745-a569-a35efb1878c1",
           "name": "Transition status (spec 002 FR-007, FR-008, AS-03). Undefined transitions are refused with the reachable set named, and write no history entry.",
           "request": {
             "name": "Transition status (spec 002 FR-007, FR-008, AS-03). Undefined transitions are refused with the reachable set named, and write no history entry.",
@@ -3032,7 +809,7 @@
                 {
                   "disabled": false,
                   "type": "any",
-                  "value": "string",
+                  "value": "<string>",
                   "key": "id",
                   "description": "(Required) "
                 }
@@ -3052,7 +829,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"resolved\",\n  \"reason\": \"string\",\n  \"followUpAt\": \"1980-07-20T17:13:29.080Z\"\n}",
+              "raw": "{\n  \"status\": \"<string>\",\n  \"reason\": \"<string>\",\n  \"followUpAt\": \"<dateTime>\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3060,247 +837,12 @@
               }
             }
           },
-          "response": [
-            {
-              "id": "718645a6-3342-43c0-95ec-d9d8d4981376",
-              "name": "Transitioned",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket",
-                    ":id",
-                    "status"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "PATCH",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"status\": \"resolved\",\n  \"reason\": \"string\",\n  \"followUpAt\": \"1980-07-20T17:13:29.080Z\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "383fc041-d619-4c7d-a1c1-6f3814d16f27",
-              "name": "Unknown status",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket",
-                    ":id",
-                    "status"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "PATCH",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"status\": \"resolved\",\n  \"reason\": \"string\",\n  \"followUpAt\": \"1980-07-20T17:13:29.080Z\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Bad Request",
-              "code": 400,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "11202d75-0b88-4e96-be1d-6d8b41199fe9",
-              "name": "Not found",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket",
-                    ":id",
-                    "status"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "PATCH",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"status\": \"resolved\",\n  \"reason\": \"string\",\n  \"followUpAt\": \"1980-07-20T17:13:29.080Z\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Not Found",
-              "code": 404,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "f95fd997-1e48-4727-bfbd-1dccbe342f8d",
-              "name": "Already in that status, or the transition is not defined (AS-03)",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket",
-                    ":id",
-                    "status"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  },
-                  {
-                    "key": "Accept",
-                    "value": "application/json"
-                  }
-                ],
-                "method": "PATCH",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"status\": \"resolved\",\n  \"reason\": \"string\",\n  \"followUpAt\": \"1980-07-20T17:13:29.080Z\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Conflict",
-              "code": 409,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"message\": {\n    \"ar\": \"string\",\n    \"en\": \"string\"\n  },\n  \"reachableStatuses\": [\n    \"string\",\n    \"string\"\n  ]\n}",
-              "cookie": [],
-              "_postman_previewlanguage": "json"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           }
         },
         {
-          "id": "4d407bd6-410f-461f-9d02-af904660c37a",
           "name": "Add a reply or internal note (spec 002 FR-014, AS-07). AUD is read-only; visibility has no default.",
           "request": {
             "name": "Add a reply or internal note (spec 002 FR-014, AS-07). AUD is read-only; visibility has no default.",
@@ -3319,7 +861,7 @@
                 {
                   "disabled": false,
                   "type": "any",
-                  "value": "string",
+                  "value": "<string>",
                   "key": "id",
                   "description": "(Required) "
                 }
@@ -3335,7 +877,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"body\": \"string\",\n  \"visibility\": \"internal\"\n}",
+              "raw": "{\n  \"body\": \"<string>\",\n  \"visibility\": \"<string>\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3343,293 +885,6 @@
               }
             }
           },
-          "response": [
-            {
-              "id": "1ec9c840-06cc-4288-b402-00b0147c521e",
-              "name": "Added",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket",
-                    ":id",
-                    "message"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"body\": \"string\",\n  \"visibility\": \"internal\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Created",
-              "code": 201,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "a411cf1c-a2ed-49a6-b394-de661355c981",
-              "name": "Body or visibility missing",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket",
-                    ":id",
-                    "message"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"body\": \"string\",\n  \"visibility\": \"internal\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Bad Request",
-              "code": 400,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "909c7ef1-7e81-4dae-bda5-459bc6ac0d06",
-              "name": "Requires AGT",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket",
-                    ":id",
-                    "message"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"body\": \"string\",\n  \"visibility\": \"internal\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Forbidden",
-              "code": 403,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "8c780c3b-f5e4-494b-995a-9b1a8e88051e",
-              "name": "Not found",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket",
-                    ":id",
-                    "message"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"body\": \"string\",\n  \"visibility\": \"internal\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Not Found",
-              "code": 404,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            },
-            {
-              "id": "4b586362-d8e9-4cf4-a991-522be9ebcb83",
-              "name": "Terminal ticket accepts no reply",
-              "originalRequest": {
-                "url": {
-                  "path": [
-                    "ticket",
-                    ":id",
-                    "message"
-                  ],
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "disabled": false,
-                      "type": "any",
-                      "value": "string",
-                      "key": "id",
-                      "description": "(Required) "
-                    }
-                  ]
-                },
-                "header": [
-                  {
-                    "description": {
-                      "content": "Added as a part of security scheme: bearer",
-                      "type": "text/plain"
-                    },
-                    "key": "Authorization",
-                    "value": "Bearer <token>"
-                  }
-                ],
-                "method": "POST",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"body\": \"string\",\n  \"visibility\": \"internal\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "status": "Conflict",
-              "code": 409,
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "text/plain"
-                }
-              ],
-              "body": "",
-              "cookie": [],
-              "_postman_previewlanguage": "text"
-            }
-          ],
           "event": [],
           "protocolProfileBehavior": {
             "disableBodyPruning": true
@@ -3658,7 +913,6 @@
     ]
   },
   "info": {
-    "_postman_id": "8156803b-7c1a-46b0-997d-83def0d09633",
     "name": "azm-crm API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "description": "Generated from docs/openapi.json by npm run docs:postman. Re-run docs:build then docs:postman after adding a @swagger block — this file is not hand-edited."
