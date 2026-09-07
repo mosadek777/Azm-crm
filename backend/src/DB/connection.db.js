@@ -6,17 +6,24 @@
 import { MongoClient } from 'mongodb'
 import mongoose from 'mongoose'
 
+// MONGO_URI carries no database in its path, so the name lives here — and is
+// exported, because anything that connects on its own (the test runner drops
+// the database between suites) has to target the SAME one. Reading the URI and
+// letting the driver pick its default silently connects to `test` while the app
+// uses this: a "clean" run against an untouched database, which is worse than a
+// failing one. That mistake has already been made once here.
+export const DB_NAME = 'azmCrm'
+
 const client = new MongoClient(process.env.MONGO_URI, { serverSelectionTimeoutMS: 5000 })
 
 export const connectMongoose = async () => {
-  await mongoose.connect(process.env.MONGO_URI, { dbName: "azmCrm" })
+  await mongoose.connect(process.env.MONGO_URI, { dbName: DB_NAME })
   console.log("MONGOOSE CONNECTED")
 }
 
 export const checkDBconnection = async () => {
   try {
-    const result = await client.connect()
-    console.log({ result })
+    await client.connect()
     console.log("DB CONNECTED")
     await connectMongoose()
   } catch (err) {
@@ -26,4 +33,4 @@ export const checkDBconnection = async () => {
   }
 }
 
-export const db = client.db("azmCrm")
+export const db = client.db(DB_NAME)

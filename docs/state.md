@@ -10,6 +10,32 @@ seed, API documentation, ClickUp board restructured into a tree, GitHub Pages
 
 ---
 
+## ⚠ Any verification claim made before 2026-09-08 needs re-running
+
+`MONGO_URI` names no database in its path, and `src/DB/connection.db.js`
+overrides it with `dbName: 'azmCrm'`. A verification script that connects with
+the URI alone therefore talks to `test` — an empty database the application
+never touches — while the app reads and writes `azmCrm`.
+
+That mistake was made during the 2026-09-08 audit: a drop-and-reseed hit `test`,
+the suites then ran against a dirty `azmCrm` carrying leftovers from earlier
+sessions, and the first result was a failure that did not exist. **A clean run
+against the wrong database is worse than a failing run** — it reports success
+for work it never examined.
+
+The audit's own results were re-run against a correctly dropped `azmCrm` and are
+sound. What cannot be established retrospectively is which database earlier
+sessions used. So:
+
+- **Treat every "verified", "passing" or "clean" claim in this repository dated
+  before 2026-09-08 as unconfirmed** until re-run. That includes the check
+  counts quoted in earlier revisions of this file and of `next-steps.md`.
+- Re-running is now one command: `npm test` in `backend/`.
+- The name is exported as `DB_NAME` from `connection.db.js` and the test runner
+  imports it, so the runner cannot drift from the application again.
+
+---
+
 ## NEXT ACTION
 
 **Step 4 shipped today under an explicit delivery-compression instruction —
@@ -103,15 +129,30 @@ login, customer list/detail/create, ticket list/detail/create. Every component
 is hand-rolled and **none has had an accessibility or RTL keyboard audit** —
 see `next-steps.md` §5.
 
-**Verification:** 46-check customer+ticket acceptance suite · 23/23 platform
-suite · `npm run audit:reconcile` clean, including `Ticket`/`Message` coverage
-(added after the same false-clean trap recurred) · `ng build` clean · login,
-customer and ticket screens screenshotted in both languages. The acceptance
-suites are **not idempotent** — they must be preceded by a database drop and
-re-seed. They also live outside the repository, so there is still no automated
-safety net; the frontend has no tests beyond the Angular default.
+**Verification** (all re-run 2026-09-08 against a correctly dropped `azmCrm`):
+
+| | |
+|---|---|
+| `npm test` (backend) | **106 checks** — scope 24, customer 32, ticket 50. Exit 0 |
+| `npm run audit:reconcile` | 0 orphaned, 0 unaudited, 0 unchecked models (8 checked) |
+| atomicity + transaction proofs | no orphaned entry survives an injected fault; rollback verified |
+| `ng build` | exit 0 |
+| `ng test` (frontend) | 6/6 — app shell and language service only |
+| Screens | login, customer and ticket screens screenshotted in both languages |
+
+`npm test` drops the database and restarts the server **before each suite**.
+That is not belt-and-braces: the suites each create their own
+`sara@azmsquad.com`, so sharing a database makes the second suite sign in as the
+first one's user and fail as though the scope predicate were broken. Dropping
+also drops the indexes, which mongoose only rebuilds at model compilation —
+hence the server restart too, or the customer suite would pass while the
+one-primary-per-channel-type constraint quietly did not exist.
+
+**The frontend still has no meaningful tests.** The 6 that pass cover the app
+shell and the language service; none of the six screens has one.
 
 ```bash
+# backend/          npm test   — drops the DB and runs every acceptance suite
 # backend/          npm run seed:admin (once) · npm run dev · npm run audit:reconcile
 # backend/          npm run docs:build · npm run docs:postman
 # backend/          npm run seed:demo   (needs DEMO_AGENT_PASSWORD) · npm run seed:demo:clear

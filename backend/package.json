@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "test": "node tests/run-all.js",
     "seed:admin": "node src/utils/seed-admin.js",
     "audit:reconcile": "node src/utils/reconcile-audit.js",
     "docs:build": "node src/docs/build-openapi.js",

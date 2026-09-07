@@ -115,7 +115,7 @@ Blunt, as asked.
 
 **The transition graph (decision 22) is data I invented, not data anyone approved.** It's flagged as such in the code, but "flagged as such in the code" is not the same as "someone with authority over the support workflow has looked at it." If the real workflow doesn't allow `assigned → resolved` directly, or wants `pending_supplier` reachable from `pending_customer`, that graph is wrong today and nothing will fail loudly to reveal it — tickets will simply follow a legal-but-wrong path.
 
-**No integration or end-to-end test suite exists — only manual acceptance scripts run by hand this session.** The 46 customer/ticket checks and 23 platform checks are real and they did catch two genuine bugs today (the index-name collision, the reconcile coverage gap). But they live in the session's scratchpad, not the repository, and they don't run in CI because there is no CI. The next person to touch `scope.js` or `audit.js` has no automated safety net.
+**~~No integration test suite exists~~ — resolved 2026-09-08, but it still does not run in CI.** The 106 acceptance checks now live in `backend/tests/` and run with `npm test`, which drops the database and restarts the server before each suite. They are real and have caught genuine bugs (the index-name collision, the reconcile coverage gap). What is still missing is anything that runs them automatically: nothing stops a commit that breaks them, because there is no CI. The command exists; the discipline is still manual.
 
 **The Postman collection and OpenAPI spec will drift the moment someone adds a route without running `docs:build`/`docs:postman` afterward.** There's no pre-commit hook or CI check enforcing that. It's a two-command discipline problem now; it'll be a "why does the API docs page lie" problem in a month if nobody enforces it.
 
@@ -146,12 +146,13 @@ feature makes more expensive to fix later. Do it now while ticket volume is
 zero.
 
 **Days 3–4 — get a real safety net in place.**
-Move today's manual test scripts into the repository as an actual test suite,
-wire up CI (even just "run the suite on push"), and add a pre-commit or CI
-check that `docs:build`/`docs:postman` are current. This is unglamorous and it
-is the thing that prevents every future change from being a today-style manual
-verification marathon. Include at least a smoke test on the frontend, which
-currently has none at all.
+The suites are in the repository now (`npm test`), so what remains is CI: run
+`npm test` and `ng build` on push, and add a check that `docs:build` /
+`docs:postman` leave no diff — now a meaningful check, because `docs:postman`
+is deterministic as of 2026-09-08 and previously could not have been one.
+Include at least a smoke test on the frontend, which still has none. Unglamorous,
+and the thing that stops every future change from being a manual verification
+marathon.
 
 **Day 5 — an accessibility and RTL pass over the hand-rolled components.**
 Half a day with a keyboard and a screen reader over the four bespoke controls

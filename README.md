@@ -66,6 +66,9 @@ password should be changed before any real use.
 
 ```bash
 # backend/
+npm test                 # every acceptance suite in backend/tests/. Drops the
+                          # database and restarts the server before each one —
+                          # see tests/run-all.js for why both are necessary
 npm run dev              # nodemon
 npm run seed:admin       # once, before first use
 npm run audit:reconcile  # report-only: finds audit entries with no record,
