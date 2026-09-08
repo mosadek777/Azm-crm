@@ -128,5 +128,38 @@ export const DICTIONARY: Translations = {
   'ticket.selected': { ar: 'المحدد', en: 'Selected' },
   'history.when': { ar: 'التاريخ', en: 'When' },
   'history.action': { ar: 'الإجراء', en: 'Action' },
-  'history.actor': { ar: 'المنفّذ', en: 'Actor' }
+  'history.actor': { ar: 'المنفّذ', en: 'Actor' },
+
+  // --- spec 008, the customer portal ---------------------------------------
+  // FR-011 (MUST): "fully usable in Arabic and English, switchable at any time,
+  // with correct right-to-left layout". The portal is a customer-facing surface,
+  // so every string here is chrome the customer reads.
+  'portal.name': { ar: 'عزم — بوابة العملاء', en: 'AZM — Customer Portal' },
+  'portal.signIn': { ar: 'تسجيل الدخول', en: 'Sign in' },
+  'portal.email': { ar: 'البريد الإلكتروني', en: 'Email address' },
+  'portal.password': { ar: 'كلمة المرور', en: 'Password' },
+  'portal.submitting': { ar: 'جارٍ تسجيل الدخول…', en: 'Signing in…' },
+  'portal.noAccount': {
+    ar: 'الحسابات تُنشأ عن طريقنا. إذا لم تتمكن من الدخول، تواصل معنا.',
+    en: 'Accounts are arranged by us. If you cannot sign in, contact us.'
+  },
+  'portal.myRequests': { ar: 'طلباتي', en: 'My requests' },
+  'portal.signOut': { ar: 'تسجيل الخروج', en: 'Sign out' },
+  'portal.reference': { ar: 'الرقم المرجعي', en: 'Reference' },
+  'portal.subject': { ar: 'الموضوع', en: 'Subject' },
+  'portal.status': { ar: 'الحالة', en: 'Status' },
+  'portal.raised': { ar: 'تاريخ الطلب', en: 'Raised' },
+  'portal.none': { ar: 'لا توجد طلبات بعد.', en: 'No requests yet.' },
+  'portal.backToList': { ar: 'العودة إلى طلباتي', en: 'Back to my requests' },
+  'portal.conversation': { ar: 'المحادثة', en: 'Conversation' },
+  'portal.fromYou': { ar: 'أنت', en: 'You' },
+  'portal.fromSupport': { ar: 'الدعم', en: 'Support' },
+  'portal.noMessages': { ar: 'لا توجد رسائل بعد.', en: 'No messages yet.' },
+  'portal.loading': { ar: 'جارٍ التحميل…', en: 'Loading…' },
+  // Read-only for now: X4 and X6 add submit and reply. Saying so is better than
+  // a button that does nothing.
+  'portal.readOnlyNote': {
+    ar: 'يمكنك متابعة طلباتك هنا. الرد وإنشاء طلب جديد سيتوفران قريبًا.',
+    en: 'You can follow your requests here. Replying and raising a new request are coming soon.'
+  }
 };

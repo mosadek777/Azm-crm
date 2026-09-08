@@ -1,0 +1,28 @@
+<!-- Logical properties only (ms-/me-/ps-/pe-/start/end). Direction is set once
+     on the root element, so this whole shell mirrors in Arabic with no override
+     sheet — 008 FR-011, AS-10. -->
+<div class="min-h-screen bg-surface-100 flex flex-col">
+  <header class="bg-white border-b border-surface-200">
+    <div class="mx-auto max-w-4xl px-4 py-3 flex items-center gap-4">
+      <a routerLink="/portal/tickets" class="font-semibold text-surface-900 no-underline">
+        {{ 'portal.name' | translate: i18n.lang() }}
+      </a>
+
+      <div class="ms-auto flex items-center gap-4 text-sm">
+        @if (portalAuth.customer(); as customer) {
+          <span class="text-surface-600 hidden sm:inline">{{ customer.displayName }}</span>
+        }
+        <button type="button" class="text-primary-700 hover:underline" (click)="i18n.toggle()">
+          {{ 'lang.switchTo' | translate: i18n.lang() }}
+        </button>
+        <button type="button" class="text-surface-600 hover:underline" (click)="portalAuth.signOut()">
+          {{ 'portal.signOut' | translate: i18n.lang() }}
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 mx-auto w-full max-w-4xl p-4">
+    <router-outlet />
+  </main>
+</div>

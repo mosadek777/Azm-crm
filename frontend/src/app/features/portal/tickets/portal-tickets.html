@@ -1,0 +1,47 @@
+<h1 class="text-xl font-semibold text-surface-900 mb-1">
+  {{ 'portal.myRequests' | translate: i18n.lang() }}
+</h1>
+<p class="text-sm text-surface-500 mb-5">
+  {{ 'portal.readOnlyNote' | translate: i18n.lang() }}
+</p>
+
+@if (loading()) {
+  <p class="text-surface-500">{{ 'portal.loading' | translate: i18n.lang() }}</p>
+} @else if (tickets().length === 0) {
+  <p class="text-surface-500 bg-white border border-surface-200 rounded-xl p-6 text-center">
+    {{ 'portal.none' | translate: i18n.lang() }}
+  </p>
+} @else {
+  <!-- Wide content scrolls inside its own container so the page never scrolls
+       sideways on a phone (008 FR-012, NFR-007). -->
+  <div class="bg-white border border-surface-200 rounded-xl overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="text-surface-600 border-b border-surface-200">
+        <tr>
+          <th class="text-start font-medium px-4 py-3">{{ 'portal.reference' | translate: i18n.lang() }}</th>
+          <th class="text-start font-medium px-4 py-3">{{ 'portal.subject' | translate: i18n.lang() }}</th>
+          <th class="text-start font-medium px-4 py-3">{{ 'portal.status' | translate: i18n.lang() }}</th>
+          <th class="text-start font-medium px-4 py-3">{{ 'portal.raised' | translate: i18n.lang() }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (t of tickets(); track t._id) {
+          <tr class="border-b border-surface-100 last:border-0 hover:bg-surface-50">
+            <td class="px-4 py-3">
+              <!-- A reference never reverses, in either direction (008 §8). -->
+              <a [routerLink]="['/portal/tickets', t._id]" dir="ltr"
+                 class="text-primary-700 hover:underline font-medium">{{ t.reference }}</a>
+            </td>
+            <td class="px-4 py-3 text-surface-900">{{ t.subject }}</td>
+            <td class="px-4 py-3">
+              <span class="inline-block rounded-full px-2.5 py-0.5 text-xs" [class]="t.status | statusTone">
+                {{ t.statusLabel ?? t.status }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-surface-600">{{ t.createdAt | date: 'mediumDate' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

@@ -12,6 +12,8 @@ import { Routes } from '@angular/router';
 import { AuthLayout } from './layouts/auth-layout/auth-layout';
 import { MainLayout } from './layouts/main-layout/main-layout';
 import { authGuard } from './core/auth/guards/auth.guard';
+import { PortalLayout } from './layouts/portal-layout/portal-layout';
+import { portalGuard } from './core/auth/guards/portal.guard';
 
 export const routes: Routes = [
   {
@@ -23,6 +25,30 @@ export const routes: Routes = [
         loadComponent: () => import('./features/auth/login/login').then(m => m.Login)
       },
       { path: '', pathMatch: 'full', redirectTo: 'login' }
+    ]
+  },
+  {
+    // spec 008. A separate shell with its own guard and its own token — a
+    // customer is not a member of staff and shares nothing with MainLayout.
+    // Declared BEFORE the '' branch, or the empty path swallows it.
+    path: 'portal',
+    component: PortalLayout,
+    children: [
+      {
+        path: 'signin',
+        loadComponent: () => import('./features/portal/signin/portal-signin').then(m => m.PortalSignin)
+      },
+      {
+        path: 'tickets',
+        canActivate: [portalGuard],
+        loadComponent: () => import('./features/portal/tickets/portal-tickets').then(m => m.PortalTickets)
+      },
+      {
+        path: 'tickets/:id',
+        canActivate: [portalGuard],
+        loadComponent: () => import('./features/portal/ticket-detail/portal-ticket-detail').then(m => m.PortalTicketDetail)
+      },
+      { path: '', pathMatch: 'full', redirectTo: 'tickets' }
     ]
   },
   {
