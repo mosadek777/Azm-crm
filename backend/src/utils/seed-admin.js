@@ -29,8 +29,48 @@ const run = async () => {
     process.exit(1)
   }
 
-  if (await User.findOne({ email })) {
-    console.log(`break-glass administrator already exists: ${email}`)
+  // RECONCILE, don't skip. This used to return here the moment the account
+  // existed, which made BREAKGLASS_PASSWORD in .env look authoritative when it
+  // was not: the hash was written once at first seed and every later edit to
+  // .env changed nothing, so the file and the database disagreed silently and
+  // the only symptom was a sign-in that refused a password the operator could
+  // see was correct. The account is now reconciled with .env on every run, the
+  // same way the ClickUp board is reconciled with tasks.json — the file is the
+  // source of truth.
+  //
+  // A password change is a mutation, so it goes through the audit writer inside
+  // a transaction like any other (constitution II). Neither the password nor
+  // either hash is written into the entry: the trail records THAT the credential
+  // changed, never the credential.
+  const existing = await User.findOne({ email }).select('+passwordHash')
+  if (existing) {
+    if (await bcrypt.compare(password, existing.passwordHash)) {
+      console.log(`break-glass administrator already matches .env: ${email}`)
+      await mongoose.disconnect()
+      return
+    }
+
+    const passwordHash = await bcrypt.hash(password, Number(process.env.SALT_ROUNDS))
+    const session = await mongoose.startSession()
+    try {
+      await session.withTransaction(async () => {
+        await recordAudit({
+          actorRef: 'system',
+          action: 'user.password_changed',
+          entityType: 'User',
+          entityId: existing._id,
+          before: { passwordHash: '[redacted]' },
+          after: { passwordHash: '[redacted]', source: 'seed:admin', breakGlass: true },
+          severity: 'high',
+          session
+        })
+        await User.updateOne({ _id: existing._id }, { $set: { passwordHash } }, { session })
+      })
+    } finally {
+      await session.endSession()
+    }
+
+    console.log(`break-glass administrator password updated from .env: ${email}`)
     await mongoose.disconnect()
     return
   }

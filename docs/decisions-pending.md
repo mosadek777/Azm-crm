@@ -125,6 +125,43 @@ unscoped form would wrongly protect.
 **Reversal cost: low.** Two index definitions in `customer.model.js`, plus a
 reindex. No application code reads the filter.
 
+### Eleventh batch — ratified 2026-09-08, credential rendering
+
+| # | Decision | Kind | Marker | Basis |
+|---|---|---|---|---|
+| 38 | **A password input is a direction-neutral value and is pinned `dir="ltr"` unconditionally** — both languages, staff and portal | **The developer's**, not a reading. `012 §3` does not name passwords | No marker. `012` has none open on this | **The rule exists and passwords are outside its stated extension.** `012 §3` defines a *direction-neutral value* as *"a value that must always render left-to-right regardless of context: ticket references, phone numbers, email addresses, identifiers, numerals, times and durations"*, and `012 FR-002` (**MUST**) requires that they *"always render left-to-right in the correct order, in every context"*. `012 AS-04` exercises the rule over a reference, a phone number, an email address, a duration and a date. **A password is in none of those lists.** The developer decided it belongs to the same class, on the reasoning that a password is a value the user must reproduce character for character and therefore must never be visually reordered |
+
+**Why this is recorded as the developer's and not as a reading.** The
+enumeration in `012 §3` could be read either way — as the definition's whole
+extension, or as examples of a defining property (*"must always render
+left-to-right regardless of context"*) that a password would also satisfy. The
+project's own rule is that an unstated case is not filled from inference, so
+this is attributed rather than presented as what the spec already said.
+
+**It was a real defect, not a theoretical one.** In an Arabic interface a
+password ending in `_` rendered with the underscore at the visual start: a
+trailing neutral character takes the surrounding paragraph direction under the
+bidirectional algorithm. What the user typed and what they saw disagreed, and
+the sign-in that followed was refused. Masking does not avoid it — the caret and
+the insertion point follow the field's direction whether the glyphs are dots or
+characters, and the Show control reveals the reordered value outright.
+
+**An earlier revert is superseded.** `dir="ltr"` had been placed on the input
+alone, then removed because it broke the layout: the reveal button is positioned
+with `end-0`, which resolves against the **page** direction and moved to the
+left edge in Arabic, while the input's own `padding-inline-end` stayed on the
+right — padding on one edge, icon on the other, value under the glyph. That
+revert traded a correctness defect for a layout one. The fix is to pin the
+**wrapper**, so the input, its padding and the button share a single direction
+context and agree in both languages.
+
+**Reversal cost: one attribute.** `dir="ltr"` on the wrapper in
+`password-field.html`. Nothing else reads it.
+
+**Verified**, both languages and both interfaces: computed `direction` is `ltr`
+on all four fields with the page at `dir="rtl"`, padding and button on the same
+edge, and `Example-2026_` screenshotted rendering with the underscore at the end.
+
 ### Tenth batch — ratified 2026-09-08, the portal write path
 
 | # | Decision | Kind | Marker | Basis |

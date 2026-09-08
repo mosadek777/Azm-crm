@@ -385,7 +385,7 @@ const run = async () => {
   console.log('            replies to the customer and resolves the ticket')
   console.log(`  CUSTOMER  ${customerPersona.value.padEnd(32)} ${customerPersona.displayName} (${customerPersona.ref})`)
   console.log('            signs in at the portal and sees their own tickets')
-  console.log('            read-only for now: submit and reply arrive with X4/X6')
+  console.log('            raises a request and replies; never sees an internal note')
   console.log('')
   console.log('  the ticket to demonstrate with: "Refund not received for a returned order"')
   console.log(`  — ${customerPersona.displayName}'s, status new, deliberately unassigned`)
