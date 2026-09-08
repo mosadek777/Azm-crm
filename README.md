@@ -148,6 +148,11 @@ enforced on every read and write, including on tickets and customers.
   from spec with its undo cost.
 - **`docs/trace.md`** — spec requirement → code, both directions: what's built
   with no requirement, and what's required with no code yet.
+- **`docs/remaining.md`** — everything not yet built, ordered as a safe build
+  order, each item marked **ADD** (bolt on, cannot break what works) or
+  **CHANGE** (edits working code or reshapes existing data), with what it
+  depends on and rough backend/frontend effort. Ends with where to start, where
+  not to, and which items get more expensive with time.
 - **`docs/portal-plan.md`** — the customer-facing flow (customer signs in, opens
   a ticket, exchanges messages, sees it resolved) audited against the specs:
   which steps a requirement covers, which are covered with no code, which have

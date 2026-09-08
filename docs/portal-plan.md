@@ -83,8 +83,8 @@ amendment before the piece that depends on it is built.
 
 | Gap | Why it matters |
 |---|---|
-| **Ticket `source`** | `008 AS-04` mandates a ticket created with `source: portal`, but `002`'s Ticket entity has no `source` attribute. Neither spec owns the field. Without it, portal intake is indistinguishable from an agent typing on the customer's behalf — and `008`'s own success metric "portal share of ticket intake" is unmeasurable. |
-| **Customer-facing status labels** | `008 §8` says they are "sourced from spec `002` status labels, not re-authored here". `002` defines status keys and no customer-facing label. Nothing in the product tells a customer what `pending_internal` means, in either language. |
+| **Ticket `source` on the entity** | *(narrowed 2026-09-08 on re-reading.)* `002 §10` **does** specify it, for the audit entry: *"Ticket created \| actor, timestamp, **source** (`ui` / `email` / `whatsapp` / `sms` / `chat` / `form` / `api` / `portal`), customer, …"*. What no spec provides is a `source` attribute on the Ticket entity in `002 §3`, which `008 AS-04` implies by saying *"a ticket is created with source `portal`"*. So the value set and the audit obligation are specified; only persistence on the record is not. Recording it in the audit entry requires no gap-filling; storing it on the ticket does. |
+| ~~**Customer-facing status labels**~~ — **not a gap; withdrawn** | *(corrected 2026-09-08.)* This row was wrong. `002 §3` **does** define them: the Status entity carries `label_ar`, `label_en` — *"Both required (constitution I)"* — and `008 §8` correctly points at them (*"Sourced from spec `002` status labels, not re-authored here"*). The specs are complete here. What is missing is **code**: `backend/src/utils/ticket-status.js` carries only `pausesSla`, `terminal` and `requiresResolutionFields` for each status, and no labels. That is unbuilt work, not an unspecified requirement — see `docs/remaining.md`. |
 | **An administrator intake surface** | No spec describes one. `004` is the agent and lead workspace. Recorded because the original step 2 assumed it; the assumption has been dropped rather than built. |
 
 ---
