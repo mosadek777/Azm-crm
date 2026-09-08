@@ -9,7 +9,7 @@ constitution and the code relate.
 customers and tickets are built and tested end to end, backend and frontend.
 Most of the product (channels, SLA automation, knowledge base, the customer
 portal, reports, ERP integration, AI features) is **not built** — see
-[What's not built](#whats-not-built).
+[docs/roadmap.md](docs/roadmap.md).
 
 ## Links
 
@@ -19,6 +19,29 @@ portal, reports, ERP integration, AI features) is **not built** — see
 | **Live API docs** | `http://localhost:3000/api-docs` — **local only**, requires the backend running. There is no hosted environment |
 | **Postman** | `docs/azm-crm.postman_collection.json` and `docs/azm-crm.postman_environment.json` — import both by hand (File → Import). Nothing is pushed to Postman's cloud |
 | **Project board** | *TODO* — the ClickUp list is private to the workspace; a shareable public link has not been created |
+
+## Demo accounts
+
+`npm run seed:demo` (from `backend/`) creates three personas for demonstrating
+the flow end to end. **All three share one password, read from `DEMO_PASSWORD`
+in `backend/.env`** — it is not written here, and it is not in any tracked file.
+
+| Persona | Sign-in | Signs in at | Does what |
+|---|---|---|---|
+| **Admin** | `demo.admin@azmsquad.com` | `/auth/login` | Assigns tickets. **Cannot** post a customer-visible reply — spec `002` §9 permits an administrator an internal note and not a reply to the customer |
+| **Agent** | `demo.sara@azmsquad.com` | `/auth/login` | Replies to the customer and resolves the ticket |
+| **Customer** | `demo.customer@azmsquad.com` | `/portal` | Signs in to the customer portal and follows their own requests |
+
+The seed prints all three at the end of its run, so the terminal doubles as a
+crib sheet. Staff and customer sessions use separate storage, so both can be
+held in one browser — a private window is still the cleanest way to demonstrate
+both halves side by side.
+
+**Step-by-step rehearsal script, including what to say about the parts that are
+not built: [`docs/demo-script.md`](docs/demo-script.md).**
+
+Sharing one password across three accounts is a demo shortcut, recorded as
+decision 36 in `docs/decisions-pending.md`, not a pattern to copy.
 
 ## Stack
 
@@ -120,25 +143,6 @@ module has no entry rather than a guessed one.
 | Tickets | Create, list with filters, detail with thread and history, assign/reassign, status transitions against an explicit graph |
 | Angular UI | Customer list/detail, ticket list/detail/create |
 
-## What's not built
-
-**Deliberately scoped out today**, each with an open ClickUp task naming what
-blocks it: email/WhatsApp/SMS/chat, the SLA & automation engine, the knowledge
-base, the customer portal, reports, the ERP integration, and AI features (the
-last one is not merely deferred — see `docs/decisions-pending.md` for why it
-cannot be planned yet).
-
-**Two deliberate deviations from spec**, made to ship a working slice today:
-
-- **`Team` is not implemented.** Tickets assign directly to an agent. Two specs
-  make a `Team` reference *required*, and no spec defines the entity — this is
-  a documented spec defect, not a design choice, and it is *stepped around*
-  here, not resolved.
-- **Category is a flat string**, not the tree the spec requires (`FR-004`).
-
-Neither compromise touches scope enforcement or the audit trail — both remain
-enforced on every read and write, including on tickets and customers.
-
 ## Where to look next
 
 - **`docs/state.md`** — read this first in any new session. What's built, what's
@@ -148,6 +152,10 @@ enforced on every read and write, including on tickets and customers.
   from spec with its undo cost.
 - **`docs/trace.md`** — spec requirement → code, both directions: what's built
   with no requirement, and what's required with no code yet.
+- **`docs/roadmap.md`** — what is not built, and the two deliberate deviations
+  from spec (`Team` stepped around, category as a flat string) with the note
+  that neither touches scope enforcement or the audit trail. Moved out of this
+  README verbatim; nothing retired.
 - **`docs/demo-script.md`** — the rehearsal script for demonstrating the ticket
   flow to management: which account to sign in as at each step, what to click,
   what to say, and what to say when asked about the parts that are not built.
