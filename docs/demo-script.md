@@ -1,13 +1,16 @@
 # demo-script.md — the rehearsal script
 
-For demonstrating the ticket flow to management. Written 2026-09-08 for the
-**stage-1 demo**: four of the five steps, driven from the staff interface.
+For demonstrating the ticket flow to management. Revised 2026-09-08 after
+pieces X1–X3, X5 and X7 landed: **the customer half now exists, read-only.**
 
-**What this demo does not include.** The customer portal is not built. Step 1 is
-performed by an agent on the customer's behalf — which is a real intake path,
-not a fudge: `002 §9` gives `AGT` **✓** for *Create ticket*. Step 5 — the
-customer seeing it resolved — is absent until piece `X1` exists. Do not promise
-the customer half in this demo; say it is next.
+**What this demo includes.** Steps 2, 3 and 4 on the staff interface, and step 5
+on the customer portal — the customer signs in and sees the resolved request
+with the agent's reply and without the internal note.
+
+**What it does not.** Step 1 is still performed by an agent on the customer's
+behalf, which is a real intake path rather than a fudge: `002 §9` gives `AGT`
+**✓** for *Create ticket*. The customer cannot yet raise a request or reply —
+those are pieces X6 and X4. Say that plainly rather than avoiding the question.
 
 ---
 
@@ -49,7 +52,7 @@ All three share the password in `DEMO_PASSWORD` (`backend/.env`).
 |---|---|---|
 | **ADMIN** | `demo.admin@azmsquad.com` | Assigns the ticket. **Cannot** post a customer-visible reply |
 | **AGENT** | `demo.sara@azmsquad.com` | Replies to the customer, resolves the ticket |
-| **CUSTOMER** | `demo.customer@azmsquad.com` | **Not a sign-in yet.** A customer record — Layla Mansour, `DEMO-006` — whose tickets are already seeded |
+| **CUSTOMER** | `demo.customer@azmsquad.com` | Signs in at **http://localhost:4200/portal** and sees their own requests. Read-only |
 
 The ticket to use: **"Refund not received for a returned order"** — Layla
 Mansour's, status `new`, deliberately left unassigned so you can assign it live.
@@ -123,14 +126,33 @@ comes back refused, naming the statuses that *are* reachable.
 
 ### Step 5 — what the customer sees
 
-**Not built.** Say so plainly:
+Open a new browser window — or a private one, so the staff session stays signed
+in — and go to **http://localhost:4200/portal**.
 
-> *"The customer would now see this resolved in their portal, with the reply and
-> without the internal note. That is the next piece of work — sign-in, submit,
-> and view their own tickets. Everything behind it, including the rule that
-> keeps internal notes off their screen, is already here."*
+Sign in as **CUSTOMER** (`demo.customer@azmsquad.com`).
 
-Do not improvise a substitute. There is no customer-facing screen to show.
+They land on **My requests**, showing only their own. Open the ticket you just
+resolved.
+
+> *"This is the same ticket. They see our reply and the status. They do not see
+> the internal note, and they never will — the server does not send it. It is
+> excluded by the database query, not hidden by the screen."*
+
+**The two things worth pointing at:**
+
+1. **Switch the language.** The whole portal mirrors right-to-left, and the
+   ticket reference stays left-to-right inside the mirrored layout.
+2. **The internal note is absent.** If someone asks how you know it is really
+   absent rather than just not displayed: it is excluded by the query, so it is
+   never loaded, and there is an automated check asserting the note appears
+   nowhere in the response.
+
+**If asked why they cannot reply here:** replying and raising a request are the
+next two pieces. The screen says so rather than showing a button that does
+nothing.
+
+**Do not promise timing.** The portal deliberately shows nothing about how long
+anything will take — see the elapsed-time answer below.
 
 ---
 
@@ -142,6 +164,8 @@ Do not improvise a substitute. There is no customer-facing screen to show.
 | Sign-in fails for a demo account | `DEMO_PASSWORD` changed after the account was seeded | `npm run seed:demo:clear` then `npm run seed:demo` |
 | Ticket list is empty | `npm test` was run — it drops the database | `npm run seed:demo` |
 | Backend will not start | MongoDB is not running as a replica set | See README Setup — transactions require `rs0` |
+| Customer sign-in fails | The portal login is seeded separately | `npm run seed:demo` reports `portal login created 1` — if it says 0 and sign-in still fails, clear and re-seed |
+| Signing in as the customer signs staff out | Should not happen — the two sessions use separate storage | Use a private window anyway; it is the cleanest way to hold both at once |
 | ADMIN cannot post a customer reply | Correct behaviour, `002 §9` | Use the AGENT account, or show it deliberately as above |
 
 ---
@@ -169,5 +193,13 @@ that cannot be edited or deleted, and it is written in the same database
 transaction as the change itself — so there is no window where a change exists
 without its record.
 
-**"When can customers use it?"** Roughly a week of work for sign-in, submit, and
-view-plus-reply. See `docs/portal-plan.md` for the split.
+**"When can customers use it?"** They can sign in and follow their requests now.
+Raising a request and replying are two more pieces, roughly two to three days.
+See `docs/portal-plan.md` for the split.
+
+**"Is this the real sign-in?"** No, and it is worth being straight about it. The
+demo uses a password; the specified method is a one-time code sent to a verified
+email or phone (`008 FR-001`, decision 26). The shortcut is recorded as
+decision 31 and is reversed by piece `R3`. Everything else on that screen — that
+a sign-in binds to exactly one customer, and that a refusal never reveals
+whether an address is known to us — is the real behaviour, not a demo stub.
