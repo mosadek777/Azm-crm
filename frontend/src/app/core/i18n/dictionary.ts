@@ -16,7 +16,7 @@ export interface Translations {
 }
 
 export const DICTIONARY: Translations = {
-  'app.name': { ar: 'أزم — دعم العملاء', en: 'AZM — Customer Support' },
+  'app.name': { ar: 'عزم — دعم العملاء', en: 'AZM — Customer Support' },
 
   'login.title': { ar: 'تسجيل الدخول', en: 'Sign in' },
   'login.email': { ar: 'البريد الإلكتروني', en: 'Email address' },
