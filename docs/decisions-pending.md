@@ -125,6 +125,57 @@ unscoped form would wrongly protect.
 **Reversal cost: low.** Two index definitions in `customer.model.js`, plus a
 reindex. No application code reads the filter.
 
+### Ninth batch — ratified 2026-09-08, demo shortcuts for the management demonstration
+
+**These are deviations, not answers.** Each names the requirement it breaks and
+what it costs to undo. Approved individually by Mohamed Sadek (developer, acting
+as decision authority) — the delivery team, not the client — for a demonstration
+to management, explicitly *"demonstrable, not production-ready"*.
+
+**Three things were held and are NOT deviated**, because they were named
+non-negotiable: the **scope predicate** (`008 §11`'s `customer = session`,
+constitution IV), the **audit writer** (`008 FR-020` — every portal action writes
+an entry attributed to the customer), and **internal notes never reaching a
+customer** (`008 FR-019`, `AS-06`). Where a shortcut would have bypassed any of
+the three, the piece is omitted from the demo instead.
+
+**Throwaway vs debt** is the column that matters when the demo is over.
+*Throwaway* means nothing wrong was built and deleting the demo data ends it.
+*Debt* means something incorrect exists and will keep being true until reversed.
+
+| # | Deviation | Breaks | Undo cost | Throwaway or debt |
+|---|---|---|---|---|
+| 31 | **Customer signs in with the shared demo password, not a one-time code** | `008 FR-001` (**MUST**) — *"authenticate against a verified contact point by the methods agreed in `[CLARIFY-1]`"*. **Deviates from decision 26, ratified the same day** — see the note below | Portal identity, session issuance and the `customer = session` predicate all survive; only the credential check is replaced. `R3` in `remaining.md`: 3–4 be | **Throwaway** while the demo database is discarded. **Debt from the moment one real customer account exists under it** |
+| 32 | **No verified contact point** | `008 FR-001`; `008 §2` — *"Required to authenticate"*; `008 §3` `verified_contact_point_id` **Required** | `P1`: 1.5–2 be, plus backfilling `verifiedAt` for any identity created without it | **Debt.** A security property, not a feature — the difference between *this address is theirs* and *someone typed this address* |
+| 33 | **No rate limiting or abuse protection on the portal** | `008 E-03`; `008 §3` `state: locked` (lockout per `010 FR-007`) | Additive middleware, ~0.5 be | **Throwaway on one condition: the demo is never internet-facing.** If it is ever deployed publicly this stops being debt and becomes a live vulnerability |
+| 34 | **No attachments at all** — not attachments without scanning | `008 FR-002`, `FR-004` (both **MUST**); `002 FR-015`; `008 E-09`, `E-10` | `A8`: 2–3 be, 1–1.5 fe | **Throwaway.** Omitting a feature leaves no wrong code. A working upload path with no scanning would have been worse than an absent one, and demos get kept |
+| 35 | **The portal ticket view omits the owning team** | `008 FR-003` (**MUST**) — *"MUST show a customer-facing status label, **the owning team**, and timing information"* | `R2` (Team, decision 30), after which the field appears | **Debt, but pre-existing.** Decision 20 already owns it; this extends it to one more surface |
+| 36 | **Three demo accounts share one password from `.env`** — an administrator, an agent, and a customer record | **Nothing in `specs/`.** No spec covers demo seeding. `010 §1` scopes *"session and password policy"* but none is built, so there is nothing yet to violate. Revisit when it is | Delete the accounts — `npm run seed:demo:clear` | **Throwaway**, provided the password stays in `.env` and never in a tracked file |
+
+**⚠ Decision 31 is a temporary deviation from decision 26, not a revision of
+it.** Both stand, and they say different things on purpose:
+
+- **Decision 26 is the target and is unchanged.** Customer authentication is a
+  one-time code to a verified email or phone; no password. That was read from
+  `008 AS-01`, `E-03`, `NFR-004` and `stories/008 CP-01`, and none of that
+  evidence has changed.
+- **Decision 31 is a demo shortcut measured against it**, in force only for the
+  management demonstration.
+
+Nobody should read 31 as the project changing its mind about one-time codes. The
+`auth_method` enum in `008 §3` still records `otp_email` and `otp_phone` as the
+launch methods per decision 26. When the shortcut is reversed (`R3`), decision 31
+is closed and decision 26 is simply implemented — no decision needs revisiting.
+
+**What the demo therefore demonstrates honestly, and what it does not.** Steps 2,
+3 and 4 of the five-step flow are real: a ticket is assigned with a required
+reason, an agent and the ticket exchange customer-visible and internal messages,
+and the status moves through a validated transition graph. Step 1 is performed by
+an agent on the customer's behalf, which `002 §9` permits (`AGT` **✓** *Create
+ticket*). **Step 5 — the customer seeing it resolved — is absent**, because the
+portal does not exist. The rehearsal script (`docs/demo-script.md`) says so
+rather than substituting something.
+
 ### Eighth batch — ratified 2026-09-08, the customer-portal flow
 
 All five by **Mohamed Sadek (developer, acting as decision authority) — a

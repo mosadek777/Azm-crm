@@ -148,6 +148,9 @@ enforced on every read and write, including on tickets and customers.
   from spec with its undo cost.
 - **`docs/trace.md`** — spec requirement → code, both directions: what's built
   with no requirement, and what's required with no code yet.
+- **`docs/demo-script.md`** — the rehearsal script for demonstrating the ticket
+  flow to management: which account to sign in as at each step, what to click,
+  what to say, and what to say when asked about the parts that are not built.
 - **`docs/remaining.md`** — everything not yet built, ordered as a safe build
   order, each item marked **ADD** (bolt on, cannot break what works) or
   **CHANGE** (edits working code or reshapes existing data), with what it

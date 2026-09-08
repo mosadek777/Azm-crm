@@ -57,19 +57,35 @@ const CUSTOMERS = [
   { ref: 'DEMO-002', displayName: 'منى سعيد', type: 'person', lang: 'ar', nationalId: '29505054455661', channel: 'phone', value: '+201115556677' },
   { ref: 'DEMO-003', displayName: 'Rania Botros', type: 'person', lang: 'en', nationalId: null, channel: 'email', value: 'rania.botros@example.com' },
   { ref: 'DEMO-004', displayName: 'شركة النيل للتجارة', type: 'organisation', lang: 'ar', nationalId: null, channel: 'email', value: 'support@nile-trading.example' },
-  { ref: 'DEMO-005', displayName: 'Peter Wanas', type: 'person', lang: 'en', nationalId: '28812126677889', channel: 'whatsapp', value: '+201220001122' }
+  { ref: 'DEMO-005', displayName: 'Peter Wanas', type: 'person', lang: 'en', nationalId: '28812126677889', channel: 'whatsapp', value: '+201220001122' },
+  // The CUSTOMER persona. Reached by email because that is what a portal
+  // sign-in will bind to once X1 exists (spec 008 FR-001, decision 26 —
+  // one-time code to a verified contact point; decision 31 shortcuts the
+  // delivery for the demo, not the binding).
+  { ref: 'DEMO-006', displayName: 'Layla Mansour', type: 'person', lang: 'en', nationalId: null, channel: 'email', value: 'demo.customer@azmsquad.com' }
 ]
 
-const AGENTS = [
-  { email: 'demo.sara@azmsquad.com', displayName: 'Sara Ahmed', lang: 'ar' },
-  { email: 'demo.omar@azmsquad.com', displayName: 'Omar Farouk', lang: 'en' }
+// The three personas a demo is driven from. Roles are real: the ADMIN cannot
+// post a customer-visible reply (spec 002 §9 — see B1), so the rehearsal script
+// has the administrator assign and the agent speak to the customer. That is the
+// permission model working, not a limitation to route around.
+const STAFF = [
+  { email: 'demo.admin@azmsquad.com', displayName: 'Dalia Admin', lang: 'en', role: 'ADM', persona: 'ADMIN' },
+  { email: 'demo.sara@azmsquad.com', displayName: 'Sara Ahmed', lang: 'ar', role: 'AGT', persona: 'AGENT' },
+  { email: 'demo.omar@azmsquad.com', displayName: 'Omar Farouk', lang: 'en', role: 'AGT', persona: null }
 ]
 
 // Read from the environment, never hardcoded. A literal password in a tracked
 // file is a committed credential the moment the repository is pushed, however
 // throwaway the account is — and demo accounts are exactly the ones that get
 // reused somewhere real.
-const AGENT_PASSWORD = process.env.DEMO_AGENT_PASSWORD
+// The ticket fixtures below index into agents by position, so derive them.
+const AGENTS = STAFF.filter(s => s.role === 'AGT')
+
+// One password for every demo persona (decision 36). DEMO_PASSWORD is the name
+// that matches what it now is; DEMO_AGENT_PASSWORD is still honoured so an
+// existing .env keeps working.
+const AGENT_PASSWORD = process.env.DEMO_PASSWORD ?? process.env.DEMO_AGENT_PASSWORD
 
 // Each ticket names the transitions to walk it through. Every path is legal
 // under decision 22's graph — the API refuses anything else, so an illegal
@@ -84,7 +100,13 @@ const TICKETS = [
   { customer: 1, subject: 'تحديث بيانات التواصل', category: 'Account', priority: 'low', assign: null, path: [] },
   { customer: 2, subject: 'Mobile app crashes on open', category: 'Technical', priority: 'high', assign: 1, path: ['in_progress', 'resolved', 'closed'] },
   { customer: 3, subject: 'استفسار عن عقد الصيانة', category: 'Contracts', priority: 'normal', assign: 0, path: ['in_progress'] },
-  { customer: 4, subject: 'Request cancelled by customer', category: 'Account', priority: 'low', assign: null, path: ['cancelled'], reason: 'Customer withdrew the request' }
+  { customer: 4, subject: 'Request cancelled by customer', category: 'Account', priority: 'low', assign: null, path: ['cancelled'], reason: 'Customer withdrew the request' },
+  // Belongs to the CUSTOMER persona. Left NEW and UNASSIGNED on purpose: it is
+  // the ticket the administrator assigns live in step 2 of the rehearsal.
+  { customer: 5, subject: 'Refund not received for a returned order', category: 'Billing / Refund', priority: 'high', assign: null, path: [] },
+  // Also theirs, already resolved, so step 5 has something to show the moment
+  // the customer view exists.
+  { customer: 5, subject: 'Password reset email never arrived', category: 'Account', priority: 'normal', assign: 0, path: ['in_progress', 'resolved'] }
 ]
 
 const run = async () => {
@@ -105,13 +127,13 @@ const run = async () => {
   }
 
   if (!AGENT_PASSWORD) {
-    console.error('DEMO_AGENT_PASSWORD is not set in .env — refusing to seed.')
+    console.error('DEMO_PASSWORD is not set in .env — refusing to seed.')
     console.error('')
     console.error('The demo agents need a password and this script will not invent')
     console.error('one: a default here becomes a known credential on every machine')
     console.error('that ever runs the seed. Set it in backend/.env, for example:')
     console.error('')
-    console.error('  DEMO_AGENT_PASSWORD=$(openssl rand -base64 18)')
+    console.error('  DEMO_PASSWORD=$(openssl rand -base64 18)')
     console.error('')
     process.exit(1)
   }
@@ -146,7 +168,7 @@ const run = async () => {
   // --- agents ---------------------------------------------------------------
   const existingUsers = (await call('GET', '/user', { token: admin })).body?.users ?? []
   const agentTokens = []
-  for (const agent of AGENTS) {
+  for (const agent of STAFF) {
     const already = existingUsers.find(u => u.email === agent.email)
     if (already) { reused.users++ } else {
       const res = await call('POST', '/user', {
@@ -156,7 +178,7 @@ const run = async () => {
           email: agent.email,
           password: AGENT_PASSWORD,
           defaultLanguage: agent.lang,
-          roles: ['AGT'],
+          roles: [agent.role],
           scope
         }
       })
@@ -167,7 +189,8 @@ const run = async () => {
     // time. If that value has since changed, sign-in fails here — and the
     // honest fix is to clear and re-seed, not to silently reset a password.
     try {
-      agentTokens.push(await login(agent.email, AGENT_PASSWORD))
+      const token = await login(agent.email, AGENT_PASSWORD)
+      if (agent.role === 'AGT') agentTokens.push(token)
     } catch {
       console.error(`Cannot sign in as ${agent.email}.`)
       console.error('')
@@ -270,13 +293,35 @@ const run = async () => {
   console.log('demo data seeded through the API (scope and audit written as a user would)')
   console.log(`  branches     created ${created.branches}   reused ${reused.branches}`)
   console.log(`  departments  created ${created.departments}   reused ${reused.departments}`)
-  console.log(`  agents       created ${created.users}   reused ${reused.users}`)
+  console.log(`  staff        created ${created.users}   reused ${reused.users}`)
   console.log(`  customers    created ${created.customers}   reused ${reused.customers}`)
   console.log(`  tickets      created ${created.tickets}   reused ${reused.tickets}`)
   console.log('')
   // The password is not echoed: it lives in .env and printing it here would
   // put it into terminal scrollback and CI logs.
-  console.log(`  demo agent sign-in: ${AGENTS[0].email} (password: DEMO_AGENT_PASSWORD in .env)`)
+  // The three personas a demo is driven from, printed so they can be read off
+  // rather than remembered. Roles are real, not cosmetic: spec 002 §9 refuses an
+  // administrator a customer-visible reply, which is why the rehearsal script
+  // has the ADMIN assign and the AGENT speak to the customer.
+  const customerPersona = CUSTOMERS.find(c => c.ref === 'DEMO-006')
+  const adminPersona = STAFF.find(s => s.persona === 'ADMIN')
+  const agentPersona = STAFF.find(s => s.persona === 'AGENT')
+
+  console.log('  demo sign-ins — all three share the password in DEMO_PASSWORD')
+  console.log('  ' + '-'.repeat(66))
+  console.log(`  ADMIN     ${adminPersona.email.padEnd(32)} ${adminPersona.displayName}`)
+  console.log('            assigns tickets. Cannot post a customer-visible reply (002 §9)')
+  console.log(`  AGENT     ${agentPersona.email.padEnd(32)} ${agentPersona.displayName}`)
+  console.log('            replies to the customer and resolves the ticket')
+  console.log(`  CUSTOMER  ${customerPersona.value.padEnd(32)} ${customerPersona.displayName} (${customerPersona.ref})`)
+  console.log('            ⚠ NOT a sign-in yet — the customer portal is not built.')
+  console.log('            This is a customer RECORD with its tickets already seeded.')
+  console.log('            Sign-in arrives with piece X1; see docs/portal-plan.md')
+  console.log('')
+  console.log('  the ticket to demonstrate with: "Refund not received for a returned order"')
+  console.log(`  — ${customerPersona.displayName}'s, status new, deliberately unassigned`)
+  console.log('')
+  console.log('  rehearsal script: docs/demo-script.md')
   console.log('')
 }
 
