@@ -17,6 +17,7 @@ export interface Translations {
 
 export const DICTIONARY: Translations = {
   'app.name': { ar: 'عزم — دعم العملاء', en: 'AZM — Customer Support' },
+  'nav.staffArea': { ar: 'الموظفون', en: 'Staff' },
 
   'login.title': { ar: 'تسجيل الدخول', en: 'Sign in' },
   'login.email': { ar: 'البريد الإلكتروني', en: 'Email address' },
@@ -123,6 +124,12 @@ export const DICTIONARY: Translations = {
   'ticket.chooseVisibility': { ar: 'اختر: للعميل أم ملاحظة داخلية', en: 'Choose: customer-visible or internal' },
   'ticket.customerVisible': { ar: 'مرئي للعميل', en: 'Customer-visible' },
   'ticket.internal': { ar: 'ملاحظة داخلية', en: 'Internal note' },
+  // Replaces the raw authorKind values ('customer' / 'user' / 'system'), which
+  // were the enum leaking onto the screen. Staff see a role, not a name: the
+  // client is not sent one, and resolving it is separate work.
+  'ticket.authorCustomer': { ar: 'العميل', en: 'Customer' },
+  'ticket.authorStaff': { ar: 'موظف الدعم', en: 'Support agent' },
+  'ticket.authorSystem': { ar: 'النظام', en: 'System' },
   'ticket.history': { ar: 'السجل', en: 'History' },
   'ticket.customer': { ar: 'العميل', en: 'Customer' },
   'ticket.selected': { ar: 'المحدد', en: 'Selected' },
@@ -135,6 +142,9 @@ export const DICTIONARY: Translations = {
   // with correct right-to-left layout". The portal is a customer-facing surface,
   // so every string here is chrome the customer reads.
   'portal.name': { ar: 'عزم — بوابة العملاء', en: 'AZM — Customer Portal' },
+  // A word carrying the same meaning as the header colour, so telling the two
+  // interfaces apart never depends on seeing a hue.
+  'portal.customerArea': { ar: 'العملاء', en: 'Customer' },
   'portal.signIn': { ar: 'تسجيل الدخول', en: 'Sign in' },
   'portal.email': { ar: 'البريد الإلكتروني', en: 'Email address' },
   'portal.password': { ar: 'كلمة المرور', en: 'Password' },

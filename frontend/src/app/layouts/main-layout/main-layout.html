@@ -1,10 +1,19 @@
 <div class="min-h-screen flex flex-col bg-surface-50">
   <!-- Header. All directional spacing is logical (ps-/pe-/ms-/me-, start/end),
        so the bar mirrors under dir="rtl" with no override sheet — FR-002. -->
-  <header class="sticky top-0 z-20 flex items-center gap-3 border-b border-surface-200
-                 bg-surface-0/95 backdrop-blur ps-4 pe-4 py-3">
+  <!-- STAFF header. Deliberately unlike the portal's: pale, with a primary
+       top rule and a "Staff" chip. Both interfaces live on the same host and
+       look alike otherwise, so a glance has to be enough to tell them apart —
+       and the person it matters most for is the customer, who should never
+       wonder whether they are on a staff screen. -->
+  <header class="sticky top-0 z-20 border-b border-surface-200 border-t-4 border-t-primary-600
+                 bg-surface-0/95 backdrop-blur">
+    <div class="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3">
     <span class="text-lg font-semibold tracking-tight text-primary-700">
       {{ 'app.name' | translate: i18n.lang() }}
+    </span>
+    <span class="rounded-full bg-surface-100 px-2 py-0.5 text-xs font-medium text-surface-600">
+      {{ 'nav.staffArea' | translate: i18n.lang() }}
     </span>
 
     <nav class="flex items-center gap-1 ms-6">
@@ -67,6 +76,7 @@
         }
       </div>
     }
+    </div>
   </header>
 
   <!-- Content, centred with a readable max width. Every screen renders here. -->

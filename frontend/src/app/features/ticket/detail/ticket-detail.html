@@ -163,34 +163,48 @@
         {{ 'ticket.thread' | translate: i18n.lang() }}
       </h2>
 
-      <div class="flex flex-col gap-3">
+      <!-- TWO THINGS ARE VISIBLE AT A GLANCE HERE, and they are independent.
+           WHO wrote it — the customer's words sit at the START edge on white,
+           ours at the END edge tinted, so a thread reads as a conversation
+           rather than a list (the same treatment the portal thread uses).
+           WHETHER THE CUSTOMER CAN SEE IT — an internal note additionally
+           carries an amber start-rule and an amber chip, so it stands out
+           whoever wrote it and however the author colours fall. FR-014 / AS-07:
+           nobody should post an internal note believing it is a reply.
+           Both signals are shape and text as well as colour. -->
+      <ul class="m-0 flex list-none flex-col gap-3 p-0">
         @for (m of messages(); track m._id) {
-          <!-- FR-014 / AS-07: an internal note is visually distinct from a
-               customer-visible reply, and labelled, so nobody posts one
-               believing it is the other. -->
-          <article class="rounded-lg border p-3"
-            [class]="m.visibility === 'internal'
-              ? 'border-primary-200 bg-primary-50/50'
-              : 'border-surface-200 bg-surface-0'">
-            <div class="mb-1 flex flex-wrap items-center gap-2 text-xs text-surface-500">
-              <span class="ltr">{{ m.sentAt }}</span>
-              <span>{{ m.authorKind }}</span>
-              @if (m.visibility === 'internal') {
-                <span class="rounded-full bg-primary-100 px-2 py-0.5 text-primary-800">
-                  {{ 'ticket.internal' | translate: i18n.lang() }}
+          <li class="flex" [class]="m.authorKind === 'customer' ? 'justify-start' : 'justify-end'">
+            <article class="max-w-[80%] rounded-lg border p-3"
+              [class]="(m.authorKind === 'customer'
+                          ? 'border-surface-200 bg-surface-0 rounded-es-sm '
+                          : 'border-primary-200 bg-primary-50/60 rounded-ee-sm ')
+                       + (m.visibility === 'internal' ? 'border-s-4 border-s-amber-400' : '')">
+              <div class="mb-1 flex flex-wrap items-center gap-2 text-xs text-surface-500">
+                <span class="font-medium"
+                  [class]="m.authorKind === 'customer' ? 'text-surface-700' : 'text-primary-800'">
+                  {{ (m.authorKind === 'customer' ? 'ticket.authorCustomer'
+                      : m.authorKind === 'system' ? 'ticket.authorSystem'
+                      : 'ticket.authorStaff') | translate: i18n.lang() }}
                 </span>
-              } @else {
-                <span class="rounded-full bg-surface-100 px-2 py-0.5 text-surface-700">
-                  {{ 'ticket.customerVisible' | translate: i18n.lang() }}
-                </span>
-              }
-            </div>
-            <!-- User-authored: single language, direction detected per message
-                 by the browser (spec 012 AS-05). -->
-            <p class="m-0 text-sm text-surface-800">{{ m.body }}</p>
-          </article>
+                <span dir="ltr">{{ m.sentAt }}</span>
+                @if (m.visibility === 'internal') {
+                  <span class="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-900">
+                    {{ 'ticket.internal' | translate: i18n.lang() }}
+                  </span>
+                } @else {
+                  <span class="rounded-full bg-surface-100 px-2 py-0.5 text-surface-700">
+                    {{ 'ticket.customerVisible' | translate: i18n.lang() }}
+                  </span>
+                }
+              </div>
+              <!-- User-authored: single language, direction detected per message
+                   by the browser (spec 012 AS-05). -->
+              <p class="m-0 text-sm text-surface-800">{{ m.body }}</p>
+            </article>
+          </li>
         }
-      </div>
+      </ul>
 
       @if (!t.terminal) {
         <div class="mt-4 flex flex-col gap-3 border-t border-surface-200 pt-4">

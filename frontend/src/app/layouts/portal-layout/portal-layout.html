@@ -2,24 +2,36 @@
      on the root element, so this whole shell mirrors in Arabic with no override
      sheet — 008 FR-011, AS-10. -->
 <div class="min-h-screen bg-surface-100 flex flex-col">
-  <header class="bg-white border-b border-surface-200">
-    <div class="mx-auto w-full max-w-6xl px-4 py-3 flex items-center gap-4">
+  <!-- Same treatment as the staff header: white bar, primary top rule, content
+       on the shared max-w-6xl measure. The two interfaces are told apart by the
+       product name and the area pill, not by chrome — a filled bar here was
+       heavier than the difference needed to be. -->
+  <header class="border-b border-surface-200 border-t-4 border-t-primary-600 bg-surface-0">
+    <div class="mx-auto w-full max-w-6xl px-4 py-3 flex items-center gap-3">
       <!-- Not a link when signed out: it would lead to a guarded route. -->
       @if (portalAuth.isSignedIn()) {
-        <a routerLink="/portal/tickets" class="font-semibold text-surface-900 no-underline">
+        <a routerLink="/portal/tickets" class="text-lg font-semibold tracking-tight text-primary-700 no-underline">
           {{ 'portal.name' | translate: i18n.lang() }}
         </a>
       } @else {
-        <span class="font-semibold text-surface-900">
+        <span class="text-lg font-semibold tracking-tight text-primary-700">
           {{ 'portal.name' | translate: i18n.lang() }}
         </span>
       }
+      <!-- Carries the same meaning as the product name, in one word, so telling
+           the two interfaces apart never depends on reading the whole title. -->
+      <span class="rounded-full bg-surface-100 px-2 py-0.5 text-xs font-medium text-surface-600">
+        {{ 'portal.customerArea' | translate: i18n.lang() }}
+      </span>
 
       <div class="ms-auto flex items-center gap-4 text-sm">
         <!-- The only language toggle in the portal. Present signed out too,
              because FR-011 says switchable at any time and the sign-in screen
              is one of the times. -->
-        <button type="button" class="text-primary-700 hover:underline" (click)="i18n.toggle()">
+        <button type="button"
+          class="rounded-md px-2.5 py-1.5 font-medium text-primary-600
+                 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+          (click)="i18n.toggle()">
           {{ 'lang.switchTo' | translate: i18n.lang() }}
         </button>
 
@@ -28,7 +40,8 @@
           @if (portalAuth.customer(); as customer) {
             <span class="text-surface-600 hidden sm:inline">{{ customer.displayName }}</span>
           }
-          <button type="button" class="text-surface-600 hover:underline" (click)="portalAuth.signOut()">
+          <button type="button" class="text-surface-600 hover:text-surface-900 hover:underline"
+            (click)="portalAuth.signOut()">
             {{ 'portal.signOut' | translate: i18n.lang() }}
           </button>
         }
@@ -36,10 +49,20 @@
     </div>
   </header>
 
-  <!-- Same container as the staff shell (main-layout.html): mx-auto,
-       max-w-6xl, px-4 py-6. The portal used a narrower box, which read as
-       content shoved to one side rather than as a deliberate reading width. -->
-  <main class="flex-1 mx-auto w-full max-w-6xl px-4 py-6">
+  <!-- TWO CONTAINERS, ONE SHELL — and this is where the portal differed from
+       staff. Staff has two layout components: AuthLayout centres a lone card in
+       the whole remaining viewport, MainLayout gives signed-in screens a
+       max-w-6xl column. The portal has one shell, because unlike staff its
+       header is identical before and after sign-in (staff's gains navigation
+       and a user menu), so a second component would have duplicated the header
+       to change one class.
+       The consequence, until now, was that the sign-in card inherited the
+       CONTENT column and sat hard against the header while the staff card
+       floated in the middle. The two branches below are exactly the two staff
+       mains, so both sign-in screens now centre identically. -->
+  <main [class]="portalAuth.isSignedIn()
+                   ? 'flex-1 mx-auto w-full max-w-6xl px-4 py-6'
+                   : 'flex flex-1 items-center justify-center p-4'">
     <router-outlet />
   </main>
 </div>
