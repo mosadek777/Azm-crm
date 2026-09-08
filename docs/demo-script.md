@@ -74,9 +74,9 @@ Open it. The customer, the subject, the category and the priority are all there,
 and the history already shows it being created.
 
 **If asked "how did it get here?"** — answer honestly: an agent raised it on the
-customer's behalf, which is one of the real intake paths. The customer portal is
-the next piece of work, and until it exists the customer cannot raise it
-themselves.
+customer's behalf, which is one of the real intake paths. The customer can sign
+in and follow it (step 5), but raising a request from the portal is still to
+come.
 
 ### Step 2 — assign it
 
