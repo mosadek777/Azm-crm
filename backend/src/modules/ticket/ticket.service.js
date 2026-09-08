@@ -479,6 +479,35 @@ export const addMessage = async (req, res, next) => {
         'visibility must be stated explicitly: "customer" or "internal"', ['visibility'])
     }
 
+    // §9 splits authorship by VISIBILITY, not by route:
+    //
+    //   Reply (customer-visible) | AGT ✓ | LEAD ✓ | MGR ✓ | ADM — | AUD —
+    //   Internal note            | AGT ✓ | LEAD ✓ | MGR ✓ | ADM ✓ | AUD read only
+    //
+    // An administrator may annotate a ticket and may not speak to the customer
+    // in the organisation's voice. That distinction depends on the request BODY,
+    // which route-level authorize() cannot express — which is why this endpoint
+    // has been wrong in both directions: it first named AGT/LEAD/MGR and locked
+    // an administrator out of internal notes too, then used WRITERS and let one
+    // reply to customers. The route keeps WRITERS as the coarse gate (AUD and
+    // anonymous callers never arrive here) and the visibility-dependent half is
+    // decided below.
+    //
+    // Roles are resolved against THIS ticket's coordinate, never held globally:
+    // a manager in another branch is not a manager here (FR-005).
+    if (visibility === 'customer') {
+      const rolesHere = rolesForTarget(req.assignments, ticket.scopeCoordinate())
+      const mayReplyToCustomer = rolesHere.some(r => ['AGT', 'LEAD', 'MGR'].includes(r))
+      if (!mayReplyToCustomer) {
+        return res.status(403).json({
+          message: {
+            ar: 'مرفوض: الرد المرئي للعميل يتطلب صلاحية موظف دعم أو قائد فريق أو مدير',
+            en: 'Refused: a customer-visible reply requires an agent, team lead or manager role on this ticket. An internal note is permitted.'
+          }
+        })
+      }
+    }
+
     const messageId = new mongoose.Types.ObjectId()
     const msg = {
       _id: messageId,

@@ -192,21 +192,17 @@ router.patch("/:id/status", authenticate, authorize(...WRITERS), ticketservice.c
  *     responses:
  *       201: { description: Added }
  *       400: { description: Body or visibility missing }
- *       403: { description: 'Requires a writing role. AUD is read-only and is refused here.' }
+ *       403: { description: 'AUD is read-only and never reaches this route. An administrator may add an internal note but MAY NOT post a customer-visible reply (§9) — that requires AGT, LEAD or MGR on this ticket.' }
  *       404: { description: Not found }
  *       409: { description: Terminal ticket accepts no reply }
  */
-// WRITERS, like every other write route on this controller. This line used to
-// spell the roles out as 'AGT', 'LEAD', 'MGR' — omitting ADM, and so refusing
-// an administrator a reply on a ticket they could open and read. No spec asks
-// for that: FR-014 governs a message's VISIBILITY, not who may author one, and
-// an administrator writes everywhere else in the product (creates tickets,
-// assigns them, moves their status, edits customers).
-//
-// The bug was not the missing role so much as the hand-written list: the
-// constant existed and this one line did not use it, so it could drift from
-// the other six without anything noticing. Excluding AUD is deliberate and
-// still holds — WRITERS omits it, which is exactly why the constant exists.
+// WRITERS is only the coarse gate here — it keeps AUD and anonymous callers out.
+// Who may post is decided per message in the service, because §9 splits
+// authorship by VISIBILITY: an administrator may write an internal note and may
+// not reply to the customer. A route-level role list cannot express a rule that
+// depends on the request body, which is why this line has been wrong twice —
+// first naming AGT/LEAD/MGR and locking administrators out of internal notes,
+// then using WRITERS and letting them speak to customers.
 router.post("/:id/message", authenticate, authorize(...WRITERS), ticketservice.addMessage)
 
 export default router

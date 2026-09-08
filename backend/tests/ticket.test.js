@@ -147,10 +147,25 @@ chk('thread holds description + 2 messages', det.body?.messages?.length, 3)
 chk('one is internal', det.body?.messages?.filter(m => m.visibility === 'internal').length, 1)
 const aud = await login('aya@azmsquad.com', FIXTURE_PASSWORD)
 chk('AUD is read-only: cannot post', (await call('POST', `/ticket/${T}/message`, { token: aud, body: { body: 'x', visibility: 'internal' } })).status, 403)
-// ADM is a writer on every other ticket route, and was refused only here.
-// Without this check the message route can silently drift away from WRITERS
-// again — which is how a demo administrator ended up unable to reply at all.
-chk('ADM may reply, like every other write route', (await call('POST', `/ticket/${T}/message`, { token: root, body: { body: 'Administrator reply.', visibility: 'customer' } })).status, 201)
+// §9's permission matrix, which is the only place that says who may author a
+// message, splits on VISIBILITY rather than on the route:
+//
+//   Reply (customer-visible) | CUST own | AGT ✓ | LEAD ✓ | MGR ✓ | ADM — | AUD —
+//   Read / write internal note |    —    | AGT ✓ | LEAD ✓ | MGR ✓ | ADM ✓ | AUD read only
+//
+// So an administrator may annotate a ticket internally and may not speak to the
+// customer in the organisation's voice. Both halves are asserted: a check on
+// only one of them passes for a route that refuses ADM outright, and passes
+// again for one that lets ADM do anything.
+chk('ADM may write an internal note (§9)', (await call('POST', `/ticket/${T}/message`, { token: root, body: { body: 'Administrator note for the file.', visibility: 'internal' } })).status, 201)
+chk('ADM may NOT post a customer-visible reply (§9)', (await call('POST', `/ticket/${T}/message`, { token: root, body: { body: 'Administrator reply.', visibility: 'customer' } })).status, 403)
+chk('and the refusal is bilingual', Boolean((await call('POST', `/ticket/${T}/message`, { token: root, body: { body: 'x', visibility: 'customer' } })).body?.message?.ar), true)
+// The role is judged on THIS ticket, not held globally: an administrator in
+// another branch is not an administrator here. Same reasoning as the FR-005
+// composition check above.
+chk('AGT may still post customer-visible', (await call('POST', `/ticket/${T}/message`, { token: sara, body: { body: 'Agent reply to the customer.', visibility: 'customer' } })).status, 201)
+chk('LEAD may still post customer-visible', (await call('POST', `/ticket/${T}/message`, { token: omar, body: { body: 'Lead reply to the customer.', visibility: 'customer' } })).status, 201)
+chk('AUD may not write an internal note either', (await call('POST', `/ticket/${T}/message`, { token: aud, body: { body: 'x', visibility: 'internal' } })).status, 403)
 
 console.log('\n--- constitution II: every mutation audited, non-negotiable ---')
 const hist = det.body.history.map(h => h.action)

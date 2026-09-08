@@ -1164,7 +1164,7 @@
             "description": "Body or visibility missing"
           },
           "403": {
-            "description": "Requires a writing role. AUD is read-only and is refused here."
+            "description": "AUD is read-only and never reaches this route. An administrator may add an internal note but MAY NOT post a customer-visible reply (§9) — that requires AGT, LEAD or MGR on this ticket."
           },
           "404": {
             "description": "Not found"
