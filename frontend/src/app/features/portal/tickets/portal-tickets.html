@@ -1,9 +1,12 @@
-<h1 class="text-xl font-semibold text-surface-900 mb-1">
-  {{ 'portal.myRequests' | translate: i18n.lang() }}
-</h1>
-<p class="text-sm text-surface-500 mb-5">
-  {{ 'portal.readOnlyNote' | translate: i18n.lang() }}
-</p>
+<div class="flex items-center gap-4 mb-5">
+  <h1 class="text-xl font-semibold text-surface-900">
+    {{ 'portal.myRequests' | translate: i18n.lang() }}
+  </h1>
+  <a routerLink="/portal/tickets/new"
+     class="ms-auto bg-primary-600 hover:bg-primary-700 text-white rounded-lg px-4 py-2 text-sm font-medium no-underline">
+    {{ 'portal.newRequest' | translate: i18n.lang() }}
+  </a>
+</div>
 
 @if (loading()) {
   <p class="text-surface-500">{{ 'portal.loading' | translate: i18n.lang() }}</p>

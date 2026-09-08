@@ -17,17 +17,20 @@
 // Two of those four are requirements this screen does not yet satisfy. They are
 // recorded in docs/portal-plan.md rather than papered over with a placeholder.
 
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { PortalApiService, PortalTicket, PortalMessage } from '../../../core/services/portal-api.service';
 import { LanguageService } from '../../../core/i18n/language.service';
+import { ApiRefusal, LocalizedText } from '../../../core/models/user.model';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { StatusTonePipe } from '../../../shared/pipes/status-tone.pipe';
 
 @Component({
   selector: 'app-portal-ticket-detail',
-  imports: [RouterLink, DatePipe, TranslatePipe, StatusTonePipe],
+  imports: [FormsModule, RouterLink, DatePipe, TranslatePipe, StatusTonePipe],
   templateUrl: './portal-ticket-detail.html'
 })
 export class PortalTicketDetail {
@@ -46,6 +49,22 @@ export class PortalTicketDetail {
   protected readonly loading = signal(true);
   protected readonly notFound = signal(false);
 
+  // FR-004. There is no visibility control, and its absence is the point: a
+  // customer reply is always visible to both sides and the route has no code
+  // path that could make it internal.
+  protected readonly draft = signal('');
+  protected readonly sending = signal(false);
+  protected readonly replyRefusal = signal<LocalizedText | null>(null);
+
+  // 002 §3: "Terminal statuses accept no reply." The box is hidden rather than
+  // shown-and-refused, because a control a customer cannot use is the deeper
+  // problem recorded in next-steps.md §5. The server still refuses, so this is
+  // a courtesy and not the enforcement.
+  protected readonly canReply = computed(() => {
+    const status = this.ticket()?.status;
+    return !!status && !['closed', 'merged', 'cancelled'].includes(status);
+  });
+
   constructor() {
     this.api.myTicket(this.id).subscribe({
       next: response => {
@@ -59,6 +78,31 @@ export class PortalTicketDetail {
       error: () => {
         this.notFound.set(true);
         this.loading.set(false);
+      }
+    });
+  }
+
+  protected sendReply() {
+    if (!this.draft().trim()) return;
+    this.replyRefusal.set(null);
+    this.sending.set(true);
+
+    this.api.reply(this.id, this.draft()).subscribe({
+      next: response => {
+        // AS-07: appended to the same thread. The server is the authority on
+        // what the thread contains, but re-fetching the whole ticket to add one
+        // known message would be a round trip for nothing.
+        this.messages.update(list => [...list, response.message]);
+        this.draft.set('');
+        this.sending.set(false);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.sending.set(false);
+        const body = error.error as ApiRefusal | null;
+        this.replyRefusal.set(body?.message ?? {
+          ar: 'تعذر إرسال الرد',
+          en: 'Could not send the reply'
+        });
       }
     });
   }

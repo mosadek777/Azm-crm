@@ -96,6 +96,10 @@ export const createTicket = async (req, res, next) => {
           // category defaults need the tree (dropped), rules are spec 005, and
           // `ai` is spec 007 which constitution V forbids building.
           prioritySource: 'manual',
+          // Decision 37. Staff creation is `ui`; the portal sets `portal`
+          // (008 AS-04). Stated on the document now, so the audit entry below
+          // takes it from the document rather than restating it.
+          source: 'ui',
           status: 'new',
           assignedAgentId: null,
           branchId,
@@ -115,7 +119,7 @@ export const createTicket = async (req, res, next) => {
           entityType: 'Ticket',
           entityId: ticketId,
           before: null,
-          after: { ...doc, source: 'ui', owningTeamId: null, owningTeamNote: 'team scoped out — decision 20' },
+          after: { ...doc, owningTeamId: null, owningTeamNote: 'team scoped out — decision 20' },
           req,
           session
         })

@@ -87,4 +87,55 @@ router.get('/ticket', authenticatePortal, portalticketservice.listMyTickets)
  */
 router.get('/ticket/:id', authenticatePortal, portalticketservice.getMyTicket)
 
+/**
+ * @swagger
+ * /portal/ticket:
+ *   post:
+ *     summary: Submit a request (spec 008 FR-002, AS-04)
+ *     tags: [Portal]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [subject, description, category]
+ *             additionalProperties: false
+ *             properties:
+ *               subject: { type: string, minLength: 3, maxLength: 300 }
+ *               description: { type: string, description: 'Becomes the first message on the thread, authored by the customer' }
+ *               category: { type: string }
+ *     responses:
+ *       201: { description: 'Created with source `portal` (AS-04), status `new`, priority `normal`, unassigned, in the customer''s own branch and department' }
+ *       400: { description: 'A required field is missing, OR the body carried a field a customer may not set — priority, status, assignment, owning team, customerId and anything else are REFUSED BY NAME rather than ignored (002 §9)' }
+ *       401: { description: Sign-in required }
+ */
+router.post('/ticket', authenticatePortal, portalticketservice.submitTicket)
+
+/**
+ * @swagger
+ * /portal/ticket/{id}/message:
+ *   post:
+ *     summary: Reply on your own request (spec 008 FR-004, AS-07)
+ *     tags: [Portal]
+ *     parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [body]
+ *             additionalProperties: false
+ *             properties:
+ *               body: { type: string }
+ *     responses:
+ *       201: { description: 'Appended to the same thread — no new ticket (AS-07, constitution VI). Always visibility `customer`: there is no parameter for it, so this route cannot produce an internal note' }
+ *       400: { description: 'Body missing, or the request carried a field a customer may not set — `visibility` included' }
+ *       401: { description: Sign-in required }
+ *       404: { description: 'Not found, or belongs to another customer (AS-02) — recorded as a security event' }
+ *       409: { description: 'Terminal ticket accepts no reply (002 §3). Reopen-on-reply (008 E-08) and reply-to-cancelled (E-07) are NOT built — piece F3 — so this refuses rather than guessing' }
+ */
+router.post('/ticket/:id/message', authenticatePortal, portalticketservice.replyToTicket)
+
 export default router

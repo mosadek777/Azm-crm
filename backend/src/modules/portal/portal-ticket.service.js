@@ -24,10 +24,11 @@
 import mongoose from 'mongoose'
 import { Ticket } from '../../DB/models/ticket.model.js'
 import { Message } from '../../DB/models/message.model.js'
+import { nextTicketReference } from '../../DB/models/counter.model.js'
 import { recordAudit } from '../../utils/audit.js'
 import { customerActorRef } from './portal.service.js'
 import { portalScope } from '../../middlewares/portal-auth.middleware.js'
-import { STATUSES } from '../../utils/ticket-status.js'
+import { STATUSES, isTerminal } from '../../utils/ticket-status.js'
 import { elapsedBusinessMinutes } from '../../utils/elapsed-time.js'
 
 const NOT_FOUND = {
@@ -146,5 +147,262 @@ export const getMyTicket = async (req, res, next) => {
       ticket: publicTicket(ticket),
       messages: messages.map(publicMessage)
     })
+  } catch (err) { return next(err) }
+}
+
+// ---------------------------------------------------------------------------
+// FR-002 / AS-04 — the customer submits a request
+// ---------------------------------------------------------------------------
+//
+// WHAT A CUSTOMER MAY SET, AND WHY THE LIST IS CLOSED.
+//
+// FR-002 (MUST) is the whole of it: "submit a request with category,
+// description and attachments" — three things, one excluded for the demo by
+// decision 34. Everything else about a new ticket is ours, and 002 §9 says so
+// directly: the customer column carries `—` for *Assign / self-assign*, and
+// *Change status* is footnoted "A customer may confirm resolution, reopen
+// within the window, and cancel their own ticket before resolution. Nothing
+// else."
+//
+// So the body is an ALLOW-LIST and anything outside it is REFUSED BY NAME
+// rather than quietly dropped. Silently ignoring `priority: 'urgent'` would
+// leave the customer believing they had escalated their own request, and would
+// leave us unable to tell a hostile caller from a confused integration.
+//
+// The values a customer does not choose are set below:
+//   customerId  — from the session (§11), never the body
+//   branch/dept — from the CUSTOMER record (AS-04)
+//   status      — `new`;  priority — `normal`;  assignee — null ("queued", §3)
+//   source      — `portal` (AS-04, decision 37)
+const SUBMITTABLE = ['subject', 'description', 'category']
+
+export const submitTicket = async (req, res, next) => {
+  try {
+    const body = req.body ?? {}
+
+    const notYours = Object.keys(body).filter(k => !SUBMITTABLE.includes(k))
+    if (notYours.length) {
+      return res.status(400).json({
+        message: {
+          ar: `لا يمكن تحديد هذه الحقول عند إرسال الطلب: ${notYours.join('، ')}`,
+          en: `These fields cannot be set when submitting a request: ${notYours.join(', ')}. `
+            + 'A request carries a subject, a description and a category. Priority, '
+            + 'status, assignment and routing are set by us (spec 002 §9).'
+        },
+        fields: notYours
+      })
+    }
+
+    const { subject, description, category } = body
+    const missing = []
+    if (!subject || !String(subject).trim()) missing.push('subject')
+    if (!description || !String(description).trim()) missing.push('description')
+    if (!category || !String(category).trim()) missing.push('category')
+    if (missing.length) {
+      return res.status(400).json({
+        message: {
+          ar: `حقول مطلوبة ناقصة: ${missing.join('، ')}`,
+          en: `Required fields are missing: ${missing.join(', ')}`
+        },
+        fields: missing
+      })
+    }
+
+    // §3: subject is 3-300 characters. Checked here so the refusal is a 400
+    // naming the field rather than a 500 out of mongoose.
+    const trimmedSubject = String(subject).trim()
+    if (trimmedSubject.length < 3 || trimmedSubject.length > 300) {
+      return res.status(400).json({
+        message: {
+          ar: 'الموضوع يجب أن يكون بين ٣ و ٣٠٠ حرف',
+          en: 'Subject must be between 3 and 300 characters'
+        },
+        fields: ['subject']
+      })
+    }
+
+    // From the SESSION, never the body — §11's "writes customer = session".
+    // There is no customerId to spoof, because that field is refused above.
+    const customer = req.customer
+
+    const ticketId = new mongoose.Types.ObjectId()
+    const messageId = new mongoose.Types.ObjectId()
+    const actorRef = customerActorRef(customer._id)
+
+    let reference = null
+    const session = await mongoose.startSession()
+    try {
+      await session.withTransaction(async () => {
+        // Consumed inside the transaction, as staff creation does (002 E-16):
+        // a rolled-back create must burn no reference.
+        reference = await nextTicketReference(session)
+
+        const doc = {
+          _id: ticketId,
+          reference,
+          customerId: customer._id,
+          category: String(category).trim(),
+          priority: 'normal',
+          prioritySource: 'manual',
+          source: 'portal',
+          status: 'new',
+          assignedAgentId: null,
+          branchId: customer.branchId,
+          departmentId: customer.departmentId,
+          subject: trimmedSubject,
+          tags: []
+        }
+
+        // FR-020: attributed to the customer and distinguishable from a staff
+        // action — actorId stays null because a customer is not a User, and
+        // actorRef carries the `customer:` prefix.
+        await recordAudit({
+          actorRef,
+          action: 'ticket.created',
+          entityType: 'Ticket',
+          entityId: ticketId,
+          before: null,
+          after: { ...doc, owningTeamId: null, owningTeamNote: 'team scoped out — decision 20' },
+          req,
+          session
+        })
+        await Ticket.create([doc], { session })
+
+        // The description becomes the first message on the thread, authored by
+        // the customer. `authorKind: 'customer'` and `authorCustomerId` have
+        // been on the Message model since it was written.
+        const msg = {
+          _id: messageId,
+          ticketId,
+          visibility: 'customer',
+          authorKind: 'customer',
+          authorCustomerId: customer._id,
+          body: String(description),
+          channel: null
+        }
+        await recordAudit({
+          actorRef,
+          action: 'message.added',
+          entityType: 'Message',
+          entityId: messageId,
+          before: null,
+          after: msg,
+          req,
+          session
+        })
+        await Message.create([msg], { session })
+      })
+    } finally { await session.endSession() }
+
+    const created = await Ticket.findById(ticketId)
+    return res.status(201).json({ ticket: publicTicket(created) })
+  } catch (err) { return next(err) }
+}
+
+// ---------------------------------------------------------------------------
+// FR-004 / AS-07 — the customer replies onto the same thread
+// ---------------------------------------------------------------------------
+//
+// AS-07: "the message appends to that ticket, visible to the agent in the
+// unified timeline … and no new ticket is created" — constitution VI, one
+// thread.
+//
+// VISIBILITY IS NOT A PARAMETER HERE. A customer's message is
+// `visibility: 'customer'` by construction, so there is no code path on this
+// route that can produce an internal note and FR-019's guarantee cannot be
+// inverted by a crafted body. The staff route takes visibility explicitly
+// because staff genuinely choose between the two; a customer never does.
+export const replyToTicket = async (req, res, next) => {
+  try {
+    const body = req.body ?? {}
+
+    const notYours = Object.keys(body).filter(k => k !== 'body')
+    if (notYours.length) {
+      return res.status(400).json({
+        message: {
+          ar: `لا يمكن تحديد هذه الحقول في الرد: ${notYours.join('، ')}`,
+          en: `These fields cannot be set on a reply: ${notYours.join(', ')}. `
+            + 'A customer reply is always visible to you and to us; there is no internal option.'
+        },
+        fields: notYours
+      })
+    }
+
+    if (!body.body || !String(body.body).trim()) {
+      return res.status(400).json({
+        message: { ar: 'نص الرسالة مطلوب', en: 'A message body is required' },
+        fields: ['body']
+      })
+    }
+
+    const scope = await portalScope(req)
+    const ticket = mongoose.isValidObjectId(req.params.id)
+      ? await Ticket.findOne({ _id: req.params.id, ...scope })
+      : null
+
+    // AS-02 again: someone else's ticket is not-found, and the attempt is a
+    // security event.
+    if (!ticket) {
+      await recordAudit({
+        actorRef: customerActorRef(req.customer._id),
+        action: 'portal.cross_customer_access_attempted',
+        entityType: 'Ticket',
+        entityId: String(req.params.id),
+        after: { requestedTicketId: String(req.params.id), attempted: 'reply' },
+        severity: 'high',
+        req,
+        session: null
+      })
+      return res.status(404).json({ message: NOT_FOUND })
+    }
+
+    // §3: "Terminal statuses accept no reply and no assignment." The customer
+    // meets the same refusal an agent would.
+    //
+    // NOT BUILT, and refused rather than guessed: 008 E-08 says a reply to a
+    // `resolved` ticket within the reopen window should REOPEN it (FR-009), and
+    // E-07 says a reply to a `cancelled` ticket should create a new linked
+    // ticket. Both are piece F3. `resolved` is not terminal, so a reply to a
+    // resolved ticket is accepted here and simply does not reopen it yet.
+    if (isTerminal(ticket.status)) {
+      return res.status(409).json({
+        message: {
+          ar: `هذا الطلب مغلق (${ticket.status}) ولا يقبل ردودًا`,
+          en: `This request is closed (${ticket.status}) and accepts no reply`
+        }
+      })
+    }
+
+    const messageId = new mongoose.Types.ObjectId()
+    const actorRef = customerActorRef(req.customer._id)
+
+    const session = await mongoose.startSession()
+    try {
+      await session.withTransaction(async () => {
+        const msg = {
+          _id: messageId,
+          ticketId: ticket._id,
+          visibility: 'customer',   // fixed, not taken from the request
+          authorKind: 'customer',
+          authorCustomerId: req.customer._id,
+          body: String(body.body),
+          channel: null
+        }
+        await recordAudit({
+          actorRef,
+          action: 'message.added',
+          entityType: 'Message',
+          entityId: messageId,
+          before: null,
+          after: msg,
+          req,
+          session
+        })
+        await Message.create([msg], { session })
+      })
+    } finally { await session.endSession() }
+
+    const created = await Message.findById(messageId)
+    return res.status(201).json({ message: publicMessage(created) })
   } catch (err) { return next(err) }
 }

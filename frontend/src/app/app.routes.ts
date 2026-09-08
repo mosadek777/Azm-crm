@@ -44,6 +44,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/portal/tickets/portal-tickets').then(m => m.PortalTickets)
       },
       {
+        // Declared BEFORE ':id', or 'new' is read as an identifier.
+        path: 'tickets/new',
+        canActivate: [portalGuard],
+        loadComponent: () => import('./features/portal/new-request/portal-new-request').then(m => m.PortalNewRequest)
+      },
+      {
         path: 'tickets/:id',
         canActivate: [portalGuard],
         loadComponent: () => import('./features/portal/ticket-detail/portal-ticket-detail').then(m => m.PortalTicketDetail)

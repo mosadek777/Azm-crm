@@ -31,6 +31,27 @@ const ticketSchema = new Schema({
 
   customerId: { type: Schema.Types.ObjectId, ref: 'Customer', required: true, immutable: true },
 
+  // WHERE THE TICKET CAME FROM. Decision 37.
+  //
+  // The value set is NOT invented here — `002` §10 already enumerates it, for
+  // the audit entry: "Ticket created | actor, timestamp, source (`ui` / `email`
+  // / `whatsapp` / `sms` / `chat` / `form` / `api` / `portal`), …". What no spec
+  // provided was a place to STORE it: `002` §3's Ticket entity has no such
+  // attribute, while `008 AS-04` requires that a portal submission produce "a
+  // ticket … with source `portal`". Two specs, one gap between them.
+  //
+  // Immutable, because where a request arrived from is a fact about its past.
+  // Defaulted to `ui` so tickets created before this field existed read as what
+  // they were — every one of them came through the staff API, and each carries
+  // an audit entry that already recorded `source: 'ui'` at creation.
+  source: {
+    type: String,
+    enum: ['ui', 'email', 'whatsapp', 'sms', 'chat', 'form', 'api', 'portal'],
+    default: 'ui',
+    required: true,
+    immutable: true
+  },
+
   // Decision 21 — flat. Free string, trimmed.
   category: { type: String, required: true, trim: true, maxlength: 120 },
 

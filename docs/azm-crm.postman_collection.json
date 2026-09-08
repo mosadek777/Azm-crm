@@ -1006,6 +1006,45 @@
           }
         },
         {
+          "name": "Submit a request (spec 008 FR-002, AS-04)",
+          "request": {
+            "name": "Submit a request (spec 008 FR-002, AS-04)",
+            "description": {},
+            "url": {
+              "path": [
+                "portal",
+                "ticket"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"<string>\",\n  \"description\": \"<string>\",\n  \"category\": \"<string>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
           "name": "One of the customer's own tickets, with its customer-visible thread (spec 008 FR-003, AS-06)",
           "request": {
             "name": "One of the customer's own tickets, with its customer-visible thread (spec 008 FR-003, AS-06)",
@@ -1032,6 +1071,55 @@
             },
             "method": "GET",
             "auth": null
+          },
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "Reply on your own request (spec 008 FR-004, AS-07)",
+          "request": {
+            "name": "Reply on your own request (spec 008 FR-004, AS-07)",
+            "description": {},
+            "url": {
+              "path": [
+                "portal",
+                "ticket",
+                ":id",
+                "message"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "id",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"<string>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "event": [],
           "protocolProfileBehavior": {

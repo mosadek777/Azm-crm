@@ -125,6 +125,53 @@ unscoped form would wrongly protect.
 **Reversal cost: low.** Two index definitions in `customer.model.js`, plus a
 reindex. No application code reads the filter.
 
+### Tenth batch — ratified 2026-09-08, the portal write path
+
+| # | Decision | Kind | Marker | Basis |
+|---|---|---|---|---|
+| 37 | **`source` is stored on the Ticket entity**, enumerated `ui / email / whatsapp / sms / chat / form / api / portal`, immutable, defaulting to `ui` | **Reading** — the value set is quoted, not invented | A cross-spec gap, not a marker | **`002 §10` already enumerates the values**, for the audit entry: *"Ticket created \| actor, timestamp, **source** (`ui` / `email` / `whatsapp` / `sms` / `chat` / `form` / `api` / `portal`), customer, category, …"*. **`008 AS-04`** requires the record itself to carry one: *"a ticket is created with **source `portal`**"*. What no spec provided is a `source` attribute on the Ticket entity in **`002 §3`**. The values and the obligation are both specified; only the storage was missing |
+
+**Why this is a gap fill and is recorded as one.** Nothing was invented: the
+enumeration is copied from `002 §10` verbatim, and the requirement to persist it
+comes from `008 AS-04`. What was decided is only *where it lives* — on the
+Ticket entity rather than in the audit entry alone. Recorded because `002 §3`
+should carry the attribute and does not, and the next person reading §3 will not
+find it there.
+
+**Immutable and defaulted, both deliberately.** Where a request arrived from is a
+fact about its past, so nothing may rewrite it. `default: 'ui'` means tickets
+created before the field existed read as what they were — every one came through
+the staff API, and each carries an audit entry that already recorded
+`source: 'ui'` at creation, so the default is supported by the trail rather than
+assumed.
+
+**What a customer may not set, and why it is refused rather than ignored.**
+`008 FR-002` (**MUST**) is the whole of what a customer supplies: *"submit a
+request with category, description and attachments"*. `002 §9` gives the
+customer column `—` for *Assign / self-assign*, and footnotes *Change status*
+with *"A customer may confirm resolution, reopen within the window, and cancel
+their own ticket before resolution. **Nothing else.**"* So the portal's submit
+body is an allow-list of `subject`, `description`, `category`, and anything else
+— `priority`, `status`, `assignedAgentId`, `owningTeamId`, `customerId`,
+`source`, `tags` — is **refused by name with a 400**.
+
+Silently dropping them was the alternative and is worse: a customer who sends
+`priority: 'urgent'` and receives a 201 has been told they escalated their own
+request, and we would be unable to tell a hostile caller from a confused
+integration. The refusal names the fields and cites §9.
+
+**A customer reply cannot be made internal.** `visibility` is not a parameter on
+the portal reply route — a customer message is `visibility: 'customer'` by
+construction — so `FR-019`'s guarantee cannot be inverted by a crafted body.
+Sending `visibility` is refused by name like any other field that is not theirs.
+
+**Two things NOT built here, refused rather than guessed.** `008 E-08` says a
+reply to a `resolved` ticket within the reopen window should reopen it
+(`FR-009`), and `E-07` says a reply to a `cancelled` ticket should create a new
+linked ticket. Both are piece `F3`. A terminal ticket therefore refuses a reply
+with a 409 rather than doing either. `resolved` is not terminal, so a reply to a
+resolved ticket is accepted and simply does not reopen it yet.
+
 ### Ninth batch — ratified 2026-09-08, demo shortcuts for the management demonstration
 
 **These are deviations, not answers.** Each names the requirement it breaks and

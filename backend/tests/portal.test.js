@@ -113,5 +113,80 @@ chk('the cross-customer attempt was recorded', hist.length >= 0, true)
 const audit = await call('GET', `/ticket/${theirTicket._id}`, { token: sara })
 chk("the other customer's ticket is readable by staff (control)", audit.status, 200)
 
+console.log('\n--- FR-002 / AS-04: the customer submits a request ---')
+const submitted = await call('POST', '/portal/ticket', { token: ct, body: { subject: 'My laptop will not charge', description: 'It stopped charging yesterday.', category: 'Technical' } })
+chk('submits', submitted.status, 201)
+chk('gets a reference', /^TKT-\d{4}-\d{5}$/.test(submitted.body?.ticket?.reference ?? ''), true)
+const newId = submitted.body?.ticket?._id
+
+// The customer's projection does not carry these, so they are read back as
+// staff — the record is what matters, not the response shape.
+const asStaff = await call('GET', `/ticket/${newId}`, { token: sara })
+chk('AS-04: source is `portal`', asStaff.body?.ticket?.source, 'portal')
+chk('status is `new`', asStaff.body?.ticket?.status, 'new')
+chk('priority is `normal`, not chosen by the customer', asStaff.body?.ticket?.priority, 'normal')
+chk('unassigned — §3 "empty means queued"', asStaff.body?.ticket?.assignedAgentId, null)
+chk("in the customer's own branch", String(asStaff.body?.ticket?.branchId), String(bB._id))
+chk('the description became the first message', asStaff.body?.messages?.length, 1)
+chk('...authored by the customer', asStaff.body?.messages?.[0]?.authorKind, 'customer')
+chk('...and visible to them', asStaff.body?.messages?.[0]?.visibility, 'customer')
+
+console.log('\n--- 002 §9: a customer may not set what is not theirs ---')
+// §9 gives the customer column `—` for Assign/self-assign, and footnote ¹
+// limits status changes to confirm/reopen/cancel. Refused BY NAME rather than
+// ignored: silently dropping `priority: 'urgent'` would leave the customer
+// believing they had escalated their own request.
+const base = { subject: 'A valid subject', description: 'd', category: 'c' }
+for (const [label, extra] of [
+  ['owningTeamId', { owningTeamId: '6a9e000000000000000000aa' }],
+  ['assignedAgentId', { assignedAgentId: '6a9e000000000000000000aa' }],
+  ['priority', { priority: 'urgent' }],
+  ['status', { status: 'resolved' }],
+  ['customerId', { customerId: '6a9e000000000000000000aa' }],
+  ['source', { source: 'email' }],
+  ['prioritySource', { prioritySource: 'rule' }],
+  ['tags', { tags: ['vip'] }]
+]) {
+  const r = await call('POST', '/portal/ticket', { token: ct, body: { ...base, ...extra } })
+  chk(`setting ${label} is refused`, r.status, 400)
+  chk(`...and ${label} is named in the refusal`, (r.body?.fields ?? []).includes(label), true)
+}
+const allFour = await call('POST', '/portal/ticket', { token: ct, body: { ...base, owningTeamId: 'a', assignedAgentId: 'b', priority: 'urgent', status: 'closed' } })
+chk('all four at once are refused', allFour.status, 400)
+chk('...and all four are named', (allFour.body?.fields ?? []).length, 4)
+chk('a valid submission still succeeds — otherwise the checks above pass vacuously', (await call('POST', '/portal/ticket', { token: ct, body: base })).status, 201)
+
+console.log('\n--- FR-004 / AS-07: a reply joins the same thread ---')
+const beforeCount = (await call('GET', `/ticket/${newId}`, { token: sara })).body?.messages?.length
+const ticketsBefore = (await call('GET', '/ticket', { token: sara })).body?.total
+const replied = await call('POST', `/portal/ticket/${newId}/message`, { token: ct, body: { body: 'It is a 2021 model, if that helps.' } })
+chk('reply accepted', replied.status, 201)
+const afterStaff = await call('GET', `/ticket/${newId}`, { token: sara })
+chk('the thread grew by one', afterStaff.body?.messages?.length, beforeCount + 1)
+chk('AS-07: no new ticket was created', (await call('GET', '/ticket', { token: sara })).body?.total, ticketsBefore)
+const theirReply = afterStaff.body.messages.at(-1)
+chk('authorKind is customer', theirReply.authorKind, 'customer')
+chk('visibility is customer', theirReply.visibility, 'customer')
+chk('no staff author is attributed', theirReply.authorUserId, null)
+chk('staff see it in the same thread', afterStaff.body.messages.some(m => m.body.includes('2021 model')), true)
+chk('and so does the customer', (await call('GET', `/portal/ticket/${newId}`, { token: ct })).body?.messages?.some(m => m.body.includes('2021 model')), true)
+
+console.log('\n--- FR-019 again: a reply cannot be made internal ---')
+const sneaky = await call('POST', `/portal/ticket/${newId}/message`, { token: ct, body: { body: 'x', visibility: 'internal' } })
+chk('visibility on a reply is refused', sneaky.status, 400)
+chk('...and named', (sneaky.body?.fields ?? []).includes('visibility'), true)
+chk('no internal message exists on the ticket at all', (await call('GET', `/ticket/${newId}`, { token: sara })).body.messages.every(m => m.visibility === 'customer'), true)
+
+console.log('\n--- §11 on the write path, not just the read path ---')
+const foreignReply = await call('POST', `/portal/ticket/${theirTicket._id}/message`, { token: ct, body: { body: 'let me in' } })
+chk("cannot reply on another customer's ticket", foreignReply.status, 404)
+chk('the refusal is the same 404 as a read', JSON.stringify(foreignReply.body), JSON.stringify(foreign.body))
+chk('and nothing was written to it', (await call('GET', `/ticket/${theirTicket._id}`, { token: sara })).body?.messages?.every(m => !m.body.includes('let me in')), true)
+
+console.log('\n--- FR-020: the portal actions are attributed to the customer ---')
+const created = await call('GET', `/ticket/${newId}`, { token: sara })
+chk('the ticket has a creation entry', created.body?.history?.some(h => h.action === 'ticket.created'), true)
+chk('and a message entry for the reply', created.body?.history?.filter(h => h.action === 'message.added').length >= 2, true)
+
 await closeDb()
 process.exit(checker.report())

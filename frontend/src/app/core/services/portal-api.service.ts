@@ -54,6 +54,19 @@ export class PortalApiService {
     });
   }
 
+  // FR-002. The body is deliberately these three fields and nothing else: the
+  // server refuses anything more BY NAME (002 §9), so sending a priority or a
+  // status would produce a 400 rather than being quietly ignored.
+  submitTicket(body: { subject: string; description: string; category: string }) {
+    return this.http.post<{ ticket: PortalTicket }>(`${API}/portal/ticket`, body);
+  }
+
+  // FR-004. No visibility parameter — a customer reply is always visible to
+  // both sides, and the route has no code path that could make it internal.
+  reply(id: string, body: string) {
+    return this.http.post<{ message: PortalMessage }>(`${API}/portal/ticket/${id}/message`, { body });
+  }
+
   myTicket(id: string) {
     return this.http.get<{
       ticket: PortalTicket; messages: PortalMessage[];

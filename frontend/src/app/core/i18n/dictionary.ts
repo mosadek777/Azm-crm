@@ -158,8 +158,19 @@ export const DICTIONARY: Translations = {
   'portal.loading': { ar: 'جارٍ التحميل…', en: 'Loading…' },
   // Read-only for now: X4 and X6 add submit and reply. Saying so is better than
   // a button that does nothing.
-  'portal.readOnlyNote': {
-    ar: 'يمكنك متابعة طلباتك هنا. الرد وإنشاء طلب جديد سيتوفران قريبًا.',
-    en: 'You can follow your requests here. Replying and raising a new request are coming soon.'
+  'portal.newRequest': { ar: 'طلب جديد', en: 'New request' },
+  'portal.submit': { ar: 'إرسال الطلب', en: 'Submit request' },
+  'portal.submittingRequest': { ar: 'جارٍ الإرسال…', en: 'Submitting…' },
+  'portal.category': { ar: 'التصنيف', en: 'Category' },
+  'portal.describe': { ar: 'وصف المشكلة', en: 'Describe the problem' },
+  'portal.yourReply': { ar: 'ردك', en: 'Your reply' },
+  'portal.send': { ar: 'إرسال', en: 'Send' },
+  'portal.sending': { ar: 'جارٍ الإرسال…', en: 'Sending…' },
+  'portal.cancel': { ar: 'إلغاء', en: 'Cancel' },
+  // 008 E-08 (reopen on reply) and E-07 (reply to a cancelled ticket) are not
+  // built — piece F3 — so a closed request refuses rather than guessing which.
+  'portal.closedNoReply': {
+    ar: 'هذا الطلب مغلق ولا يقبل ردودًا. أنشئ طلبًا جديدًا إذا عادت المشكلة.',
+    en: 'This request is closed and accepts no reply. Raise a new request if the problem returns.'
   }
 };
