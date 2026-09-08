@@ -15,10 +15,11 @@ portal, reports, ERP integration, AI features) is **not built** — see
 
 | | |
 |---|---|
-| **API documentation** | https://mosadek777.github.io/Azm-crm/ — Swagger UI over `docs/openapi.json`, published from `main` / `docs` |
+| **API documentation** (Swagger) | https://mosadek777.github.io/Azm-crm/ — Swagger UI over `docs/openapi.json`, published from `main` / `docs` |
+| **API documentation** (Postman, published) | https://documenter.getpostman.com/view/50283616/2sBYAxP9fz — the same routes, rendered by Postman |
+| **Project board** (ClickUp, public) | https://sharing.clickup.com/90152504892/b/h/6-901525782663-2/2eb729eabd1a379 — 19 top-level tasks and 41 subtasks, mirroring `tools/tasks.json` |
 | **Live API docs** | `http://localhost:3000/api-docs` — **local only**, requires the backend running. There is no hosted environment |
-| **Postman** | `docs/azm-crm.postman_collection.json` and `docs/azm-crm.postman_environment.json` — import both by hand (File → Import). Nothing is pushed to Postman's cloud |
-| **Project board** | *TODO* — the ClickUp list is private to the workspace; a shareable public link has not been created |
+| **Postman, offline** | `docs/azm-crm.postman_collection.json` and `docs/azm-crm.postman_environment.json` — import both by hand (File → Import). Nothing is pushed to Postman's cloud by this repository; the published link above is a separate, manual export |
 
 ## Demo accounts
 
@@ -30,7 +31,7 @@ in `backend/.env`** — it is not written here, and it is not in any tracked fil
 |---|---|---|---|
 | **Admin** | `demo.admin@azmsquad.com` | `/auth/login` | Assigns tickets. **Cannot** post a customer-visible reply — spec `002` §9 permits an administrator an internal note and not a reply to the customer |
 | **Agent** | `demo.sara@azmsquad.com` | `/auth/login` | Replies to the customer and resolves the ticket |
-| **Customer** | `demo.customer@azmsquad.com` | `/portal` | Signs in to the customer portal and follows their own requests |
+| **Customer** | `demo.customer@azmsquad.com` | `/portal` | Raises a request, replies on it, and follows it to resolution |
 
 The seed prints all three at the end of its run, so the terminal doubles as a
 crib sheet. Staff and customer sessions use separate storage, so both can be
@@ -42,6 +43,130 @@ not built: [`docs/demo-script.md`](docs/demo-script.md).**
 
 Sharing one password across three accounts is a demo shortcut, recorded as
 decision 36 in `docs/decisions-pending.md`, not a pattern to copy.
+
+## Try it
+
+Start to finish, assuming you have never seen this project. Node 20+ and
+MongoDB. Roughly ten minutes.
+
+### 1. MongoDB must be a replica set
+
+Not a plain `mongod`. **This is the one prerequisite that will stop you**, and it
+is not optional: every mutation writes its audit entry inside the same
+transaction as the change (constitution II), and MongoDB only offers
+transactions on a replica set.
+
+```bash
+mongod --replSet rs0 --dbpath /your/data/path
+# then, once, in a mongosh shell:
+rs.initiate()
+```
+
+**If you skip it,** the backend prints `failed to connect` and exits at startup.
+If it somehow starts, the first ticket you create fails with a transaction
+error. Neither is subtle. `docs/decisions-pending.md` §3 has the longer version
+and how to convert an existing standalone.
+
+### 2. Backend — terminal 1
+
+```bash
+cd backend
+npm install
+cp .env.example .env
+```
+
+Open `.env` and fill in four values: `JWT_SECRET`, `BREAKGLASS_EMAIL`,
+`BREAKGLASS_PASSWORD`, and `DEMO_PASSWORD`. For a secret:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+```
+
+Then:
+
+```bash
+npm run seed:admin    # ONCE, ever — creates the break-glass administrator
+npm run dev           # leave running, http://localhost:3000
+```
+
+### 3. Demo data — terminal 2
+
+```bash
+cd backend
+npm run seed:demo     # needs the backend from step 2 already running
+```
+
+It prints the three accounts at the end. **Leave that terminal open** — it is
+your crib sheet, and it is the only place the password is shown.
+
+Re-run it any time. It is idempotent, so a second run creates nothing. `npm test`
+drops the database, so re-seed afterwards.
+
+### 4. Frontend — terminal 3
+
+```bash
+cd frontend
+npm install
+npm start             # http://localhost:4200
+```
+
+### 5. Two front doors
+
+| URL | Who |
+|---|---|
+| **http://localhost:4200** | **Staff** — administrators and agents |
+| **http://localhost:4200/portal** | **Customers** |
+
+They are separate applications sharing one server, with separate sessions. You
+can hold both at once in one browser; a private window for the customer is
+tidier.
+
+### 6. Walk the flow
+
+All three accounts use the password from `DEMO_PASSWORD`.
+
+1. **Customer raises a request.** Go to `/portal`, sign in as
+   `demo.customer@azmsquad.com`, click **New request**, fill in the three
+   fields, submit. Note there is no priority and no status control — a customer
+   does not set those, and the server refuses them by name if you try.
+
+2. **Admin routes it.** At `http://localhost:4200`, sign in as
+   `demo.admin@azmsquad.com`. The new request is in **Tickets**, status `new`,
+   unassigned. Open it and assign it to **Sara Ahmed** — a reason is required.
+
+3. **Agent replies.** Sign out, sign in as `demo.sara@azmsquad.com`. Open the
+   same ticket. Post a reply with visibility **customer**, then a second message
+   with visibility **internal** — something obviously private, like
+   *"Finance says the refund was queued but not released."*
+
+4. **Agent resolves it.** Move the status `assigned` → `in_progress` →
+   `resolved`.
+
+5. **Customer sees the result.** Back on `/portal`, open the request.
+
+### 7. The thing worth actually checking
+
+**On that last screen, go looking for the internal note. It is not there.**
+
+The customer sees the agent's reply and the status. They do not see the message
+you marked internal, they do not see who the agent was, and they do not see an
+assignee. That is `008 FR-019` and it is enforced in the database query — the
+internal note is never loaded, so it cannot be leaked by a template, a log line
+or a future refactor. The staff view of the same ticket shows all of it.
+
+Two more worth a minute:
+
+- **Switch the language** on any screen. The whole interface mirrors
+  right-to-left with no reload, and ticket references, phone numbers and email
+  addresses stay left-to-right inside the mirrored layout.
+- **Try to reply as the admin.** Sign in as `demo.admin@azmsquad.com`, open a
+  ticket and attempt a customer-visible reply. It is **refused**. An
+  administrator may write an internal note and may not speak to the customer in
+  the organisation's voice — spec `002` §9. It looks like a bug until you know
+  that, which is exactly why it is worth showing.
+
+Presenting this to someone? `docs/demo-script.md` is the same walk with what to
+say at each step.
 
 ## Stack
 
