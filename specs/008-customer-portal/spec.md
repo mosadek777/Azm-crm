@@ -8,7 +8,7 @@
 | **Story** | [`stories/008-customer-portal/story.md`](../../stories/008-customer-portal/story.md) |
 | **Status** | Draft — clarifying |
 | **Constitution gates** | **I (bilingual and RTL)**, II (attributable), IV (a customer sees only their own), VI (one thread) |
-| **Blocking clarifications** | 6 |
+| **Blocking clarifications** | 4 open (`[CLARIFY-3]`–`[CLARIFY-6]`) · 2 RESOLVED 2026-09-08 by Mohamed Sadek (developer, acting as decision authority) |
 
 ---
 
@@ -38,7 +38,7 @@ announcements, the complaint path, and portal branding.
 | **Verified contact point** | A contact point whose ownership has been demonstrated. Required to authenticate. |
 | **Organisation visibility** | A permission, granted by staff, letting one person see tickets raised by other members of their organisation. |
 | **Own ticket** | A ticket whose customer is the signed-in identity, or, where organisation visibility is granted, a ticket of a fellow member. |
-| **Expected response time** | What the portal shows the customer about timing. Content pending `[CLARIFY-2]`. |
+| **Expected response time** | What the portal shows the customer about timing. `[CLARIFY-2]` RESOLVED PROVISIONALLY 2026-09-08: **nothing is shown**, because both alternatives are business durations and constitution III requires those to come from spec `005`, which is unbuilt. Reopen when `005` unblocks. `FR-003` stays an uncovered MUST meanwhile. |
 | **Withdrawal** | A customer cancelling their own request before resolution. Maps to spec `002` status `cancelled`. |
 | **Reopen window** | The period after closure during which a customer may reopen. Owned by spec `002` `FR-022`. |
 | **Complaint** | A request the customer designates as dissatisfaction. Treated per `[CLARIFY-5]`. |
@@ -52,7 +52,7 @@ announcements, the complaint path, and portal branding.
 | Attribute | Type | Rules |
 |---|---|---|
 | `customer_id` | ref Customer | Required, exactly one |
-| `auth_method` | `otp_email` \| `otp_phone` \| `password` \| `sso` | Per `[CLARIFY-1]` |
+| `auth_method` | `otp_email` \| `otp_phone` \| `password` \| `sso` | `[CLARIFY-1]` RESOLVED 2026-09-08: **`otp_email` and `otp_phone` only** at launch. `password` is not offered; `sso` is not excluded as a later addition |
 | `verified_contact_point_id` | ref | Required |
 | `locale` | `ar` \| `en` | Defaults from the customer's `preferred_language` |
 | `organisation_visibility` | `none` \| `own_org` | Granted by staff only (`FR-006`) |
@@ -303,8 +303,15 @@ granted `own_org`. This is the single most important predicate in the spec.
 
 ## 12. Clarifications needed
 
-- [ ] `[CLARIFY-1]` **Is authentication one-time code, password, or the client's SSO — and may a customer submit a ticket without an account at all?** Anonymous submission changes identity resolution, the permission matrix and the abuse surface. — *blocks* `FR-001`, `FR-002`, `E-02` — *ask* client operations + IT
-- [ ] `[CLARIFY-2]` **What does the portal show a customer about timing: the SLA target, a computed estimate, or nothing?** Showing a target we then miss is worse than showing nothing, and this decision is visible to every customer. — *blocks* `FR-003`, `AS-05` — *ask* client management
+- [x] `[CLARIFY-1]` **Is authentication one-time code, password, or the client's SSO — and may a customer submit a ticket without an account at all?** Anonymous submission changes identity resolution, the permission matrix and the abuse surface. — *blocks* `FR-001`, `FR-002`, `E-02` — *ask* client operations + IT
+  - **RESOLVED 2026-09-08 by Mohamed Sadek (developer, acting as decision authority). A decision made by the delivery team rather than the client.** The two halves rest on different footing and are recorded separately.
+  - **Method — a one-time code to a verified email or phone contact point. No password. Read from this spec, not supplied.** `AS-01` describes the mechanism directly: *"the customer requests a one-time code and submits it correctly"*. `E-03` exists only for it: *"One-time code requested repeatedly | Rate-limited per source and per contact point"*. `NFR-004` sets it a delivery target: *"One-time code delivery | ≤ 30s at p95"* — a non-functional requirement written for OTP. `stories/008 CP-01` (**Must**) states the intent in the story's own words: *"sign in by email or phone one-time code, or SSO | **my requests are tied to me without another password**"*. `password` appears only in the `auth_method` enum in §3 and nothing else in this spec or its story supports it. SSO is not excluded as a later addition; it is not the launch method.
+  - **Anonymous submission — NO. Accounts only. Supplied by the delivery team, not read from the specs.** Nothing in `specs/` or `stories/` leans either way: §9 defers the anonymous cell (*"Submit a ticket | per `[CLARIFY-1]`"*) and `E-02` offers both paths without choosing between them (*"Registration is offered per `[CLARIFY-1]`, **or** the customer is directed to contact us"*). This half is an owned choice, not an inference, and is marked so a later reader can tell it from the method above.
+  - **Consequence.** Every portal operation therefore carries §11's `customer = session` predicate with no anonymous branch, and `FR-001`'s *"verified contact point"* becomes a prerequisite: `ContactPoint.verified_at` exists in the model today and nothing writes it. See `docs/portal-plan.md` piece `C1`.
+- [x] `[CLARIFY-2]` **What does the portal show a customer about timing: the SLA target, a computed estimate, or nothing?** Showing a target we then miss is worse than showing nothing, and this decision is visible to every customer. — *blocks* `FR-003`, `AS-05` — *ask* client management
+  - **RESOLVED PROVISIONALLY 2026-09-08 by Mohamed Sadek (developer, acting as decision authority). A decision made by the delivery team rather than the client. To be reopened when spec `005` unblocks.**
+  - **The portal shows nothing about timing.** Not a preference between the three options — the other two are eliminated by the constitution. Both *"the SLA target"* and *"a computed estimate"* are business durations, and constitution III: *"Elapsed time is never computed as `now - created_at`. It is computed against a business calendar … and a pause ledger … Any feature that displays, sorts by, reports on or alerts against remaining time reads from that one implementation."* That implementation is spec `005`, which is not built. "Nothing" is the only option that can be built without violating principle III.
+  - **⚠ This answers the marker and does NOT satisfy `FR-003`.** `FR-003` is a **MUST** requiring *"timing information per `[CLARIFY-2]`"*. Showing nothing leaves it an **uncovered MUST**, and it must not be recorded as satisfied anywhere. When spec `005` exists, reopen this marker and choose between target and estimate on the client's answer. Tracked in `docs/portal-plan.md` §5.1 and §2.
 - [ ] `[CLARIFY-3]` Is satisfaction CSAT, NPS or both, on what scale, and after what delay is it requested? Shared with spec `009` `[CLARIFY-2]`. — *blocks* `FR-008` — *ask* client management
 - [ ] `[CLARIFY-4]` Who decides which colleagues a corporate contact may see, and may that visibility cross branches? — *blocks* `FR-006`, `E-12` — *ask* client operations
 - [ ] `[CLARIFY-5]` Is a complaint a distinct ticket type with its own SLA and escalation, or a flag on an ordinary ticket? — *blocks* `FR-017` — *ask* client management
@@ -334,5 +341,5 @@ granted `own_org`. This is the single most important predicate in the spec.
 - [x] Permission matrix complete, and states what is **never** visible
 - [x] Audit entries defined, including cross-customer access as a security event
 - [x] Constitution IV satisfied — every contract carries `customer = session`
-- [ ] **Zero `[NEEDS CLARIFICATION]` markers remaining — 6 open, `/plan` is blocked**
+- [ ] **Zero `[NEEDS CLARIFICATION]` markers remaining — 4 open (`[CLARIFY-3]` satisfaction scale, `[CLARIFY-4]` organisation visibility, `[CLARIFY-5]` complaints, `[CLARIFY-6]` portal domain), `/plan` is blocked for the requirements they block. `[CLARIFY-1]` and `[CLARIFY-2]` RESOLVED 2026-09-08 by Mohamed Sadek (developer, acting as decision authority) — `[CLARIFY-2]` provisionally, to be reopened when spec `005` unblocks. Resolved markers are marked `[x]` and retained rather than deleted per Governance, so each decision and its basis stay attributable (constitution II). ⚠ `[CLARIFY-2]`'s answer does NOT satisfy `FR-003`, which remains an uncovered MUST.**
 - [x] Constitution gates satisfied and named

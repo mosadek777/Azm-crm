@@ -32,17 +32,21 @@ model** (§4). Tickets land unassigned in the owning team's queue, are assigned
 by rule, or are self-assigned. An administrator assigning stays what it is: a
 manual override that §9 permits.
 
-That makes **Team the blocker for the real intake path**, and Team is undefined
-in every spec that uses it. `B5` precedes `E1`, and both precede the specified
-version of step 2.
+That makes **Team the blocker for the real intake path**. Its entity is now
+decided — owned by spec `012`, one Department, independent of Branch, membership
+on `RoleAssignment` (§5.4, decision 30) — but **one rule is still missing**:
+`002 E-12`'s singular *"the team lead"* has no stated behaviour for zero or
+several leads, and `E1` cannot be built against an undefined recipient (§5.5
+Point 4). `B5` precedes `E1`, and both precede the specified version of step 2.
 
 **Four decisions were ratified 2026-09-08** (§5.1), by the delivery team rather
 than the client, and are marked in §5.1 as either a reading the specs argue for
 or a judgement made where they are silent. One is deliberately deferred (§5.2).
 One listed as open was never open (§5.3).
 
-Spec `012` owns the Team entity (§5.4). Its **data model is still open**, and
-§5.5 gives the options with what each costs to reverse.
+Spec `012` owns the Team entity, and its data model is decided — `T1` + `M1`
+(§5.4). The options and evidence are kept in §5.5 rather than deleted. **One
+rule remains open and blocks `E1`** (§5.5 Point 4).
 
 ---
 
@@ -111,11 +115,10 @@ as specified.
 **Step 1** presumed a decision not then made. `008 [CLARIFY-1]` is now decided —
 §5.1: one-time code to email or phone, accounts only, no anonymous submission.
 
-**Step 5** carried three dependencies on one screen. Two are now decided
-(§5.1): timing shows nothing, and no agent identity is shown. The third — the
-**owning team**, which `008 FR-003` requires the screen to display — remains
-open, because Team has an owner (§5.4) and no data model (§5.5). `D2` cannot
-render `FR-003` in full until it does.
+**Step 5** carried three dependencies on one screen, and all three are now
+decided (§5.1, §5.4): timing shows nothing, no agent identity is shown, and the
+**owning team** `008 FR-003` requires the screen to display is now a defined
+entity. `D2` therefore depends on `B5` having been built, not on a decision.
 
 ---
 
@@ -190,8 +193,28 @@ organisational entity that 010 scopes by. Decisively, `012 §3` already carries
 `default_team_id | ref | **Required**` on Department — a required foreign key to
 an entity the same spec never defines.
 
-**The data model is not decided.** Options and costs are in §5.5. Until one is
-ratified, `B5` and `E1` stay unstarted.
+**The data model is now decided — `T1` + `M1`, ratified 2026-09-08 by Mohamed
+Sadek (developer, acting as decision authority), a decision made by the delivery
+team rather than the client.** Recorded as decision 30 in
+`docs/decisions-pending.md`.
+
+- **`T1`** — a Team belongs to **exactly one Department**, and is **independent
+  of Branch**.
+- **`M1`** — **membership rides on `RoleAssignment`**: an assignment names
+  branch, department and team.
+
+The deciding argument was reversal asymmetry, not elegance: `T2 → T1` later
+means giving every existing team a department and re-checking every ticket's
+`owning_team_id` against it — cheap at zero ticket volume, expensive after —
+while `T1 → T2` is near-free. `M1` was chosen because it inherits `010 AS-04`
+(*a granting admin cannot exceed their own scope*), which is already built and
+tested, whereas `M2` would need its own overreach rule and **no spec provides
+one**.
+
+The options and the evidence behind them are kept in §5.5 rather than deleted,
+so the reasoning stays attributable.
+
+**⚠ One rule is still missing, and `E1` is blocked on it** — see §5.5 Point 4.
 
 ### 5.5 Team — the open points, with options
 
@@ -203,7 +226,7 @@ Two points listed as open in the 2026-09-08 audit turned out to be closer to
 answered on re-reading, and are recorded as such rather than presented as free
 choices.
 
-#### Point 1 — what a Team belongs to
+#### Point 1 — what a Team belongs to — **DECIDED: T1**
 
 | Option | Shape | Evidence for | Evidence against |
 |---|---|---|---|
@@ -219,14 +242,14 @@ giving every existing team a department and re-checking every ticket's
 expensive after. T1 → T2 is near-free. **T1 is the more expensive to get wrong in
 one direction and the safer default in the other.**
 
-#### Point 2 — whether a Team belongs to a Branch
+#### Point 2 — whether a Team belongs to a Branch — **DECIDED: no (T1)**
 
 Folded into Point 1: T1 and T2 both say no, T3 says yes and is excluded. The
 strongest single line against branch-bound teams is `005 §2`, which lists *"in
 the owning team"* and *"in scope"* as separate conditions of eligibility — if a
 team were branch-bound the second would be implied by the first.
 
-#### Point 3 — who assigns membership, and how
+#### Point 3 — who assigns membership, and how — **DECIDED: M1**
 
 Nothing in any spec creates, edits or populates a team. `004 §2` (*"a team I am
 in"*), `004 FR-016` (*"the teams … they hold"*) and `004 E-14` (*"Lead scoped to
@@ -239,16 +262,30 @@ zero teams"*) establish that membership exists and is plural, and stop there.
 
 *Evidence leans M1;* the choice of which is a judgement.
 
-#### Point 4 — what a "team lead" is
+#### Point 4 — what a "team lead" is — **OPEN, and it blocks `E1`**
 
 | Option | Shape | Evidence |
 |---|---|---|
 | **L1** | The existing `LEAD` role, scoped to that team | `010` §4: *"a user who is an agent in branch B and a **team lead** in branch C"* — phrased as a role held at a place. `004 FR-016`: *"scoped to the teams, branches and departments **they hold**"* |
 | **L2** | An explicit `lead_user_id` attribute on Team | Nothing in any spec proposes it |
 
-**Unresolved under either:** `002 E-12` says *"the **team lead** is notified"*,
-singular. Under L1 a team may have zero leads or several, and no spec says what
-happens in either case. Choosing L1 does not close this; it needs a stated rule.
+**Not decided, and no rule invented here.** `002 E-12` says *"the ticket returns
+to the owning team queue as unassigned and **the team lead** is notified"* —
+singular and definite. Under `M1` a team lead is the `LEAD` role scoped to that
+team, so a team may hold **zero leads or several**, and **no spec states what
+happens in either case**:
+
+- With zero, `E-12`'s notification has no recipient, and a deactivated agent's
+  tickets return to a queue nobody is told about.
+- With several, `E-12` does not say whether all are notified or one is chosen.
+  `005`'s escalation *"level 1 after 2h unassigned to the team lead"* carries the
+  same ambiguity.
+
+**This blocks piece `E1`.** `005 FR-009` requires that *"where none are eligible
+the ticket MUST remain unassigned and **the lead** MUST be notified"* — not
+implementable against an undefined recipient. It needs either a stated rule in
+`012` alongside the Team entity, or option `L2` (an explicit `lead_user_id` on
+Team). Neither has been chosen.
 
 #### Point 5 — team-scoped reads *(more answered than first recorded)*
 
@@ -302,7 +339,7 @@ These pay off whether or not the portal is ever built.
 | `B2` | Ticket `source` field, `portal` origin, exposed on read | 0.5 | — | §3 gap 1 |
 | `B3` | Bilingual customer-facing status labels (`008 §8`) | 1 | 0.5 | §3 gap 2 |
 | `B4` | Root-cause and resolution-code lists; enable the `FR-029` gate; reverses decision 23 | 1.5 | 1 | client supplies the values |
-| `B5` | **Team entity** — model, membership, `owning_team_id`, third scope dimension, backfill; reverses decision 20 | 2–3 | 1 | Team definition |
+| `B5` | **Team entity** — model (`T1`), membership on `RoleAssignment` (`M1`), `owning_team_id`, third scope dimension, backfill; reverses decision 20 | 2–3 | 1 | — (decision 30) |
 
 ### Customer identity — the way in
 
@@ -330,7 +367,7 @@ weakened by accident.
 
 | # | Piece | Backend | Frontend | Blocked on |
 |---|---|---|---|---|
-| `E1` | Auto-assignment: `round_robin`, `least_loaded`, `skill_match`, eligibility, unassigned-and-notify fallback (`005 FR-008`, `FR-009`) | 3–4 | 1–2 | `B5` |
+| `E1` | Auto-assignment: `round_robin`, `least_loaded`, `skill_match`, eligibility, unassigned-and-notify fallback (`005 FR-008`, `FR-009`) | 3–4 | 1–2 | `B5`, **and the team-lead rule (§5.5 Point 4)** |
 
 ### Remaining portal requirements
 

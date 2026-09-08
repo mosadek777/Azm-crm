@@ -8,7 +8,7 @@
 | **Story** | [`stories/002-ticket-management/story.md`](../../stories/002-ticket-management/story.md) |
 | **Status** | Draft — clarifying |
 | **Constitution gates** | II (attributable), III (SLA clock), IV (server-side scope), VI (one thread), VII (testable) |
-| **Blocking clarifications** | 1 open (`[CLARIFY-6]`) · 5 RESOLVED 2026-09-07 by Mohamed Sadek (developer, acting as decision authority) |
+| **Blocking clarifications** | **0 open** · 6 RESOLVED by Mohamed Sadek (developer, acting as decision authority) — `[CLARIFY-1]`–`[CLARIFY-5]` on 2026-09-07, `[CLARIFY-6]` on 2026-09-08 |
 
 ---
 
@@ -431,7 +431,11 @@ not the identity of individual agents beyond the replier per `[CLARIFY-6]`.
   - **Evidence.** `stories/002 TM-04` (**Must**): *"categorise down a **multi-level** tree"* — excludes depth 1. `FR-005` (**MUST**): *"inherited by **descendants**"* — implies ≥ 2 levels. `FR-004` (**MUST**): a ticket references a **leaf**; non-leaf nodes are not selectable.
   - **An earlier "fixed depth 3" is withdrawn as invented.** Nothing in any source supports three, or any other number.
   - **Accepted cost.** `009`'s reporting rollups must handle arbitrary depth. `E-07` already requires historical reports to *"reflect the tree as it was at ticket creation"*, so a depth-agnostic rollup was needed regardless.
-- [ ] `[CLARIFY-6]` May a customer see which individual agent handled their ticket, or only the team? — *blocks* the customer history redaction in section 9 — *ask* client operations + HR
+- [x] `[CLARIFY-6]` May a customer see which individual agent handled their ticket, or only the team? — *blocks* the customer history redaction in section 9 — *ask* client operations + HR
+  - **RESOLVED 2026-09-08 by Mohamed Sadek (developer, acting as decision authority). A decision made by the delivery team rather than the client.**
+  - **Only the team. No individual agent identity is shown to a customer, on any surface. Read from the specs.** Spec `008 FR-003` (**MUST**) names what the customer ticket view must carry: *"a customer-facing status label, **the owning team**, and timing information"* — the team, not the agent. `stories/008 CP-03` (**Must**) asks for the same three and no more: *"see status, **owning team** and expected response time"*. The marker routes to *"client operations + **HR**"*, the only marker in this spec or `008` that involves HR, which is consistent with treating an individual's name as a staff-privacy matter rather than a display preference.
+  - **Including the replier. Supplied by the delivery team, not read from the specs.** §9 footnote ² reads *"not the identity of individual agents **beyond the replier** per `[CLARIFY-6]`"*, which parses two ways: either the replier is always named and only other agents are hidden, or the whole clause including the replier is subject to this marker. The spec does not settle it. Settled here as the second reading — the replier is hidden too — and recorded as an owned choice rather than an inference, so a later reader can tell it from the paragraph above. If the client prefers the first reading, only the message author's name is added; nothing else changes.
+  - **Consequence.** §9 footnote ² is now determinate: a customer sees their own status changes, and no agent identity at all. `008 §9`'s *"See assigned agent identity | — | per spec `002` `[CLARIFY-6]`"* resolves to **never**, and `008 AS-05`'s *"they do not see the assigned agent's identity unless spec `002` `[CLARIFY-6]` permits it"* stands unconditionally. Implementation note in `docs/portal-plan.md` piece `D2`.
 
 ## 13. Success metrics
 
@@ -456,5 +460,5 @@ not the identity of individual agents beyond the replier per `[CLARIFY-6]`.
 - [x] Permission matrix complete for every action
 - [x] Audit entries defined for every mutation
 - [x] Constitution III respected — this spec computes no durations (`FR-034`)
-- [ ] **Zero `[NEEDS CLARIFICATION]` markers remaining — 1 open: `[CLARIFY-6]` (may a customer see the individual agent). `[CLARIFY-1]` through `[CLARIFY-5]` RESOLVED 2026-09-07 by Mohamed Sadek (developer, acting as decision authority). Resolved markers are marked `[x]` and retained rather than deleted per Governance, so each decision and its basis stay attributable (constitution II).**
+- [x] **Zero `[NEEDS CLARIFICATION]` markers remaining — ALL SIX RESOLVED.** `[CLARIFY-1]` through `[CLARIFY-5]` on 2026-09-07 and `[CLARIFY-6]` on 2026-09-08, all by Mohamed Sadek (developer, acting as decision authority) rather than by the client. Resolved markers are marked `[x]` and retained rather than deleted per Governance, so each decision and its basis stay attributable (constitution II).
 - [x] Constitution gates satisfied and named

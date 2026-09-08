@@ -6,7 +6,7 @@ thirteen specs. Updated at the end of every step.
 **Last updated:** 2026-09-08 · **after:** the eight-phase build pass — design
 system (Tailwind only, PrimeNG removed), customer and ticket screens, demo
 seed, API documentation, ClickUp board restructured into a tree, GitHub Pages
-— 25 ratified decisions, constitution 0.4.0
+— 30 ratified decisions, constitution 0.4.0
 
 ---
 
@@ -82,7 +82,7 @@ truth, the board is its rendering.
 | Email / WhatsApp / SMS / chat (spec 003) | `003 [CLARIFY-1]` — which channels ship in phase one |
 | SLA & automation engine (spec 005) | `005 [CLARIFY-1]` SLA numbers, `[CLARIFY-2]` calendars |
 | Knowledge base (spec 006) | `006 [CLARIFY-1]`, and `012 [CLARIFY-1]` |
-| Customer portal (spec 008) | `008 [CLARIFY-1]` — auth method, anonymous submission |
+| Customer portal (spec 008) | `008 [CLARIFY-1]` **RESOLVED 2026-09-08** (decisions 26, 27): one-time code, accounts only. Now blocked on build effort, not a decision — see `portal-plan.md` |
 | Reports & management (spec 009) | The SLA engine, for every duration figure |
 | ERP integration (spec 011) | Ownership resolved (decision 6); `011 [CLARIFY-2]` — which ERP |
 | AI features (spec 007) | `007 [CLARIFY-1]` blocks the whole spec; constitution V |
@@ -91,15 +91,15 @@ truth, the board is its rendering.
 
 | Blocker | Effect |
 |---|---|
-| **`Team` is undefined in every spec** | `002` §3 makes `owning_team_id` **Required** on Ticket. Scoped out today (decision 20), **not resolved** — see `decisions-pending.md` §7. |
+| **`Team` — entity now decided, one rule still missing** | Owned by spec `012`; belongs to exactly one Department, independent of Branch; membership rides on `RoleAssignment` (decision 30). `002` §3 still makes `owning_team_id` **Required** and no ticket carries one — backfill is piece `B5`. ⚠ **Still open:** `002 E-12`'s singular *"the team lead"* has no stated rule for zero or several leads, and `005 FR-009` cannot be built against an undefined recipient. Needed before piece `E1`. |
 | `001 [CLARIFY-4]` privacy regime / retention | Blocks `FR-021` erasure |
 | `001 [CLARIFY-5]` consent scope | Blocks `FR-022`, and keeps `E-15` refusing |
-| `002 [CLARIFY-6]` may a customer see the individual agent | Blocks §9 customer history redaction |
+| ~~`002 [CLARIFY-6]`~~ **RESOLVED 2026-09-08** (decision 29) | Team only, no agent identity including the replier. Spec `002` is now **0 open markers** |
 | `005 [CLARIFY-1]` SLA numbers, `[CLARIFY-2]` calendars | Spec `005` buildable but untestable. `elapsed-time.js` returns `unavailable` |
 | `010 [CLARIFY-2]` which IdP, whose MFA, mandatory? | `FR-006` (SSO) is an **uncovered MUST** |
 | `013 [CLARIFY-1]` volumes | Every `NFR` table unacceptable-because-unquantified |
 
-**Marker state: 70 unresolved · 12 resolved · 3 provisional** (from 82).
+**Marker state: 67 unresolved · 15 resolved · 4 provisional** (from 82). Three more resolved 2026-09-08 — `008 [CLARIFY-1]`, `008 [CLARIFY-2]` (provisional), `002 [CLARIFY-6]` — taking spec `002` to **0 open**. See `decisions-pending.md` §0 decisions 26–30 and `portal-plan.md` §5.
 
 ```bash
 grep -rEn '^- \[ \] .\[CLARIFY-[0-9]' specs/ | wc -l    # the gate
@@ -133,7 +133,7 @@ see `next-steps.md` §5.
 
 | | |
 |---|---|
-| `npm test` (backend) | **106 checks** — scope 24, customer 32, ticket 50. Exit 0 |
+| `npm test` (backend) | **131 checks** — scope 28, customer 35, ticket 68. Exit 0 |
 | `npm run audit:reconcile` | 0 orphaned, 0 unaudited, 0 unchecked models (8 checked) |
 | atomicity + transaction proofs | no orphaned entry survives an injected fault; rollback verified |
 | `ng build` | exit 0 |

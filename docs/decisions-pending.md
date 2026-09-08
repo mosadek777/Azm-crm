@@ -125,6 +125,60 @@ unscoped form would wrongly protect.
 **Reversal cost: low.** Two index definitions in `customer.model.js`, plus a
 reindex. No application code reads the filter.
 
+### Eighth batch — ratified 2026-09-08, the customer-portal flow
+
+All five by **Mohamed Sadek (developer, acting as decision authority) — a
+decision made by the delivery team rather than the client**, in the words
+Governance requires. The `Kind` column separates a **reading** the specs already
+argue for from a **judgement** supplied where the specs are silent, so a later
+reader can tell an evidenced answer from an owned choice. Full working in
+`docs/portal-plan.md` §5.
+
+| # | Decision | Kind | Marker | Basis |
+|---|---|---|---|---|
+| 26 | **Customer authentication is a one-time code to a verified email or phone. No password.** SSO is not excluded later; it is not the launch method | **Reading** | `008 [CLARIFY-1]` (method half) — **RESOLVED** | `008 AS-01` describes the mechanism (*"requests a one-time code and submits it correctly"*); `E-03` exists only for it; `NFR-004` sets it a delivery target (*"One-time code delivery ≤ 30s at p95"*); `stories/008 CP-01` (**Must**): *"one-time code, or SSO \| **without another password**"*. `password` appears only in §3's enum |
+| 27 | **No anonymous ticket submission. Accounts only.** | **Judgement** — the specs are silent | `008 [CLARIFY-1]` (anonymous half) — **RESOLVED** | Nothing in `specs/` or `stories/` leans either way. `008 §9` defers the anonymous cell (*"Submit a ticket \| per `[CLARIFY-1]`"*); `E-02` offers both paths without choosing. An owned choice, not an inference |
+| 28 | **The portal shows nothing about timing. PROVISIONAL** — reopen when spec `005` unblocks | **Reading**, forced by constitution III | `008 [CLARIFY-2]` — **RESOLVED PROVISIONALLY** | The other two options are business durations; constitution III: *"Any feature that displays … remaining time reads from that one implementation"*, which is spec `005`, unbuilt. **⚠ Answers the marker, does NOT satisfy `FR-003`** — that stays an uncovered MUST |
+| 29 | **A customer never sees an individual agent's identity — only the owning team.** Including the replier | Team-only: **reading**. Replier: **judgement** | `002 [CLARIFY-6]` — **RESOLVED**; closes the last open marker in `002` | `008 FR-003` (**MUST**) names *"the **owning team**"*, not the agent; `stories/008 CP-03` asks for the same three fields; the marker routes to *"client operations + **HR**"*, the only marker in either spec involving HR. The replier half settles `002 §9` footnote ²'s *"beyond the replier"*, which parses two ways and which the spec does not resolve |
+| 30 | **`Team` is owned by spec `012`, belongs to exactly one Department, and is independent of Branch (T1). Membership rides on `RoleAssignment` (M1).** Partially reverses decision 20 | Ownership: **reading**. T1 and M1: **judgement** | The `Team` spec defect (§7) — **RESOLVED IN PART**; the entity is defined, the lead rule is not | **Ownership:** `012 §1` — *"this spec defines the department and branch entities that scoping applies to"* — against `010 §1` — *"scoping by department, branch and team"*. 012 defines organisational entities, 010 scopes by them. Decisive: `012 §3` Department already carries `default_team_id \| ref \| **Required**`, a required key to an entity 012 never defines. **T3 (branch-bound) is excluded by the specs, not by preference:** `default_team_id` is a single ref and Department carries no branch reference, so a department in three branches could name only one branch's team. **T1 over T2 on reversal asymmetry** (below). **M1 over M2** because M1 inherits `010 AS-04` (*a granting admin cannot exceed their own scope*), already built and tested; M2 would need its own overreach rule and **no spec provides one**, so it would have to be invented |
+
+**Why T1 over T2, stated as the argument that decided it.** Both are consistent
+with the scope predicates. The asymmetry is in reversal cost: **T2 → T1** later
+requires giving every existing team a department and re-checking every ticket's
+`owning_team_id` against its `department_id` — cheap at zero ticket volume,
+expensive after. **T1 → T2** is near-free. Supporting evidence for T1 beyond the
+asymmetry: `012 AS-09` makes categories department-scoped (*"only their
+department's categories are offered"*) and `002 FR-005` gives each category a
+default owning team, so those teams already sit inside a department.
+
+**⚠ The gap decision 30 leaves, recorded loudly.**
+
+`002 E-12` says *"the ticket returns to the owning team queue as unassigned and
+**the team lead** is notified"* — singular, definite. Under M1 a "team lead" is
+the `LEAD` role scoped to that team, which means a team may have **zero leads or
+several**, and **no spec states what happens in either case**:
+
+- With zero, `E-12`'s notification has no recipient and a deactivated agent's
+  tickets return to a queue nobody is told about.
+- With several, `E-12` does not say whether all are notified or one is chosen,
+  and `005`'s escalation *"level 1 after 2h unassigned to the team lead"* has the
+  same ambiguity.
+
+**No rule has been invented here.** This is recorded as an open requirement, not
+resolved, and it is a prerequisite for piece `E1` (auto-assignment) in
+`docs/portal-plan.md` §6 — `005 FR-009` requires that *"where none are eligible
+the ticket MUST remain unassigned and **the lead** MUST be notified"*, which
+cannot be implemented against an undefined recipient. It needs either a stated
+rule in `012` alongside the Team entity, or an explicit `lead_user_id` attribute
+(option L2), and that is a decision not yet taken.
+
+**Consequences already recorded elsewhere.** #26 and #27 unblock `008 FR-001`
+and `FR-002` for planning; #28 leaves `008 FR-003` an uncovered MUST — see
+`docs/trace.md`. #29 closes the last open marker in spec `002`, taking it to
+**0 open · 6 resolved**. #30 supersedes the *scoping out* half of decision 20
+but not its consequence: `owningTeamId` is still absent from every existing
+ticket, and backfilling it is piece `B5`.
+
 ### Seventh batch — ratified 2026-09-08, demo data
 
 | # | Decision | Kind | Undo cost |
