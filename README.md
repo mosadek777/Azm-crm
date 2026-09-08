@@ -148,6 +148,11 @@ enforced on every read and write, including on tickets and customers.
   from spec with its undo cost.
 - **`docs/trace.md`** — spec requirement → code, both directions: what's built
   with no requirement, and what's required with no code yet.
+- **`docs/portal-plan.md`** — the customer-facing flow (customer signs in, opens
+  a ticket, exchanges messages, sees it resolved) audited against the specs:
+  which steps a requirement covers, which are covered with no code, which have
+  no requirement at all, and the remaining work split into pieces to approve one
+  at a time with estimates. Read before starting anything customer-facing.
 - **`docs/next-steps.md`** — what's broken or half-done, what's blocked on a
   client decision, unbuilt MUSTs, effort estimates for every scoped-out module,
   the technical debt from today's delivery compression, and a recommended
