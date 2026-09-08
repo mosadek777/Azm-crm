@@ -1,4 +1,4 @@
-# azm-crm
+# Azm-CRM
 
 A customer support CRM: bilingual (Arabic/English peer languages), multi-branch,
 scope-enforced, fully audited. Built spec-first — see [Spec-driven
