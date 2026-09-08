@@ -892,6 +892,154 @@
         }
       ],
       "event": []
+    },
+    {
+      "name": "Portal",
+      "description": {
+        "content": "",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "name": "Customer sign-in (spec 008 FR-001, AS-01). DEMO SHORTCUT — password, not a one-time code (decision 31).",
+          "request": {
+            "name": "Customer sign-in (spec 008 FR-001, AS-01). DEMO SHORTCUT — password, not a one-time code (decision 31).",
+            "description": {},
+            "url": {
+              "path": [
+                "portal",
+                "auth",
+                "signin"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"<string>\",\n  \"password\": \"<string>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "The signed-in customer's own record (spec 008 FR-013 read half)",
+          "request": {
+            "name": "The signed-in customer's own record (spec 008 FR-013 read half)",
+            "description": {},
+            "url": {
+              "path": [
+                "portal",
+                "me"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET",
+            "auth": null
+          },
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "The customer's own tickets, open and closed (spec 008 FR-005)",
+          "request": {
+            "name": "The customer's own tickets, open and closed (spec 008 FR-005)",
+            "description": {},
+            "url": {
+              "path": [
+                "portal",
+                "ticket"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "status",
+                  "value": "<string>",
+                  "description": "Comma-separated status keys"
+                },
+                {
+                  "disabled": false,
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "disabled": false,
+                  "key": "limit",
+                  "value": "25"
+                }
+              ],
+              "variable": []
+            },
+            "method": "GET",
+            "auth": null
+          },
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "One of the customer's own tickets, with its customer-visible thread (spec 008 FR-003, AS-06)",
+          "request": {
+            "name": "One of the customer's own tickets, with its customer-visible thread (spec 008 FR-003, AS-06)",
+            "description": {},
+            "url": {
+              "path": [
+                "portal",
+                "ticket",
+                ":id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "id",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "method": "GET",
+            "auth": null
+          },
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
     }
   ],
   "event": [],

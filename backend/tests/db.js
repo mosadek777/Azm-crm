@@ -50,3 +50,30 @@ export const grantExtraRole = async (email, { role, branchIds, departmentIds }) 
   }])
   return String(user._id)
 }
+
+// Creates a portal identity for an existing customer. Setup only.
+//
+// Direct because no spec gives staff a provisioning endpoint: 008 §3 defines the
+// entity, E-02 mentions registration only as something [CLARIFY-1] would decide,
+// and no requirement provides a route. Inventing one to make a test tidier would
+// be filling a gap the specs left open.
+export const createPortalIdentity = async ({ customerId, password, locale = 'en' }) => {
+  await connect()
+  const { PortalIdentity } = await import('../src/DB/models/portal-identity.model.js')
+  const { ContactPoint } = await import('../src/DB/models/contact-point.model.js')
+  const bcrypt = (await import('bcrypt')).default
+
+  const point = await ContactPoint.findOne({ customerId, channelType: 'email' })
+  if (!point) throw new Error('createPortalIdentity: customer has no email contact point')
+
+  const [identity] = await PortalIdentity.create([{
+    customerId,
+    authMethod: 'password',
+    verifiedContactPointId: point._id,
+    passwordHash: await bcrypt.hash(password, Number(process.env.SALT_ROUNDS) || 10),
+    locale,
+    organisationVisibility: 'none',
+    state: 'active'
+  }])
+  return String(identity._id)
+}

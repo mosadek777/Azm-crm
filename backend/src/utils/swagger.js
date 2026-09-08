@@ -99,6 +99,7 @@ export const openapiSpec = swaggerJSDoc({
     'src/modules/user/user.controller.js',
     'src/modules/platform/platform.controller.js',
     'src/modules/customer/customer.controller.js',
-    'src/modules/ticket/ticket.controller.js'
+    'src/modules/ticket/ticket.controller.js',
+    'src/modules/portal/portal.controller.js'
   ]
 })

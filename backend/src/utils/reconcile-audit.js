@@ -38,6 +38,7 @@ import { ContactPoint } from '../DB/models/contact-point.model.js'
 import { Ticket } from '../DB/models/ticket.model.js'
 import { Message } from '../DB/models/message.model.js'
 import { Counter } from '../DB/models/counter.model.js'
+import { PortalIdentity } from '../DB/models/portal-identity.model.js'
 
 // The collections whose creation this system audits. A model absent from here
 // is not checked — so adding a model without adding it here is itself a gap,
@@ -56,7 +57,8 @@ const AUDITED = {
   Customer,
   ContactPoint,
   Ticket,
-  Message
+  Message,
+  PortalIdentity
 }
 
 // Counter holds no auditable records — it is the reference sequence, not a
@@ -76,7 +78,8 @@ const CREATION_ACTIONS = [
   'customer.created',
   'contact_point.added',
   'ticket.created',
-  'message.added'
+  'message.added',
+  'portal_identity.created'
 ]
 
 const isObjectId = (value) => mongoose.Types.ObjectId.isValid(value)

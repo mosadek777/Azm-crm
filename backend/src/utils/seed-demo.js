@@ -16,6 +16,12 @@
 // the counts unchanged.
 
 import 'dotenv/config'
+import bcrypt from 'bcrypt'
+import mongoose from 'mongoose'
+import { DB_NAME } from '../DB/connection.db.js'
+import { ContactPoint } from '../DB/models/contact-point.model.js'
+import { PortalIdentity } from '../DB/models/portal-identity.model.js'
+import { recordAudit } from './audit.js'
 
 const API = `http://localhost:${process.env.PORT ?? 3000}`
 
@@ -307,6 +313,70 @@ const run = async () => {
   const adminPersona = STAFF.find(s => s.persona === 'ADMIN')
   const agentPersona = STAFF.find(s => s.persona === 'AGENT')
 
+  // --- the CUSTOMER persona's portal identity (spec 008 §3) ----------------
+  //
+  // THE ONE THING IN THIS SCRIPT THAT DOES NOT GO THROUGH THE API, and the
+  // reason is a gap rather than convenience: **no spec says who creates a
+  // portal identity.** 008 §3 defines the entity, E-02 mentions registration
+  // only as something [CLARIFY-1] would decide, and no requirement gives staff
+  // a provisioning endpoint. Inventing one would be filling a gap the specs
+  // left open, so this writes the record directly instead.
+  //
+  // Constitution II still holds: the creation is audited through recordAudit
+  // inside a transaction, exactly as an API-created record would be, so
+  // `npm run audit:reconcile` sees it and stays clean.
+  const portal = { created: 0, reused: 0 }
+  {
+    await mongoose.connect(process.env.MONGO_URI, { dbName: DB_NAME })
+    const personaRef = 'DEMO-006'
+    const personaIndex = CUSTOMERS.findIndex(c => c.ref === personaRef)
+    const personaCustomerId = customerIds[personaIndex]
+
+    const existing = await PortalIdentity.findOne({ customerId: personaCustomerId })
+    if (existing) {
+      portal.reused++
+    } else {
+      const point = await ContactPoint.findOne({
+        customerId: personaCustomerId, channelType: 'email'
+      })
+      if (!point) throw new Error('the CUSTOMER persona has no email contact point')
+
+      const identityId = new mongoose.Types.ObjectId()
+      const session = await mongoose.startSession()
+      try {
+        await session.withTransaction(async () => {
+          await recordAudit({
+            actorRef: 'seed:demo',
+            action: 'portal_identity.created',
+            entityType: 'PortalIdentity',
+            entityId: identityId,
+            after: {
+              customerId: String(personaCustomerId),
+              authMethod: 'password',
+              source: 'seed:demo (decision 31 — demo shortcut)'
+            },
+            req: null,
+            session
+          })
+          await PortalIdentity.create([{
+            _id: identityId,
+            customerId: personaCustomerId,
+            authMethod: 'password',
+            verifiedContactPointId: point._id,
+            passwordHash: await bcrypt.hash(AGENT_PASSWORD, Number(process.env.SALT_ROUNDS)),
+            locale: CUSTOMERS[personaIndex].lang,
+            organisationVisibility: 'none',
+            state: 'active'
+          }], { session })
+        })
+      } finally { await session.endSession() }
+      portal.created++
+    }
+    await mongoose.disconnect()
+  }
+  console.log(`  portal login created ${portal.created}   reused ${portal.reused}`)
+  console.log('')
+
   console.log('  demo sign-ins — all three share the password in DEMO_PASSWORD')
   console.log('  ' + '-'.repeat(66))
   console.log(`  ADMIN     ${adminPersona.email.padEnd(32)} ${adminPersona.displayName}`)
@@ -314,9 +384,8 @@ const run = async () => {
   console.log(`  AGENT     ${agentPersona.email.padEnd(32)} ${agentPersona.displayName}`)
   console.log('            replies to the customer and resolves the ticket')
   console.log(`  CUSTOMER  ${customerPersona.value.padEnd(32)} ${customerPersona.displayName} (${customerPersona.ref})`)
-  console.log('            ⚠ NOT a sign-in yet — the customer portal is not built.')
-  console.log('            This is a customer RECORD with its tickets already seeded.')
-  console.log('            Sign-in arrives with piece X1; see docs/portal-plan.md')
+  console.log('            signs in at the portal and sees their own tickets')
+  console.log('            read-only for now: submit and reply arrive with X4/X6')
   console.log('')
   console.log('  the ticket to demonstrate with: "Refund not received for a returned order"')
   console.log(`  — ${customerPersona.displayName}'s, status new, deliberately unassigned`)

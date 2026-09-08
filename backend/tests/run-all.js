@@ -52,7 +52,7 @@ if (!process.env.MONGO_URI) {
 // Suites run in this order. Order does not matter for correctness — each gets a
 // clean database — but scope first means a broken scope predicate reports
 // against the smallest suite rather than as noise inside the ticket run.
-const ORDER = ['scope.test.js', 'customer.test.js', 'ticket.test.js']
+const ORDER = ['scope.test.js', 'customer.test.js', 'ticket.test.js', 'portal.test.js']
 
 const filter = process.argv[2]
 const suites = readdirSync(__dirname)
