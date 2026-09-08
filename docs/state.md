@@ -70,12 +70,34 @@ see `trace.md`.
 Not blocked by a marker; simply not attempted in this pass. Each has one
 top-level ClickUp task under list `901525782663`, workspace `90152504892`,
 tagged `backend`/`frontend`, carrying a **Blocked by** line naming what would
-have to be answered first. The board is now a tree — 19 top-level tasks, 41
-subtasks — mirroring `tools/tasks.json`. Run `node tools/sync-clickup.js` after
-changing that file: it is idempotent (a second run creates zero) and updates
-existing tasks rather than duplicating. It only ever writes, so a status changed
-by hand in ClickUp is reverted on the next run — the file is the source of
-truth, the board is its rendering.
+have to be answered first.
+
+**The board is a projection of `tools/tasks.json`, re-derived 2026-09-08 from
+this file and `roadmap.md`** — 34 top-level tasks, 50 subtasks, **63 COMPLETE ·
+21 TO DO · 0 IN PROGRESS**. Two rules make it readable by someone outside the
+project, which it has to be because the list is publicly shared:
+
+- **A parent is COMPLETE when its delivered scope works.** Unfinished children
+  are not left in place dragging the parent down — they are lifted out into
+  their own top-level TO DO card. Seven were (SSO, deactivation handling, team
+  scope, the audit viewer, the outbound refusal, resolution codes, elapsed
+  time), plus five split out of the portal (one-time-code sign-in, verified
+  contact points, notifications, attachments, feedback).
+- **Descriptions carry no requirement ids, spec numbers, decision numbers or
+  section marks.** A reader without the specs open gets the whole meaning.
+
+⚠ **A subtask cannot be promoted back to a top-level task.** `PUT /task` with
+`parent: null` — and with `parent: ""` — answers 200 and leaves the parent
+unchanged; verified against throwaway tasks on the live list. Moving a child out
+therefore means deleting it and creating a new task, so `tasks.json` carries a
+`retiredIds` list that the sync deletes and then empties.
+
+Run `node tools/sync-clickup.js` after changing that file: it is idempotent (a
+second run creates zero), handles rate limiting, and finishes by **reading the
+board back from ClickUp** and counting it — counting the file it just wrote
+would only prove the file agrees with itself. It only ever writes, so a status
+changed by hand in ClickUp is reverted on the next run — the file is the source
+of truth, the board is its rendering.
 
 | Module | Blocked on |
 |---|---|
@@ -122,10 +144,14 @@ grep -rEn '^- \[ \] .\[CLARIFY-[0-9]' specs/ | wc -l    # the gate
 | Customer | `001 FR-001`, `FR-002`, `FR-003`, `FR-004` (decision 16), `FR-010`, `FR-020`, `AS-01`–`AS-04`, `E-05`, `E-06` |
 | Ticket | `002 FR-001`, `FR-002`, `FR-007`–`FR-010`, `FR-013`, `FR-014`, `FR-021`, `FR-033`, `FR-034`, `AS-01`, `AS-03`, `AS-05`–`AS-07`, `E-11`, `E-12`, `E-16` — deviations: no Team (decision 20), flat category (decision 21) |
 | API docs | `/api-docs` (Swagger UI), `docs/openapi.json`, Postman collection + environment with auto-token-save on login |
+| **Customer portal** | `008 FR-001` (sign-in, via the decision-31 password shortcut), `FR-002` submit, `FR-003`/`FR-005` list and detail, `FR-004` reply, `FR-019`/`AS-06` internal content excluded **in the query**, `AS-02` out-of-scope is 404, `FR-020` every portal action audited as the customer. §11's `customer = session` predicate is real, not stubbed |
 
 **Frontend** — Angular 22, standalone, signals, **Tailwind v4 only** (no
-component library — decision 24), runtime language switching, six screens:
-login, customer list/detail/create, ticket list/detail/create. Every component
+component library — decision 24), runtime language switching. **Ten screens
+across two interfaces**: staff — login, customer list/detail/create, ticket
+list/detail/create; customer portal — sign-in, my requests, request detail with
+the conversation thread, new request. The two shells are told apart by product
+name and an area pill and are otherwise identical in treatment. Every component
 is hand-rolled and **none has had an accessibility or RTL keyboard audit** —
 see `next-steps.md` §5.
 
@@ -133,7 +159,7 @@ see `next-steps.md` §5.
 
 | | |
 |---|---|
-| `npm test` (backend) | **131 checks** — scope 28, customer 35, ticket 68. Exit 0 |
+| `npm test` (backend) | **210 checks** — scope 28, customer 35, ticket 68, portal 79. Exit 0 |
 | `npm run audit:reconcile` | 0 orphaned, 0 unaudited, 0 unchecked models (8 checked) |
 | atomicity + transaction proofs | no orphaned entry survives an injected fault; rollback verified |
 | `ng build` | exit 0 |

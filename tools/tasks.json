@@ -1,5 +1,5 @@
 {
-  "_comment": "Source of truth for tools/sync-clickup.js. Derived from docs/state.md and docs/trace.md. Each node's `clickupId` is written back by the sync script — never edit that field by hand, or the next run will create a duplicate instead of updating. `status` is `done` ONLY where the work is built AND verified against the specs; a parent holding any unfinished child is `in progress`, never `done`.",
+  "_comment": "Source of truth for tools/sync-clickup.js — the ClickUp board is a projection of this file, re-derived from docs/state.md and docs/roadmap.md. Each node's `clickupId` is written back by the sync script; never edit that field by hand or the next run creates a duplicate instead of updating. `status` is `done` only where the work is built AND verified by the acceptance suite. A parent is `done` when its delivered scope works: unfinished work is NOT left as an open child dragging the parent down — it is lifted out into its own top-level task, because a subtask cannot be promoted through the API and would otherwise be invisible. `retiredIds` lists ClickUp ids the board should no longer contain; the sync deletes them and empties the list. Descriptions are written for a reader outside the project: no requirement identifiers, no spec numbers, no decision numbers, because the board is publicly shared.",
   "workspaceId": "90152504892",
   "listId": "901525782663",
   "tasks": [
@@ -11,7 +11,7 @@
         "frontend"
       ],
       "status": "done",
-      "description": "Repository, runtime, database and documentation scaffolding. Spec-first: the constitution and specs 001-013 were written before any code, and every item below traces to a numbered requirement.",
+      "description": "Repository, runtime, database and documentation scaffolding. The written specification came first: the rules of the system and thirteen numbered specifications were authored before any code, and every task on this board traces back to one of them.",
       "clickupId": "86cbezp98",
       "subtasks": [
         {
@@ -21,7 +21,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "src/app.controller.js mounts the module controllers, a catch-all 404 and a last-resort error handler. Config comes from backend/.env, which is gitignored; backend/.env.example lists every key with no values.",
+          "description": "The Node and Express service: module routing, a catch-all for unknown routes, and a last-resort error handler so no failure escapes as a raw stack trace. All configuration comes from an environment file that is excluded from version control; a companion example file lists every key with the values blank.",
           "clickupId": "86cbezp9a"
         },
         {
@@ -31,7 +31,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "A replica set is not optional here. Constitution II requires every mutation and its audit entry to commit atomically, and MongoDB only offers transactions on a replica set. A standalone mongod would silently drop that guarantee.",
+          "description": "MongoDB is run as a replica set rather than a standalone server. That is not a preference. Every change to data must be saved together with its audit record in a single all-or-nothing operation, and MongoDB only offers that on a replica set. A standalone server would have dropped the guarantee silently.",
           "clickupId": "86cbezp9b"
         },
         {
@@ -41,7 +41,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "Branch and Department models plus the admin-authored value lists. Every admin-authored label carries { ar, en } with both required (constitution I), so a half-translated list cannot be saved.",
+          "description": "Branches, departments, and the administrator-maintained lists of values used across the system. Every label an administrator writes must be supplied in both Arabic and English, so a half-translated list cannot be saved at all.",
           "clickupId": "86cbetqtm"
         },
         {
@@ -51,7 +51,7 @@
             "frontend"
           ],
           "status": "done",
-          "description": "Standalone components, signals, lazy-loaded feature routes, an HTTP interceptor attaching the bearer token and a guard redirecting to /login. No @angular/localize — the language switch is runtime, not a build-time locale.",
+          "description": "The Angular application shell: lazily loaded feature areas, an interceptor that attaches the signed-in token to every request, and a guard that sends unauthenticated visitors to the sign-in page. The language switch happens at runtime rather than producing one build of the application per language, so somebody who works in both can change language without reloading.",
           "clickupId": "86cbezp9c"
         },
         {
@@ -61,7 +61,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "swagger-jsdoc blocks live above the routes they describe, so a route and its documentation are edited together. Served at /api-docs, written to docs/openapi.json by `npm run docs:build`, converted to a Postman collection by `npm run docs:postman`. Undocumented routes are absent rather than guessed at.",
+          "description": "Interactive API documentation, generated from annotations that sit directly above the routes they describe so a route and its documentation are always edited together. Published as a browsable page, exported to a machine-readable file, and converted into a Postman collection. A route that has not been documented is absent from the output rather than described from guesswork.",
           "clickupId": "86cbetqvr"
         }
       ]
@@ -73,8 +73,8 @@
         "backend",
         "frontend"
       ],
-      "status": "in progress",
-      "description": "Local authentication is built and verified. SSO is a MUST in spec 010 and is not built — the parent stays `in progress` rather than `done` because of it.",
+      "status": "done",
+      "description": "Signing in, staying signed in, and recovering a system nobody can get into. Complete for email-and-password sign-in, which is what the product uses today. Signing in through the organisation’s existing corporate accounts is a separate open task, because no identity provider has been named yet.",
       "clickupId": "86cbetqtb",
       "subtasks": [
         {
@@ -84,7 +84,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "POST /auth/login (spec 010 FR-006, FR-007). bcrypt password hashing, signed JWT, bilingual refusal on bad credentials that does not reveal whether the email exists.",
+          "description": "Passwords are stored only as salted hashes, never in a form anybody can read back. A failed sign-in returns the same message whether the address is unknown or the password is wrong, so the response cannot be used to discover which email addresses exist. Refusals are returned in both Arabic and English.",
           "clickupId": "86cbezp9d"
         },
         {
@@ -94,7 +94,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "E-07: a seeded administrator that exists so a locked-out system can be recovered. Credentials come from BREAKGLASS_EMAIL / BREAKGLASS_PASSWORD in .env and appear in no tracked file. Its every action is audited like any other.",
+          "description": "A single emergency administrator account exists so that a system nobody can sign in to can still be recovered. Its credentials are supplied through the environment file and appear in no file committed to the repository. Its actions are recorded in the audit trail exactly like anyone else’s — emergency access is not unlogged access.",
           "clickupId": "86cbezp9e"
         },
         {
@@ -104,7 +104,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "The token carries identity, never permissions. Roles are loaded per request, so revoking a role takes effect on the holder's next call instead of when their token happens to expire.",
+          "description": "The sign-in token carries who you are and never what you are allowed to do. Permissions are re-read from the database on every single request, so withdrawing someone’s access takes effect on their very next action rather than whenever their token happens to expire.",
           "clickupId": "86cbezp9f"
         },
         {
@@ -114,19 +114,8 @@
             "frontend"
           ],
           "status": "done",
-          "description": "Bilingual login, mirrored in Arabic with no RTL override sheet. Verified by screenshot in both languages.",
+          "description": "The staff sign-in page, in Arabic and English as equals. The Arabic layout is a true mirror produced by the layout system itself, not a set of right-to-left corrections applied on top. Checked by screenshot in both languages.",
           "clickupId": "86cbezp9h"
-        },
-        {
-          "key": "auth-sso",
-          "name": "SSO — SAML / OIDC",
-          "tags": [
-            "backend"
-          ],
-          "status": "not started",
-          "description": "Spec 010 names SSO as a MUST. Nothing has been built for it and no stub pretends otherwise.",
-          "blocker": "No identity provider has been named by the client. Without an IdP there is no metadata endpoint, no attribute mapping onto branch and department, and no answer to whether an SSO identity may hold the break-glass role. Building against a guessed provider would have to be thrown away.",
-          "clickupId": "86cbezp9j"
         }
       ]
     },
@@ -136,8 +125,8 @@
       "tags": [
         "backend"
       ],
-      "status": "in progress",
-      "description": "Users, and the role assignments that bind a role to a branch and a department. A role has no meaning on its own here — it is always scoped.",
+      "status": "done",
+      "description": "Staff accounts, and the grants that give them access. A role never stands alone in this system: it is always attached to a specific branch and a specific department, which is what makes the access rules enforceable.",
       "clickupId": "86cbezp9k",
       "subtasks": [
         {
@@ -147,7 +136,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "User identity, hashed credentials, preferred language. Names are user-authored and therefore single-language (constitution I), unlike the admin-authored labels which require both.",
+          "description": "Staff identity, hashed credentials, and preferred interface language. A person’s own name is recorded once, in whatever language it was given, and is never machine-translated — unlike the administrator-maintained labels, which must exist in both languages.",
           "clickupId": "86cbezp9n"
         },
         {
@@ -157,7 +146,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "RoleAssignment is the join that makes the scope predicate possible: AGENT in branch A department X is a different grant from AGENT in branch B. Assignment and revocation are both audited.",
+          "description": "The grant that ties a role to one branch and one department. “Agent in Riyadh, Billing” is a different grant from “Agent in Jeddah, Billing”, and one person may hold several. Granting and withdrawing are both recorded in the audit trail.",
           "clickupId": "86cbezp9p"
         },
         {
@@ -167,19 +156,8 @@
             "backend"
           ],
           "status": "done",
-          "description": "Listing users requires LEAD or above, and the list itself is scope-filtered. This is why the ticket list derives its assignee filter from the tickets it already loaded rather than calling GET /user — an AGENT would receive a 404-shaped refusal.",
+          "description": "Viewing the staff list requires a team-lead role or above, and the list itself shows only people within the viewer’s own branch and department. This is why screens needing a list of colleagues derive it from records already on screen rather than requesting the full staff directory, which an agent is not entitled to see.",
           "clickupId": "86cbezp9q"
-        },
-        {
-          "key": "users-deactivation",
-          "name": "Deactivation and reassignment of open work",
-          "tags": [
-            "backend"
-          ],
-          "status": "not started",
-          "description": "Deactivating a user who holds open tickets is undefined behaviour today.",
-          "blocker": "Spec 010 does not say what happens to a deactivated user's open tickets — whether they are reassigned to the department lead, unassigned, or held. Each choice changes what the ticket list shows and what the audit entry must record, so it is a client decision, not an implementation detail.",
-          "clickupId": "86cbezp9r"
         }
       ]
     },
@@ -189,8 +167,8 @@
       "tags": [
         "backend"
       ],
-      "status": "in progress",
-      "description": "Constitution IV. Every read and every write applies a branch + department predicate server-side. Two of three scope levels are built; the third cannot be built from the specs as written.",
+      "status": "done",
+      "description": "The access rule underneath everything: every read and every write is filtered, on the server, to the branch and department the person actually holds a role in. Complete for branch and department, which is how the organisation is structured today. A third, narrower team level appears in the specification but cannot be built from it, and is tracked as its own open task.",
       "clickupId": "86cbetqtk",
       "subtasks": [
         {
@@ -200,7 +178,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "Applied in the data layer, not in the controllers, so a new endpoint cannot forget it. This is one of the two things marked never-to-shortcut in this project.",
+          "description": "The filter is applied in the data-access layer rather than in each endpoint, so a newly written endpoint cannot forget to include it. This is one of two rules in the project that were never allowed to be shortcut for any deadline or demonstration.",
           "clickupId": "86cbezp9u"
         },
         {
@@ -210,19 +188,8 @@
             "backend"
           ],
           "status": "done",
-          "description": "A 403 would confirm that a record exists in another branch, which is itself the disclosure the predicate exists to prevent. The body is byte-identical to a genuine not-found. Documented prominently in the OpenAPI description so integrators do not treat 404 as deletion.",
+          "description": "Asking for a record that exists in a branch you have no access to returns exactly the same “not found” response as asking for a record that does not exist at all. Returning “forbidden” instead would confirm the record exists, which is the very disclosure the rule prevents. The published API documentation states this prominently so integrators do not read “not found” as “deleted”.",
           "clickupId": "86cbezp9v"
-        },
-        {
-          "key": "scope-team",
-          "name": "Team scope level",
-          "tags": [
-            "backend"
-          ],
-          "status": "not started",
-          "description": "SPEC DEFECT. Team is referenced as a scope level but is not implementable as specified.",
-          "blocker": "SPEC DEFECT — 'Team' is used as a scope level across specs 001 and 010, but no spec defines what a Team is, who assigns membership, whether it nests inside a department or crosses departments, or what a team-scoped read returns. It cannot be built without the client defining the entity. Recorded rather than guessed at, because guessing here would silently widen or narrow every query.",
-          "clickupId": "86cbetquv"
         }
       ]
     },
@@ -232,8 +199,8 @@
       "tags": [
         "backend"
       ],
-      "status": "in progress",
-      "description": "Constitution II. Every mutation writes an immutable audit entry, and the entry commits in the same transaction as the mutation — there is no window in which one exists without the other. The writer is built and verified; nothing reads it back yet.",
+      "status": "done",
+      "description": "Every change to data writes a permanent record of who changed what, and when. The record is saved in the same all-or-nothing operation as the change itself, so there is no moment in which a change exists without its audit entry, and no way to save one without the other. The trail is written, verified and machine-checkable; an on-screen viewer for it is a separate open task.",
       "clickupId": "86cbetqtg",
       "subtasks": [
         {
@@ -243,7 +210,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "utils/audit.js takes the caller's session. If the audit entry cannot be written the whole mutation aborts and the request answers 500 (E-11) rather than reporting a success that left no trace. The second of the two never-shortcut rules.",
+          "description": "A single shared writer produces every audit entry, and it will not write one outside the enclosing transaction. If the audit entry cannot be written, the change it describes is rolled back and the request fails, rather than succeeding and leaving no trace. This is the second of the two rules never allowed to be shortcut.",
           "clickupId": "86cbezp9z"
         },
         {
@@ -253,7 +220,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "AS-08. Mongoose hooks refuse update and delete on the audit collection, so append-only is a property of the model rather than a convention reviewers have to police.",
+          "description": "The audit records refuse updates and deletions at the database-model level, so being permanent is a property of the system rather than a convention reviewers have to keep policing.",
           "clickupId": "86cbezpa0"
         },
         {
@@ -263,19 +230,8 @@
             "backend"
           ],
           "status": "done",
-          "description": "`npm run audit:reconcile` reports orphaned entries and unaudited records. The coverage check originally read mongoose.modelNames(), which only lists models that happen to have been imported — new models were invisible and the report read clean while covering nothing. Models are now imported and registered explicitly, and the fault was verified by injection rather than assumed fixed.",
+          "description": "A command that checks the trail against the data and reports any audit entry with no matching record, and any record with no audit entry. Its coverage check originally examined only the data types that happened to have been loaded into memory, so newly added types were invisible and the report read “clean” while checking almost nothing. Every type is now registered explicitly, and the original fault was reproduced deliberately to confirm the fix actually catches it.",
           "clickupId": "86cbezpa1"
-        },
-        {
-          "key": "audit-viewer",
-          "name": "Audit log viewer",
-          "tags": [
-            "frontend"
-          ],
-          "status": "not started",
-          "description": "The trail is written and reconcilable but has no interface; reading it today means querying MongoDB directly.",
-          "blocker": "No spec defines who may read the audit log or with what filters. Reading it is itself a cross-branch disclosure — entries name records the reader may not be scoped to see — so the scope predicate for the viewer has to be specified before it can be built safely.",
-          "clickupId": "86cbezpa2"
         }
       ]
     },
@@ -287,7 +243,7 @@
         "backend"
       ],
       "status": "done",
-      "description": "Constitution I. Arabic and English are peers, not a base language and a translation. Verified by screenshot in both directions.",
+      "description": "Arabic and English are treated as equal languages, not as a base language with a translation bolted on. Either can be the working language, switched at any moment without reloading the page. Verified by screenshot in both directions.",
       "clickupId": "86cbetqtq",
       "subtasks": [
         {
@@ -297,7 +253,7 @@
             "frontend"
           ],
           "status": "done",
-          "description": "A signal-backed dictionary and a translate pipe. @angular/localize would mean one build artefact per locale and a page reload to change language, which fails the peer-language requirement for a user who works in both.",
+          "description": "Text comes from a dictionary held in application state, so switching language re-renders the page in place. The conventional alternative produces a separate build of the application per language and needs a page reload to change, which fails the requirement for somebody who works in both languages all day.",
           "clickupId": "86cbezpa4"
         },
         {
@@ -307,7 +263,7 @@
             "frontend"
           ],
           "status": "done",
-          "description": "Arabic rendered in a typeface chosen for Arabic rather than a Latin face with fallback glyphs. Self-hosted with per-subset unicode-range, so a Latin-only page never downloads the Arabic subset.",
+          "description": "Arabic is set in a typeface designed for Arabic, rather than a Latin typeface falling back to whatever Arabic glyphs it happens to carry. The fonts are served by the application itself rather than by a third party, and split by character range so an English-only page never downloads the Arabic set.",
           "clickupId": "86cbezpa6"
         },
         {
@@ -317,7 +273,7 @@
             "frontend"
           ],
           "status": "done",
-          "description": "ms-/me-/ps-/pe-/start/end everywhere, never ml-/mr-/pl-/pr-. Direction is set once on the root element and the whole layout mirrors. There is no rtl.css, because an override sheet is a second place to forget.",
+          "description": "Spacing and alignment are expressed as “start” and “end” rather than “left” and “right” throughout. Direction is set once at the root of the page and the entire layout mirrors from it. There is no separate right-to-left stylesheet, because a second stylesheet is a second place to forget.",
           "clickupId": "86cbezpa7"
         },
         {
@@ -327,7 +283,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "Every error body carries both languages so the client renders rather than translates. Field names stay English; only human-readable text is translated. References, phone numbers and email addresses stay LTR in both directions.",
+          "description": "Every error the API returns carries both languages, so the interface displays the right one rather than attempting its own translation. Field names stay in English; only text meant for a human is translated. Reference numbers, telephone numbers and email addresses always read left-to-right, including inside Arabic text.",
           "clickupId": "86cbezpa8"
         }
       ]
@@ -339,8 +295,8 @@
         "backend",
         "frontend"
       ],
-      "status": "in progress",
-      "description": "Customer records, contact points, duplicate handling and the screens over them. One requirement (E-15) cannot be built until a channel exists.",
+      "status": "done",
+      "description": "Customer records, their contact details, duplicate handling, and the screens over them. Complete. One related rule — refusing to send messages to a phone number or address shared by more than one customer — has nothing to act on until an outbound messaging channel exists, and is tracked as its own open task.",
       "clickupId": "86cbezpa9",
       "subtasks": [
         {
@@ -350,7 +306,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "Customer names are user-authored and single-language; the admin-authored labels around them are { ar, en }. Decision 16 records where that line falls and why storing a customer name in two languages would invite invented translations of real people's names.",
+          "description": "A customer’s name is recorded once, in the language it was given, while the administrator-maintained labels around it must exist in both. The distinction is deliberate: storing a real person’s name in two languages would mean inventing a translation of their name.",
           "clickupId": "86cbetqtv"
         },
         {
@@ -360,7 +316,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "All four scope-predicated. Search matches account reference, name and contact point, and returns only in-scope records — a customer in another branch does not appear as a partial result.",
+          "description": "Creating, searching, viewing and updating customers, all filtered by the viewer’s branch and department. Search matches on account reference, name and contact details, and returns only records the viewer is entitled to see — a customer belonging to another branch does not appear as a partial result.",
           "clickupId": "86cbetqu2"
         },
         {
@@ -370,7 +326,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "Duplicates are surfaced rather than blocked: POST /customer answers 409 naming the matching records, and the same request with confirmCollision: true proceeds and records the override in the audit entry. Collisions outside the caller's scope come back as a count with no identities — enough to warn, not enough to disclose.",
+          "description": "Possible duplicates are surfaced rather than blocked. Creating a customer who resembles an existing one is refused with the matching records named, and repeating the request with an explicit override proceeds and records that override in the audit trail. Matches falling outside the creator’s own branch are reported as a count with no names attached — enough to warn, not enough to disclose.",
           "clickupId": "86cbezpah"
         },
         {
@@ -380,7 +336,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "Enforced by a unique partial index. The index originally collided with another on the same key path and mongoose warned that `unique` would not be applied — the constraint would have silently not existed. Fixed with an explicit index name, one_primary_per_channel_type.",
+          "description": "A customer may hold many phone numbers and email addresses, but only one may be marked primary for each type. The rule is enforced by a database constraint rather than by application code. The constraint initially clashed with another and would silently not have existed at all; it was given an explicit name and confirmed present.",
           "clickupId": "86cbezpaj"
         },
         {
@@ -390,19 +346,8 @@
             "frontend"
           ],
           "status": "done",
-          "description": "List with scope-aware search, detail with contact points, create with the collision dialogue wired to the 409 body. Verified by screenshot in both languages.",
+          "description": "Customer list with search, customer detail with contact points, and a creation form wired to the duplicate warning so the person creating the record sees the possible matches and decides. Checked by screenshot in both languages.",
           "clickupId": "86cbetqug"
-        },
-        {
-          "key": "customer-outbound-refusal",
-          "name": "Outbound refusal on a shared contact point",
-          "tags": [
-            "backend"
-          ],
-          "status": "not started",
-          "description": "E-15: refusing to send outbound to a contact point shared by more than one customer.",
-          "blocker": "Depends on an outbound channel existing. Nothing can be sent until spec 003 is built, so there is nothing yet for this rule to refuse. Building the check now would leave an untestable branch guarding a code path that does not exist.",
-          "clickupId": "86cbetqu4"
         }
       ]
     },
@@ -413,8 +358,8 @@
         "backend",
         "frontend"
       ],
-      "status": "in progress",
-      "description": "The ticket lifecycle: model, transition graph, references, assignment and the screens over them. Two items wait on client data or on the SLA engine.",
+      "status": "done",
+      "description": "The support request lifecycle: the record itself, its statuses and which moves between them are legal, human-quotable reference numbers, assignment, and the screens over all of it. Complete. Two related items wait on information the client has not supplied and on the service-level engine, and are tracked as their own open tasks.",
       "clickupId": "86cbezpan",
       "subtasks": [
         {
@@ -424,7 +369,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "Statuses and their legal transitions are data, not scattered conditionals. An illegal move is refused with 409 naming the reachable statuses.",
+          "description": "The list of statuses and the moves allowed between them are stored as data rather than scattered through the code as conditions. An illegal move is refused with a message naming the statuses actually reachable from where the ticket is now.",
           "clickupId": "86cbetqu7"
         },
         {
@@ -434,7 +379,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "A human-quotable reference allocated from a counter inside the creating transaction, so a rolled-back create burns no reference and two concurrent creates cannot share one. Always rendered LTR, in Arabic too.",
+          "description": "A short reference number a customer can read out over the phone, allocated from a counter inside the same transaction that creates the ticket. A creation that fails burns no number, and two people creating tickets at the same instant cannot be given the same one. Always displayed left-to-right, including in Arabic.",
           "clickupId": "86cbezpaq"
         },
         {
@@ -444,7 +389,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "Scope-predicated throughout. GET /ticket/:id returns reachableStatuses so clients drive their controls from server truth instead of a hardcoded list.",
+          "description": "Creating, listing, filtering and viewing tickets, all filtered by the viewer’s branch and department. Fetching a ticket also returns the statuses it may legally move to, so the interface builds its controls from what the server actually permits instead of from a list copied into the front end.",
           "clickupId": "86cbetqua"
         },
         {
@@ -454,7 +399,7 @@
             "backend"
           ],
           "status": "done",
-          "description": "Both audited, both refusing assignment to a user outside the ticket's scope with the same 404 shape as any other out-of-scope reference.",
+          "description": "Assigning a ticket and moving it between statuses, both recorded in the audit trail. Attempting to assign a ticket to somebody outside its branch and department is refused with the same “not found” response as any other out-of-reach reference, for the same non-disclosure reason.",
           "clickupId": "86cbezpar"
         },
         {
@@ -464,30 +409,8 @@
             "frontend"
           ],
           "status": "done",
-          "description": "The status control is built from GET /ticket/:id's reachableStatuses and the pause-SLA flag from /ticket/meta. An earlier version hardcoded three statuses as pausing the clock — the same duplication-of-server-truth this project exists to avoid — and was replaced.",
+          "description": "Ticket list with filters, ticket detail with the conversation and status control, and a creation form. The status control is built from the moves the server reports as legal, and the “pauses the clock” markers come from the server too. An earlier version had three statuses written into the front end as clock-pausing; that duplication of server truth was removed.",
           "clickupId": "86cbetquk"
-        },
-        {
-          "key": "ticket-resolution-codes",
-          "name": "Root cause and resolution code lists",
-          "tags": [
-            "backend"
-          ],
-          "status": "not started",
-          "description": "FR-029 requires both lists on ticket closure.",
-          "blocker": "The client has not supplied the values. These lists are the vocabulary every future report groups by, so inventing plausible-looking codes would seed the reporting module with fabricated taxonomy that nobody would later recognise as invented.",
-          "clickupId": "86cbetque"
-        },
-        {
-          "key": "ticket-elapsed",
-          "name": "Elapsed time on a ticket",
-          "tags": [
-            "backend"
-          ],
-          "status": "not started",
-          "description": "utils/elapsed-time.js exists and deliberately returns { status: 'unavailable' }.",
-          "blocker": "Blocked on spec 005. Constitution III makes elapsed-time.js the single source of every duration, and it stays unavailable until the SLA engine defines what pauses the clock. Nothing else in the codebase subtracts two dates — an 'obvious' created-to-now subtraction would be wrong the moment pauses exist, and wrong silently.",
-          "clickupId": "86cbezpau"
         }
       ]
     },
@@ -498,7 +421,7 @@
         "frontend"
       ],
       "status": "done",
-      "description": "Tailwind v4 alone, after a component library was installed and then removed. See decision 24.",
+      "description": "The visual language of the product — colour, type, spacing and the shared building blocks — built directly on Tailwind alone, after a third-party component library was installed and then removed.",
       "clickupId": "86cbezpaw",
       "subtasks": [
         {
@@ -508,7 +431,7 @@
             "frontend"
           ],
           "status": "done",
-          "description": "CSS-first configuration via @theme in styles.css: no tailwind.config.js, one place where a token is defined and consumed.",
+          "description": "Colour, type scale and spacing are defined once, in the stylesheet itself, with no separate configuration file. One place where a design value is defined, and the same place it is consumed.",
           "clickupId": "86cbezpay"
         },
         {
@@ -518,7 +441,7 @@
             "frontend"
           ],
           "status": "done",
-          "description": "PrimeNG v22 injects a licence banner through a closed shadow root that cannot be removed from application code, and the v21 pin peer-depends on Angular 21 against this app's 22.1.5. Removed entirely and recorded as a decision headed DO NOT REINSTALL, so the next person does not rediscover it.",
+          "description": "The component library first chosen injects a licensing banner into the page through a mechanism the application cannot remove or restyle, and the older version that does not do this is incompatible with the Angular version in use. It was removed entirely, and the finding written down under a heading telling the next person not to reinstall it, so the same dead end is not rediscovered.",
           "clickupId": "86cbezpaz"
         },
         {
@@ -528,10 +451,353 @@
             "frontend"
           ],
           "status": "done",
-          "description": "The shell, tables, form controls and the status-tone pipe that colours a status chip. pending_internal is deliberately not amber: amber reads as paused, and that status does not pause the clock (decision 15).",
+          "description": "The application shell, tables, form controls and the status indicator. One deliberate detail: the status meaning “waiting on another internal team” is not coloured amber, because amber reads as “the clock is paused” and that status does not pause the clock.",
           "clickupId": "86cbezpb0"
         }
       ]
+    },
+    {
+      "key": "acceptance-tests",
+      "name": "Automated acceptance test suite",
+      "tags": [
+        "backend"
+      ],
+      "status": "done",
+      "description": "An automated test suite that exercises the running system through its API, rather than checking the code against itself. 210 checks across four suites — access rules, customers, tickets and the customer portal — all passing. This suite is the evidence behind every task on this board marked complete.",
+      "clickupId": "86cbf81kt",
+      "subtasks": [
+        {
+          "key": "tests-runner",
+          "name": "One command — clean database, four suites",
+          "tags": [
+            "backend"
+          ],
+          "status": "done",
+          "description": "One command drops the database and restarts the service before each suite. Both steps are necessary and were added after failures caused by skipping them: the suites each create their own test user, so sharing a database makes the second suite sign in as the first one’s user; and dropping a database also drops its constraints, which are only rebuilt when the service starts, so a uniqueness rule would appear to hold while quietly not existing.",
+          "clickupId": "86cbf81kx"
+        },
+        {
+          "key": "tests-no-credentials",
+          "name": "No password anywhere in the test code",
+          "tags": [
+            "backend"
+          ],
+          "status": "done",
+          "description": "No password appears anywhere in the test code. The emergency administrator credentials are read from the environment file and the suite refuses to run if they are missing, and every test account it creates is given a randomly generated password. There is therefore no credential to leak through the repository or its history.",
+          "clickupId": "86cbf81m0"
+        },
+        {
+          "key": "tests-strict-comparison",
+          "name": "Strict comparison in the check helpers",
+          "tags": [
+            "backend"
+          ],
+          "status": "done",
+          "description": "The comparison helper the suites are built on was rewritten after an audit found it compared values loosely — a missing value and the text “null” could satisfy checks they should have failed. It now requires the type to match and rejects a missing value outright.",
+          "clickupId": "86cbf81m9"
+        },
+        {
+          "key": "tests-mutation-checked",
+          "name": "Tests proven able to fail",
+          "tags": [
+            "backend"
+          ],
+          "status": "done",
+          "description": "Selected tests were verified by deliberately reintroducing the fault they exist to catch, and confirming they fail. One access-control test was found during that exercise to be incapable of failing at all — it read its comparison value after the action it was meant to be checking, so it reported success against a live violation. A test that has never failed is not yet a test.",
+          "clickupId": "86cbf81mr"
+        }
+      ]
+    },
+    {
+      "key": "customer-portal",
+      "name": "Customer portal",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "done",
+      "description": "The customer-facing side of the product, where a customer signs in and follows their own requests directly instead of telephoning an agent.\n\nWorking and demonstrated end to end: a customer signs in, sees the list of their own requests, opens one, reads the conversation, raises a new request, and replies to an existing one — and the agent sees that reply immediately in the staff interface.\n\nDeliberately not included here, each tracked as its own open card: sign-in by one-time code (the portal currently uses a password, which is a demonstration shortcut rather than the intended method), verified contact points, notifications, file attachments, and the satisfaction rating after a request is resolved.\n\nThe two rules that were never shortcut hold here in full. A customer sees only their own requests, enforced by the same server-side filter used everywhere else, and every portal action writes an audit entry naming the customer as the actor.",
+      "clickupId": "86cbetqv7",
+      "subtasks": [
+        {
+          "key": "portal-identity",
+          "name": "Customer sign-in identity, separate from staff",
+          "tags": [
+            "backend"
+          ],
+          "status": "done",
+          "description": "A customer sign-in identity, kept separate from the staff identity model. Staff access derives from a role held in a branch and a department; a customer holds neither, so reusing the staff model would have meant either granting customers a branch or weakening the rule for everybody. The portal has its own identity, its own token, and its own access rule. A staff token is rejected by portal endpoints, and a portal token by staff endpoints.",
+          "clickupId": "86cbf81nj"
+        },
+        {
+          "key": "portal-my-requests",
+          "name": "My requests — list and detail",
+          "tags": [
+            "backend"
+          ],
+          "status": "done",
+          "description": "The list of the signed-in customer’s own requests, and the detail view of one with its full conversation. The restriction to the customer’s own records is part of the database query itself, not a filter applied afterwards in the interface.",
+          "clickupId": "86cbf81ny"
+        },
+        {
+          "key": "portal-internal-notes",
+          "name": "Internal notes never reach the customer",
+          "tags": [
+            "backend"
+          ],
+          "status": "done",
+          "description": "Notes agents write to each other on a ticket are never sent to the portal. The exclusion is part of the query that fetches the conversation, so internal text never reaches the customer’s browser at all rather than being sent and then hidden. The automated tests assert that a marked internal note appears nowhere in any portal response — not in the list, not in the detail, not in the conversation.",
+          "clickupId": "86cbf81p6"
+        },
+        {
+          "key": "portal-submit-reply",
+          "name": "Raising a request and replying to one",
+          "tags": [
+            "backend"
+          ],
+          "status": "done",
+          "description": "A customer can raise a new request and reply to an existing one. Submission accepts only the fields a customer is allowed to set — subject, description and category — and anything else sent alongside them is refused by name rather than quietly ignored, so an attempt to set priority, assignee or status cannot slip through unnoticed. A customer reply is always visible to support; there is no way for a customer to create an internal note.",
+          "clickupId": "86cbf81pf"
+        },
+        {
+          "key": "portal-audit",
+          "name": "Portal actions audited as the customer",
+          "tags": [
+            "backend"
+          ],
+          "status": "done",
+          "description": "Every action taken through the portal writes an audit entry attributed to the customer rather than to a member of staff, so the trail distinguishes “the customer replied” from “an agent replied on their behalf”. Refused sign-ins are recorded too, including a distinct high-severity entry for the kind of refusal that could indicate somebody probing for valid accounts.",
+          "clickupId": "86cbf81pw"
+        }
+      ]
+    },
+    {
+      "key": "portal-ui",
+      "name": "Customer portal screens",
+      "tags": [
+        "frontend"
+      ],
+      "status": "done",
+      "description": "The customer-facing screens themselves, in Arabic and English: the portal shell, sign-in, the list of my requests, the request detail with its conversation, and the form for raising a new one. Built and demonstrated. The portal and the staff interface deliberately share their visual treatment and differ only in the product name and a label naming which area you are in, so it is always obvious which side you are looking at.",
+      "clickupId": "86cbf81q8",
+      "subtasks": [
+        {
+          "key": "portal-ui-shell",
+          "name": "Portal shell — no signed-in header before sign-in",
+          "tags": [
+            "frontend"
+          ],
+          "status": "done",
+          "description": "A separate layout for the customer side that shows nothing customer-specific until a customer has actually signed in, so the sign-in page carries no signed-in header. It offers a single language switch and identifies itself as the customer area.",
+          "clickupId": "86cbf81qp"
+        },
+        {
+          "key": "portal-ui-signin",
+          "name": "Portal sign-in, identical to the staff page",
+          "tags": [
+            "frontend"
+          ],
+          "status": "done",
+          "description": "The portal sign-in page, matching the staff sign-in page exactly in layout and centring at the same window size, in both languages. Both pages share one password field with a show/hide control that stays clear of the text in Arabic as well as English.",
+          "clickupId": "86cbf81r6"
+        },
+        {
+          "key": "portal-ui-thread",
+          "name": "Conversation thread, both interfaces",
+          "tags": [
+            "frontend"
+          ],
+          "status": "done",
+          "description": "The conversation on a request, presented as an exchange rather than a flat list: messages from the customer and from support are aligned and coloured differently so authorship is readable at a glance. Support replies are labelled by role rather than by the individual agent’s name. The staff-side conversation received the same treatment, with internal notes additionally marked so an agent cannot mistake one for a reply the customer can see.",
+          "clickupId": "86cbf81t0"
+        },
+        {
+          "key": "portal-ui-submit",
+          "name": "Raise a request and reply, in both languages",
+          "tags": [
+            "frontend"
+          ],
+          "status": "done",
+          "description": "The form a customer uses to raise a request, and the reply box on an existing one, both in Arabic and English.",
+          "clickupId": "86cbf81ta"
+        }
+      ]
+    },
+    {
+      "key": "demo-environment",
+      "name": "Demonstration environment",
+      "tags": [
+        "backend"
+      ],
+      "status": "done",
+      "description": "A repeatable demonstration environment: one command clears and rebuilds a realistic branch, department, staff accounts, customers and tickets, prints the sign-in details it created, and can be reset and re-run between rehearsals. Passwords come from the environment file rather than from the script, so no credential is committed.",
+      "clickupId": "86cbf81tx",
+      "subtasks": [
+        {
+          "key": "demo-seed",
+          "name": "Repeatable seeded dataset",
+          "tags": [
+            "backend"
+          ],
+          "status": "done",
+          "description": "A single command that produces a consistent demonstration dataset — branch, department, categories, customers with contact details, and tickets spread across several statuses — and a matching command to clear it. Re-running gives the same starting point every time, so a rehearsal and the real thing behave identically.",
+          "clickupId": "86cbf81uf"
+        },
+        {
+          "key": "demo-accounts",
+          "name": "Three demonstration accounts",
+          "tags": [
+            "backend"
+          ],
+          "status": "done",
+          "description": "Three demonstration accounts covering the roles a viewer needs in order to see the system from each side: an administrator, an agent, and a customer signing in to the portal. The seeding command prints them at the end of its run. The password is supplied through the environment file and is never written into the script or any committed file.",
+          "clickupId": "86cbf81va"
+        },
+        {
+          "key": "demo-walkthrough",
+          "name": "Written walkthrough for presenting",
+          "tags": [
+            "backend"
+          ],
+          "status": "done",
+          "description": "A written walkthrough of the full loop for whoever is presenting: a customer raises a request, an agent picks it up and replies, the customer sees the reply, and the same events appear in the audit trail — with the language switched partway through to show Arabic and English as equals.",
+          "clickupId": "86cbf81vp"
+        }
+      ]
+    },
+    {
+      "key": "auth-sso",
+      "name": "SSO — SAML / OIDC",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "Signing in through the organisation’s existing corporate accounts rather than with a separate password for this system. The specification requires it. Nothing has been built, and no placeholder pretends otherwise.",
+      "blocker": "No identity provider has been named. Without one there is no configuration to connect to, no agreed mapping from a corporate account onto a branch and department, and no answer to whether such an account may hold the emergency administrator role. Building against a guessed provider would have to be thrown away.",
+      "clickupId": "86cbf81w0"
+    },
+    {
+      "key": "users-deactivation",
+      "name": "Deactivation and reassignment of open work",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "What happens to the open work of a member of staff who leaves or is deactivated. Deactivating the account itself works; the disposal of their open tickets is undefined and deliberately left unbuilt.",
+      "blocker": "The specification does not say where a deactivated person’s open tickets should go — reassigned to the department lead, returned to unassigned, or left as they are. Each answer changes what the ticket list shows and what the audit trail has to record, so it is a decision for the client rather than an implementation detail.",
+      "clickupId": "86cbf81w8"
+    },
+    {
+      "key": "scope-team",
+      "name": "Team scope level",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "A third, narrower level of access below branch and department, restricting what somebody sees to their own team. The wider branch-and-department rule is complete and in force; this would be an addition to it.",
+      "blocker": "This is a gap in the written specification, not merely unbuilt work. “Team” is used as an access level in more than one specification, but no specification says what a team is, who decides its membership, whether it sits inside a department or spans several, or what a team-level view should return. It cannot be built until the client defines it, and guessing would silently widen or narrow every query in the system.",
+      "clickupId": "86cbf81wd"
+    },
+    {
+      "key": "audit-viewer",
+      "name": "Audit log viewer",
+      "tags": [
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "An on-screen view of the audit trail. The trail itself is complete, permanent and machine-checkable; reading it today means querying the database directly.",
+      "blocker": "No specification says who may read the audit trail, or how it may be filtered. Reading it is itself a disclosure — entries name records the reader may not be entitled to see — so the access rule for the viewer has to be decided before it can be built safely.",
+      "clickupId": "86cbf81wt"
+    },
+    {
+      "key": "customer-outbound-refusal",
+      "name": "Outbound refusal on a shared contact point",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "Refusing to send an outbound message to a phone number or email address belonging to more than one customer, so that one customer’s information cannot reach another.",
+      "blocker": "There is nothing yet to refuse: no outbound messaging channel exists, so the rule would guard a path that cannot be taken and could not be tested. It becomes buildable as soon as the first messaging channel does.",
+      "clickupId": "86cbf81wx"
+    },
+    {
+      "key": "ticket-resolution-codes",
+      "name": "Root cause and resolution code lists",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "The fixed lists of root causes and resolution outcomes an agent must choose from when closing a ticket.",
+      "blocker": "The client has not supplied the values. These lists become the vocabulary every future report groups by, so inventing plausible-sounding ones would seed the reporting module with a made-up classification that nobody would later recognise as invented.",
+      "clickupId": "86cbf81x3"
+    },
+    {
+      "key": "ticket-elapsed",
+      "name": "Elapsed time on a ticket",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "Showing how long a ticket has been open, and how long it has spent at each stage. One shared component is the only place in the system permitted to calculate a duration, and it currently reports “unavailable” by design.",
+      "blocker": "Blocked on the service-level engine. Until that defines which statuses pause the clock and how working hours and public holidays are handled, an apparently obvious “created until now” subtraction would be wrong the moment pauses exist — and wrong without anybody noticing. Nothing else in the system subtracts two dates, so this remains a single change when the answer arrives.",
+      "clickupId": "86cbf81x7"
+    },
+    {
+      "key": "portal-otp",
+      "name": "Portal sign-in by one-time code",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "Signing in to the customer portal with a one-time code sent to the customer’s email address or phone, replacing the password the demonstration currently uses. This is the method the specification calls for: a customer should reach their own requests without having to maintain another password.",
+      "clickupId": "86cbf81xf",
+      "blocker": "Needs a delivery channel to send the code through, which does not exist yet, and the client’s answer on how long a code stays valid and how many attempts are allowed before the address or number is temporarily locked out. The portal was built so that this replaces only the sign-in step — nothing else about it depends on how the customer proved who they were."
+    },
+    {
+      "key": "portal-verified-contact-points",
+      "name": "Verified contact points",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "Confirming that a customer really controls the email address or phone number held on their record, before it is used to sign in or to receive notifications. Today an address is recorded as given.",
+      "clickupId": "86cbf81xk",
+      "blocker": "Depends on the same delivery channel as one-time-code sign-in, and on the client deciding what happens to a customer whose contact details are unverified — refused, given limited access, or asked to verify at first use."
+    },
+    {
+      "key": "portal-notifications",
+      "name": "Notifying customers of updates",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "Telling a customer that something has happened on their request — support replied, the status changed, the request was resolved — rather than relying on them to come back and check.",
+      "clickupId": "86cbf81xp",
+      "blocker": "Needs an outbound messaging channel, and the client’s decision on which events are worth interrupting somebody for and by which route. Notifying on every change is a reliable way to have all notifications ignored."
+    },
+    {
+      "key": "portal-attachments",
+      "name": "Attachments on a request",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "Letting a customer attach a photograph, screenshot or document to a request, and see files support has attached for them.",
+      "clickupId": "86cbf81xv",
+      "blocker": "No decision has been made on where uploaded files are stored, what sizes and file types are accepted, or whether a file inherits the same branch-level access rule as the record it hangs from. Files are also the one place where the “not found” response used everywhere else needs re-examining, since a direct link to a file bypasses the record it belongs to."
+    },
+    {
+      "key": "portal-feedback",
+      "name": "Satisfaction rating after resolution",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "Asking the customer to rate their experience once a request is resolved, and recording the result against the ticket.",
+      "clickupId": "86cbf81xz",
+      "blocker": "The rating scale, when the request is sent, and whether a poor rating should reopen the ticket or raise it with a manager, are all unspecified. The resulting figures would also feed the reporting module, which is not built."
     },
     {
       "key": "channel-email",
@@ -540,8 +806,8 @@
         "backend"
       ],
       "status": "not started",
-      "description": "Spec 003. Inbound and outbound email threaded onto tickets.",
-      "blocker": "Spec 003 is not built. There is no mailbox, no IMAP/SMTP credentials, and no decision on threading identity — whether a reply is matched by Message-ID and References headers or by a ticket reference stamped into the subject. The two behave differently when a customer forwards a thread, so the choice cannot be deferred to implementation.",
+      "description": "Receiving customer email as tickets and sending replies back out, with the whole exchange threaded onto one ticket.",
+      "blocker": "No mailbox or mail-server credentials have been supplied, and there is no decision on how a reply is matched back to its ticket — by the hidden identifiers mail clients carry, or by a reference number placed in the subject line. The two behave differently when a customer forwards a conversation to a colleague, so the choice cannot be left to implementation.",
       "clickupId": "86cbetqux"
     },
     {
@@ -551,8 +817,8 @@
         "backend"
       ],
       "status": "not started",
-      "description": "Spec 003. WhatsApp Business messaging bound to customer contact points.",
-      "blocker": "Spec 003 is not built. Requires a WhatsApp Business API provider account and pre-approved message templates, neither of which exists. The 24-hour customer-service window also constrains when an agent may reply at all, which has no equivalent in any other channel and is unspecified here.",
+      "description": "WhatsApp Business messaging tied to the phone numbers already held on customer records.",
+      "blocker": "Requires a WhatsApp Business provider account and pre-approved message templates, neither of which exists. WhatsApp also permits free-form replies only within a limited window after the customer’s last message — a constraint no other channel has, and one the specification does not address.",
       "clickupId": "86cbezpb2"
     },
     {
@@ -562,8 +828,8 @@
         "backend"
       ],
       "status": "not started",
-      "description": "Spec 003. Outbound and inbound SMS.",
-      "blocker": "Spec 003 is not built. No SMS gateway has been chosen, and delivery in Saudi Arabia requires a registered sender ID that the client must obtain. Inbound SMS also has no threading key beyond the phone number, which is exactly the shared-contact-point case E-15 refuses.",
+      "description": "Sending and receiving SMS.",
+      "blocker": "No SMS provider has been chosen, and sending in this region requires a registered sender identity that the client must obtain. An incoming SMS also has nothing to identify the sender by except the phone number itself, which is exactly the case where a number shared between two customers becomes a disclosure risk.",
       "clickupId": "86cbezpb4"
     },
     {
@@ -574,8 +840,8 @@
         "frontend"
       ],
       "status": "not started",
-      "description": "Spec 003. Real-time chat with an agent.",
-      "blocker": "Spec 003 is not built. Needs a websocket transport, which nothing in the current stack provides, and an agent availability model that no spec defines. What happens to a chat started when no agent is available — queue, offline form, or refusal — is undecided, and it determines whether a chat can exist without a ticket.",
+      "description": "Real-time chat between a customer and an agent.",
+      "blocker": "Needs a live connection type the current stack does not provide, and a model of agent availability that no specification defines. What should happen when a customer starts a chat and nobody is available — queue, offer a form, or decline — is undecided, and the answer determines whether a chat can exist without a ticket behind it.",
       "clickupId": "86cbezpb5"
     },
     {
@@ -585,8 +851,8 @@
         "backend"
       ],
       "status": "not started",
-      "description": "Spec 005. Response and resolution targets, pause semantics, escalation and time-based automation.",
-      "blocker": "Spec 005 is not built, and it blocks every duration in the product. Constitution III makes utils/elapsed-time.js the sole source of elapsed time, and it returns { status: 'unavailable' } until this engine defines which statuses pause the clock and how working hours and holidays are handled. Reports (spec 009) are blocked behind this as well as behind their own spec.",
+      "description": "Response and resolution targets, the rules for when the clock pauses, escalation when a target is missed, and time-based automation.",
+      "blocker": "This blocks every duration figure in the product. One shared component is the only place permitted to calculate elapsed time, and it deliberately reports “unavailable” until this engine defines which statuses stop the clock and how working hours and public holidays are handled. The client has supplied neither the target times nor the working calendar. Reporting is blocked behind this as well as behind its own specification.",
       "clickupId": "86cbetqv0"
     },
     {
@@ -597,21 +863,9 @@
         "frontend"
       ],
       "status": "not started",
-      "description": "Spec 006. Articles agents can search and attach to a ticket.",
-      "blocker": "Spec 006 is not built. Article scope is unresolved: whether an article is branch-scoped like every other record in the system, or deliberately global. Global content would be the first exception to the scope predicate and needs to be an explicit client decision rather than an implementation convenience. Bilingual authoring rules are also open — whether an article may exist in one language only, unlike admin-authored labels which may not.",
+      "description": "Articles agents can search and attach to a ticket, and potentially publish to customers.",
+      "blocker": "Two questions are open. Whether an article belongs to a branch like every other record here, or is deliberately shared across all of them — shared content would be the first exception to the access rule in the whole system, and needs to be an explicit client decision rather than an implementation convenience. And whether an article may exist in one language only, unlike administrator-maintained labels, which may not.",
       "clickupId": "86cbetqv3"
-    },
-    {
-      "key": "customer-portal",
-      "name": "Customer portal",
-      "tags": [
-        "backend",
-        "frontend"
-      ],
-      "status": "not started",
-      "description": "Spec 008. Customers viewing and raising their own tickets.",
-      "blocker": "Spec 008 is not built. It requires customer-facing authentication, which has no spec at all — the existing scope predicate is built around a staff identity holding a branch and department, and a customer identity holds neither. A portal cannot reuse the current authorisation model, so this is a new access model rather than a new set of screens.",
-      "clickupId": "86cbetqv7"
     },
     {
       "key": "reports",
@@ -621,8 +875,8 @@
         "frontend"
       ],
       "status": "not started",
-      "description": "Spec 009. Volume, workload, SLA attainment and resolution analysis.",
-      "blocker": "Spec 009 is not built, and it is doubly blocked: most of the figures worth reporting are durations, which wait on the SLA engine (spec 005), and the grouping dimensions wait on the root-cause and resolution code lists the client has not supplied. A report built now could count tickets and nothing else.",
+      "description": "Volume, workload, target attainment, and analysis of how requests are being resolved.",
+      "blocker": "Blocked twice over. Most figures worth reporting are durations, which wait on the service-level engine, and the categories a report would group by wait on the root-cause and resolution lists the client has not supplied. A report built today could count tickets and very little else.",
       "clickupId": "86cbetqvc"
     },
     {
@@ -632,8 +886,8 @@
         "backend"
       ],
       "status": "not started",
-      "description": "Spec 011. Customer and order data read from the client's ERP.",
-      "blocker": "Spec 011 is not built. No ERP product has been named, no endpoint supplied and no field mapping agreed — including the one that matters most, which system owns the customer record when both hold one. Until that is decided, an integration would be guessing at both the transport and the direction of truth.",
+      "description": "Reading customer and order information from the client’s existing ERP system.",
+      "blocker": "No ERP product has been named, no connection details supplied, and no field mapping agreed — including the question that matters most, which system holds the authoritative customer record when both have one. Until that is settled, an integration would be guessing at both the connection and the direction of truth.",
       "clickupId": "86cbetqvg"
     },
     {
@@ -643,9 +897,10 @@
         "backend"
       ],
       "status": "not started",
-      "description": "Spec 007. Summarisation, classification and reply suggestion.",
-      "blocker": "Spec 007 is not built, and it is blocked behind the channels (spec 003) rather than behind its own spec: every AI feature described operates on message content, and until a channel exists there are no messages to summarise, classify or reply to. Data handling is also unresolved — whether customer message content may leave the client's infrastructure is a decision the client has not been asked to make.",
+      "description": "Automatic summarising of long conversations, suggested categorisation, and drafted replies.",
+      "blocker": "Blocked behind the messaging channels rather than behind its own specification: every one of these features operates on message content, and until a channel exists there are no messages to work on. A second question has not been put to the client at all — whether customer message content may be sent outside the client’s own infrastructure for processing.",
       "clickupId": "86cbetqvn"
     }
-  ]
+  ],
+  "retiredIds": []
 }

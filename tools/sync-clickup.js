@@ -19,6 +19,16 @@
 // which is how the earlier flat board was restructured without deleting
 // anything or orphaning an id.
 //
+// RETIRING. A subtask CANNOT be promoted back to a top-level task. PUT /task
+// with `parent: null` — and with `parent: ""` — answers 200 and leaves the
+// parent exactly where it was; this was verified against throwaway tasks on the
+// live list rather than assumed from the documentation. So when a child has to
+// become a top-level task, tasks.json clears its `clickupId` and pushes the old
+// id onto `retiredIds`. This script deletes those ids before syncing and then
+// empties the list, so the board never carries both the old subtask and its
+// replacement. A retired id that no longer exists is not an error — the delete
+// is idempotent by intent.
+//
 // TAGS. ClickUp's v2 PUT /task silently ignores a `tags` field: tags only apply
 // on create, or through the dedicated tag endpoints. So updates reconcile tags
 // explicitly — add what is missing, remove what is no longer wanted. Passing
@@ -77,8 +87,24 @@ const STATUS_MAP = {
   'not started': 'to do'
 }
 
-const request = async (path, options = {}) => {
+const sleep = ms => new Promise(r => setTimeout(r, ms))
+
+// The board is now 84 nodes and each one costs two or three calls, which is
+// past ClickUp's per-minute allowance. A 429 is a normal part of a full sync,
+// not a failure: wait for the window the response names and try again. Without
+// this a large sync half-completes and the ids it did not reach are written on
+// the next run instead, which is how duplicates start.
+const request = async (path, options = {}, attempt = 0) => {
   const res = await fetch(`${API}${path}`, { ...options, headers })
+  if (res.status === 429 && attempt < 5) {
+    const reset = Number(res.headers.get('x-ratelimit-reset'))
+    const wait = Number.isFinite(reset) && reset > 0
+      ? Math.max(1000, reset * 1000 - Date.now())
+      : (attempt + 1) * 10000
+    console.log(`  rate limited — waiting ${Math.ceil(wait / 1000)}s`)
+    await sleep(Math.min(wait, 70000))
+    return request(path, options, attempt + 1)
+  }
   const body = await res.json().catch(() => null)
   if (!res.ok) {
     throw new Error(`ClickUp ${options.method ?? 'GET'} ${path} -> ${res.status}: ${JSON.stringify(body)}`)
@@ -165,7 +191,37 @@ const run = async () => {
   // Ids are written back after every node, not batched at the end, so a failure
   // partway through does not lose the ids already assigned and cause the next
   // run to create duplicates of the tasks that succeeded.
-  const save = () => writeFileSync(TASKS_PATH, JSON.stringify(config, null, 2) + '\n')
+  const saveConfig = () => writeFileSync(TASKS_PATH, JSON.stringify(config, null, 2) + '\n')
+
+  // Retire first, create second. A subtask that has become a top-level task is
+  // deleted here and recreated below; doing it in this order means the board is
+  // never showing both at once.
+  if (config.retiredIds?.length) {
+    console.log(`Retiring ${config.retiredIds.length} task(s) the file no longer describes:`)
+    const survivors = []
+    for (const entry of config.retiredIds) {
+      const { id, key } = typeof entry === 'string' ? { id: entry, key: '(unnamed)' } : entry
+      try {
+        await request(`/task/${id}`, { method: 'DELETE' })
+        console.log(`  deleted  ${key.padEnd(28)} -> ${id}`)
+      } catch (err) {
+        // Already gone is the desired end state, so a 404 is success.
+        if (/-> 404/.test(err.message)) {
+          console.log(`  absent   ${key.padEnd(28)} -> ${id} (nothing to delete)`)
+        } else {
+          counts.failed++
+          survivors.push(entry)
+          console.error(`  FAILED   ${key.padEnd(28)} -> ${err.message}`)
+        }
+      }
+    }
+    // Only clear the ones actually dealt with, so a failure is retried next run.
+    config.retiredIds = survivors
+    saveConfig()
+    console.log('')
+  }
+
+  const save = saveConfig
 
   for (const parent of config.tasks) {
     try {
@@ -199,6 +255,44 @@ const run = async () => {
   if (counts.created === 0 && counts.failed === 0) {
     console.log('Zero created — every node already had an id. The sync is idempotent.')
   }
+
+  // Read the board back and count what is actually on it. Counting the file we
+  // just wrote would only prove the file is self-consistent; the point of the
+  // count is whether ClickUp agrees. A task the file no longer describes shows
+  // up here as a surplus, which is how a stale card gets noticed.
+  console.log('')
+  console.log('Board readback — counted from ClickUp, not from tasks.json:')
+  const onBoard = []
+  for (let page = 0; page < 20; page++) {
+    const res = await request(`/list/${config.listId}/task?subtasks=true&include_closed=true&page=${page}`)
+    onBoard.push(...(res.tasks ?? []))
+    if (res.last_page || (res.tasks ?? []).length === 0) break
+  }
+  const byStatus = new Map()
+  for (const t of onBoard) {
+    const s = t.status?.status ?? 'unknown'
+    const bucket = byStatus.get(s) ?? { top: 0, sub: 0 }
+    t.parent ? bucket.sub++ : bucket.top++
+    byStatus.set(s, bucket)
+  }
+  const pad = Math.max(...[...byStatus.keys()].map(s => s.length), 8)
+  for (const [status, b] of [...byStatus].sort((a, z) => (z[1].top + z[1].sub) - (a[1].top + a[1].sub))) {
+    console.log(`  ${status.toUpperCase().padEnd(pad)}  ${String(b.top + b.sub).padStart(3)}  (${b.top} task${b.top === 1 ? '' : 's'}, ${b.sub} subtask${b.sub === 1 ? '' : 's'})`)
+  }
+  console.log(`  ${'TOTAL'.padEnd(pad)}  ${String(onBoard.length).padStart(3)}`)
+
+  const described = new Set()
+  for (const t of config.tasks) for (const n of [t, ...(t.subtasks ?? [])]) if (n.clickupId) described.add(n.clickupId)
+  const surplus = onBoard.filter(t => !described.has(t.id))
+  if (surplus.length) {
+    console.log('')
+    console.log(`  ${surplus.length} task(s) on the board that tasks.json does not describe:`)
+    for (const t of surplus) console.log(`    ${t.id}  ${t.name}`)
+    console.log('  Add them to tasks.json or put their ids on retiredIds — the file is the source of truth.')
+  } else if (onBoard.length === total) {
+    console.log('  The board matches tasks.json exactly: no surplus, no missing.')
+  }
+
   process.exit(counts.failed > 0 ? 1 : 0)
 }
 
