@@ -900,6 +900,439 @@
       "description": "Automatic summarising of long conversations, suggested categorisation, and drafted replies.",
       "blocker": "Blocked behind the messaging channels rather than behind its own specification: every one of these features operates on message content, and until a channel exists there are no messages to work on. A second question has not been put to the client at all — whether customer message content may be sent outside the client’s own infrastructure for processing.",
       "clickupId": "86cbetqvn"
+    },
+    {
+      "key": "agent-dashboard",
+      "name": "Agent workspace",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "The screen an agent works in all day, as a whole: the queue they open on, their live counters, quick replies, tasks, notifications, drafts, and the team queue a lead works from.\n\n**This module has never been tracked.** The product currently offers a ticket list, which covers part of what an agent needs and none of what a team lead needs. Nothing on the board recorded the difference until a requirement-by-requirement audit on 2026-09-09 found the whole specification absent — 26 requirements, 14 of them mandatory, none built, no card.\n\nThe pieces below are its mandatory requirements. Two of them are genuinely blocked; the rest are simply unscheduled, and each says which.",
+      "blocker": "Partly. Five client questions are open against this area, the sharpest being what \"urgency\" means when ordering an agent's queue — the ordering rule is the difference between a useful workspace and a list. The counters, quick replies, tasks and team queue are NOT blocked by any of them.",
+      "clickupId": "86cbffvc1",
+      "subtasks": [
+        {
+          "key": "agent-queue",
+          "name": "Personal queue, ordered by urgency",
+          "tags": [
+            "backend",
+            "frontend"
+          ],
+          "description": "The workspace opens directly on the agent's own queue, ordered by urgency, with no filter to choose first. An agent who has to build their own view every morning will use whichever view they built last, and no two agents will be looking at the same thing.",
+          "blocker": "The client has not defined what orders the queue. Priority, age, service-level risk and customer tier all have a claim, and the order changes which ticket gets worked first. This is the one piece here that cannot be guessed.",
+          "status": "not started",
+          "clickupId": "86cbffvc8"
+        },
+        {
+          "key": "agent-counters",
+          "name": "Live counters that agree with their own lists",
+          "tags": [
+            "backend",
+            "frontend"
+          ],
+          "description": "Counts of open, overdue, pending-customer and resolved-today, each of which opens as the list it counts. The requirement is explicit that the number and the list must agree exactly — a counter that disagrees with the list behind it destroys confidence in every other number on the screen, which is why this is mandatory rather than convenient.",
+          "blocker": "Nothing blocks this. It is unscheduled rather than gated — no client answer is outstanding and no other work has to land first. It is on the board so that \"nobody has started it\" stops looking the same as \"we are waiting on someone\".",
+          "status": "not started",
+          "clickupId": "86cbffvcc"
+        },
+        {
+          "key": "agent-quick-replies",
+          "name": "Quick replies in both languages",
+          "tags": [
+            "backend",
+            "frontend"
+          ],
+          "description": "Saved reply templates carrying named placeholders and both an Arabic and an English body, inserted in whichever language the customer prefers. Where a placeholder cannot be filled the insertion is refused rather than sending a half-completed sentence to a customer. Templates exist at personal, team and organisation level, with the shared ones editable only by a lead or above.",
+          "blocker": "Nothing blocks this. It is unscheduled rather than gated — no client answer is outstanding and no other work has to land first. It is on the board so that \"nobody has started it\" stops looking the same as \"we are waiting on someone\".",
+          "status": "not started",
+          "clickupId": "86cbffvck"
+        },
+        {
+          "key": "agent-tasks",
+          "name": "Tasks against a ticket",
+          "tags": [
+            "backend",
+            "frontend"
+          ],
+          "description": "An agent can attach a task with a due date and a body to a ticket, then complete or cancel it. No task record of any kind exists in the system today.",
+          "blocker": "Nothing blocks this. It is unscheduled rather than gated — no client answer is outstanding and no other work has to land first. It is on the board so that \"nobody has started it\" stops looking the same as \"we are waiting on someone\".",
+          "status": "not started",
+          "clickupId": "86cbffvcz"
+        },
+        {
+          "key": "staff-notifications",
+          "name": "Notifications to staff",
+          "tags": [
+            "backend"
+          ],
+          "description": "Telling an agent that something happened: a ticket was assigned to them, a colleague mentioned them, a customer replied, a request escalated, a task is due, a service-level threshold is approaching, a message failed to send, a chat is waiting. Several notifications about one request arrive grouped rather than as a burst.\n\n**Nothing notifies staff of anything today.** Two other mandatory requirements depend on this and are equally unserved: reassigning a ticket is required to notify both the previous and the new owner, and escalating one is required to notify the escalation target.",
+          "blocker": "Partly. Which channels a notification may use depends on the messaging channels, which are not built. In-application notification does not depend on them and could be built now.",
+          "status": "not started",
+          "clickupId": "86cbffvd8"
+        },
+        {
+          "key": "lead-team-queue",
+          "name": "Team queue for leads",
+          "tags": [
+            "backend",
+            "frontend"
+          ],
+          "description": "The surface a team lead actually works from: their team's tickets viewable by unassigned, oldest, at-risk and per-agent load, with assignment straight from the list, limited to the teams, branches and departments they hold. There is nothing like it today, and a lead currently has the same ticket list as an agent.",
+          "blocker": "Depends on the team concept, which no specification defines — see the separate team-scope card. The unassigned, oldest and per-agent views do not depend on it; the at-risk view additionally needs the service-level engine.",
+          "status": "not started",
+          "clickupId": "86cbffvde"
+        },
+        {
+          "key": "agent-drafts-presence",
+          "name": "Draft preservation and presence",
+          "tags": [
+            "backend",
+            "frontend"
+          ],
+          "description": "Unsent reply text kept on the server and restored when the agent comes back, flagged if the conversation moved on while it was sitting there. Plus an agent-set availability state that chat routing honours, and an indication that a colleague is composing a reply on the same ticket.",
+          "blocker": "Nothing blocks this. It is unscheduled rather than gated — no client answer is outstanding and no other work has to land first. It is on the board so that \"nobody has started it\" stops looking the same as \"we are waiting on someone\".",
+          "status": "not started",
+          "clickupId": "86cbffvdh"
+        },
+        {
+          "key": "agent-mention",
+          "name": "Mentioning a colleague on a ticket",
+          "tags": [
+            "backend"
+          ],
+          "description": "⚠ **This one needs a decision before it can be built at all, and it is not a question of effort.**\n\nThe requirement is that an agent mentions a colleague in an internal note, the colleague is notified, and the mention grants that colleague access to that one ticket.\n\nThe last clause conflicts with the access rule the rest of the system is built on. Access here is always derived from a role held in a branch and a department, evaluated against the record being read; there is no way to express \"this one person, this one record\". Building mentions means either adding a per-record grant to the permission model, or making an exception to a rule that has so far been treated as absolute.\n\nRecorded in full as spec defect 13 in the project decisions record, alongside the two earlier defects of the same kind — the undefined team concept, and the rule that forbade two customers sharing a phone number.",
+          "blocker": "A decision by the project owner. The requirement cannot be satisfied without changing the permission model or breaching it, and neither is a choice an implementer should make quietly.",
+          "status": "not started",
+          "clickupId": "86cbffvdj"
+        }
+      ]
+    },
+    {
+      "key": "cross-cutting-operations",
+      "name": "Running the system in production",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "The qualities that are not features and therefore had nowhere to live: uptime, monitoring, releases, performance measurement, and the published legal terms.\n\n**This specification has never been tracked either.** It has no module to hang a card on, which is precisely why it disappeared — eleven requirements, seven mandatory, none built, no card, until the audit on 2026-09-09.\n\nNone of this is needed for a demonstration. All of it is needed before anyone outside the project relies on the system.",
+      "blocker": "Partly. The performance requirements are waiting on agreed volumes — how many agents at once, how many requests a month — which the client has not supplied. Monitoring, releases, the status page and the published terms are not waiting on anything.",
+      "clickupId": "86cbffvdp",
+      "subtasks": [
+        {
+          "key": "ops-monitoring",
+          "name": "Monitoring and alerting",
+          "tags": [
+            "backend"
+          ],
+          "description": "Watch and raise an alarm on error rate, request latency, queue depth, integration failures and channel failures. At present a failure is noticed when somebody reports it.",
+          "blocker": "Nothing blocks this. It is unscheduled rather than gated — no client answer is outstanding and no other work has to land first. It is on the board so that \"nobody has started it\" stops looking the same as \"we are waiting on someone\".",
+          "status": "not started",
+          "clickupId": "86cbffvdv"
+        },
+        {
+          "key": "ops-releases",
+          "name": "Zero-downtime releases and reversible migrations",
+          "tags": [
+            "backend"
+          ],
+          "description": "Releases that do not interrupt service, and database migrations whose reversal is tested before the release goes out rather than written afterwards under pressure.",
+          "blocker": "Nothing blocks this. It is unscheduled rather than gated — no client answer is outstanding and no other work has to land first. It is on the board so that \"nobody has started it\" stops looking the same as \"we are waiting on someone\".",
+          "status": "not started",
+          "clickupId": "86cbffve2"
+        },
+        {
+          "key": "ops-status-page",
+          "name": "Uptime target and status page",
+          "tags": [
+            "backend"
+          ],
+          "description": "An agreed monthly availability target, and a page customers and staff can look at to see whether the system is currently healthy.",
+          "blocker": "The target itself is a client decision. The status page is not.",
+          "status": "not started",
+          "clickupId": "86cbffve5"
+        },
+        {
+          "key": "ops-privacy-terms",
+          "name": "Privacy policy and terms, both languages",
+          "tags": [
+            "backend",
+            "frontend"
+          ],
+          "description": "⚠ A privacy policy and terms of use, published in Arabic and English.\n\nThis is a legal obligation rather than a feature, and it attaches to a customer-facing portal that has already been demonstrated. It is listed here because it is mandatory and because it is the kind of requirement that gets noticed at the worst possible moment.",
+          "blocker": "The content is the client's to supply or approve. Publishing it is not blocked.",
+          "status": "not started",
+          "clickupId": "86cbffvee"
+        },
+        {
+          "key": "ops-latency-measurement",
+          "name": "Latency measured and observable",
+          "tags": [
+            "backend"
+          ],
+          "description": "Every response-time budget in every specification measured at the 95th percentile over a stated window, and visible in the running system rather than asserted in a document.",
+          "blocker": "The budgets are stated per specification but the volumes they are measured at are not agreed. Instrumentation can be built before the numbers arrive.",
+          "status": "not started",
+          "clickupId": "86cbffven"
+        }
+      ]
+    },
+    {
+      "key": "category-tree",
+      "name": "Categories as a tree, not a flat string",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "⚠ **A shipped deviation from a mandatory requirement that nothing was tracking.**\n\nCategories are required to form a tree: a request points at a leaf, and the branches above it are not selectable. What shipped is a single flat text field, accepted under time pressure and recorded as ratified deviation 21.\n\nThe deviation was recorded honestly in the decisions register. What was missing until 2026-09-09 is a card — and a deviation nobody tracks becomes permanent by default, because there is no moment at which anyone is asked whether it should still stand.\n\n**It gets more expensive every day it stands.** Every request created carries a category value the tree model cannot represent, so the eventual fix is a data migration whose size grows with usage, not a code change.\n\nThe tree is also where routing lives: each node is required to carry a default priority, owning team and service-level policy inherited by everything beneath it. That second requirement cannot even be started while the first is a string, which is why both are on this card.",
+      "blocker": "Nothing blocks the tree itself. The client should confirm the category list is stable enough to model before the migration is written, but the model does not wait on that. Note the interaction with the team concept: a node carries an owning team, which is separately undefined.",
+      "clickupId": "86cbffveu"
+    },
+    {
+      "key": "admin-configuration",
+      "name": "Administrator configuration",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "The screens through which an administrator changes how the system behaves, without a developer: statuses and the moves allowed between them, categories, request types, custom fields, priorities, service-level policies, business calendars and holidays, escalation policies, and the templates used for notifications.\n\n**Everything configurable in this product is currently a value written in code.** Changing a status, adding a category or altering a priority is a code change and a release.\n\nThis is the largest single piece of unbuilt, untracked and unblocked work the 2026-09-09 audit found. It is mandatory, nothing prevents it, and nobody was counting it.",
+      "blocker": "Nothing blocks this. It is unscheduled rather than gated — no client answer is outstanding and no other work has to land first. It is on the board so that \"nobody has started it\" stops looking the same as \"we are waiting on someone\".",
+      "clickupId": "86cbffvez"
+    },
+    {
+      "key": "security-hardening",
+      "name": "Security and recovery essentials",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "Three mandatory security requirements with nothing behind them, grouped because they share a deadline rather than a technology: none of them matters for a demonstration and all of them matter before real customer data exists.",
+      "blocker": "Nothing blocks any of the three. They are unscheduled, and they are the kind of work that is only ever scheduled deliberately.",
+      "clickupId": "86cbffvf4",
+      "subtasks": [
+        {
+          "key": "security-encryption",
+          "name": "Encryption in transit and at rest",
+          "tags": [
+            "backend"
+          ],
+          "description": "Data encrypted both in transit and where it is stored, including attachments and backups. Nothing in the codebase configures either today; local development runs unencrypted over plain HTTP.",
+          "blocker": "Nothing blocks this. It is unscheduled rather than gated — no client answer is outstanding and no other work has to land first. It is on the board so that \"nobody has started it\" stops looking the same as \"we are waiting on someone\".",
+          "status": "not started",
+          "clickupId": "86cbffvf9"
+        },
+        {
+          "key": "security-backup-restore",
+          "name": "Backups, and a restore actually rehearsed",
+          "tags": [
+            "backend"
+          ],
+          "description": "Backups meeting an agreed recovery point and recovery time, restoration to a chosen moment, and — the part usually skipped — a restore rehearsed before go-live rather than attempted for the first time during an incident. No backup of any kind is configured.",
+          "blocker": "The recovery point and time targets are a client decision. Taking backups and rehearsing a restore are not.",
+          "status": "not started",
+          "clickupId": "86cbffvfg"
+        },
+        {
+          "key": "security-password-policy",
+          "name": "Password policy, lockout and session limits",
+          "tags": [
+            "backend"
+          ],
+          "description": "A configurable password policy, session timeout, absolute session lifetime, lockout after repeated failures, and a limit on concurrent sessions. Only token expiry exists today.\n\nThis also covers ratified deviation 33 — the customer portal has no rate limiting or abuse protection — which was recorded as acceptable *only on the condition that the demonstration is never reachable from the internet*. That condition is the whole of its safety, and it was not tracked anywhere.",
+          "blocker": "Nothing blocks this. It is unscheduled rather than gated — no client answer is outstanding and no other work has to land first. It is on the board so that \"nobody has started it\" stops looking the same as \"we are waiting on someone\".",
+          "status": "not started",
+          "clickupId": "86cbffvfp"
+        }
+      ]
+    },
+    {
+      "key": "attachments",
+      "name": "Attachments on requests, messages and customers",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "Files attached to a request, to an individual message in a conversation, and to a customer record independently of any request — plus the rule that makes all three safe: every uploaded file from every surface is scanned and size- and type-checked before it is stored, and a rejected file is never stored at all.\n\nThe customer-facing half is tracked separately on its own card. The staff-facing halves and the scanning rule that gates all of them had no card at all.",
+      "blocker": "A decision on where files are stored and which scanner is used. Also note that a direct link to a stored file bypasses the record it hangs from, so the \"not found\" behaviour used everywhere else needs re-examining for files specifically.",
+      "clickupId": "86cbffvfv"
+    },
+    {
+      "key": "missing-entities",
+      "name": "Entities the specifications define that do not exist",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "⚠ **Three of these are referenced by code that is running today.**\n\nThe customer model has a `segments` field pointing at a Segment record; the branch model points at a business calendar and a holiday set. None of those three exists, so the references resolve to nothing — silently, because a reference to a missing record does not raise an error, it simply comes back empty.\n\nThis is the same fault as the team concept, found the same way and previously invisible for the same reason: no clarification marker was ever raised against any of them, so nothing surfaced them.\n\nThe customer specification defines seven record types. Two are built.",
+      "blocker": "Each child names its own. Several are shapes the specifications already describe and need no client input at all.",
+      "clickupId": "86cbffvg5",
+      "subtasks": [
+        {
+          "key": "entity-segment",
+          "name": "Segment",
+          "tags": [
+            "backend"
+          ],
+          "description": "Groupings a customer can belong to, used for filtering and — once automation exists — as a condition in routing rules. **Referenced today** by the customer record, which carries a list of segment references with no segment records to point at. Also required by the mandatory requirement that a customer's view shows their segments, which it currently cannot.",
+          "blocker": "Nothing blocks this. It is unscheduled rather than gated — no client answer is outstanding and no other work has to land first. It is on the board so that \"nobody has started it\" stops looking the same as \"we are waiting on someone\".",
+          "status": "not started",
+          "clickupId": "86cbffvgb"
+        },
+        {
+          "key": "entity-business-calendar",
+          "name": "Business calendar",
+          "tags": [
+            "backend"
+          ],
+          "description": "Working hours per branch. **Referenced today** by the branch record, which carries a business-calendar reference pointing at nothing. Required by the rule that each branch owns its own calendar, and needed by the service-level engine before any clock can pause correctly overnight or at a weekend.",
+          "blocker": "The working hours themselves are a client answer. The record shape is not.",
+          "status": "not started",
+          "clickupId": "86cbffvgf"
+        },
+        {
+          "key": "entity-holiday-set",
+          "name": "Holiday set",
+          "tags": [
+            "backend"
+          ],
+          "description": "Public and company holidays per branch. **Referenced today** by the branch record, pointing at nothing. Same requirement and same dependency as the business calendar.",
+          "blocker": "The holiday dates are a client answer. The record shape is not.",
+          "status": "not started",
+          "clickupId": "86cbffvgj"
+        },
+        {
+          "key": "entity-consent-record",
+          "name": "Consent record",
+          "tags": [
+            "backend"
+          ],
+          "description": "What a customer has agreed to be contacted about, per channel and per purpose, appended to rather than overwritten, with the source and time of each entry. Outbound messages are required to be refused where consent is absent or withdrawn.",
+          "blocker": "The applicable privacy regime and the scope of consent are both open client questions. This is genuinely gated, unlike most of its siblings here.",
+          "status": "not started",
+          "clickupId": "86cbffvgu"
+        },
+        {
+          "key": "entity-custom-field",
+          "name": "Custom field definition",
+          "tags": [
+            "backend"
+          ],
+          "description": "Administrator-defined extra fields on customers and on requests — text, number, date, single- and multi-select, boolean — each carrying an Arabic and an English label and an optional required flag. Closely related to the administrator configuration card.",
+          "blocker": "Nothing blocks this. It is unscheduled rather than gated — no client answer is outstanding and no other work has to land first. It is on the board so that \"nobody has started it\" stops looking the same as \"we are waiting on someone\".",
+          "status": "not started",
+          "clickupId": "86cbffvh1"
+        }
+      ]
+    },
+    {
+      "key": "nfr-targets",
+      "name": "Performance and reliability targets — none represented",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "⚠ **A whole class of requirement that no card has ever represented.**\n\nThe thirteen specifications contain **79 numbered performance and reliability targets** — how fast a search returns, how quickly a notification arrives, how long a restore may take, how many rows an export may hold, what proportion of messages may be lost. They are structurally different from every other requirement: their tables carry a metric and a figure but **no mandatory-or-optional column**, so they never appeared in any count of mandatory work and never triggered a card.\n\nThey were invisible for a reason nobody chose.\n\nMost of the figures are additionally unusable because the volumes they are measured against — how many agents at once, how many requests a month — have not been agreed. But *unquantified* and *untracked* are different problems, and until now these were both.\n\nThis card exists to make the class visible. It should become several cards once the volumes are agreed and the targets can be tested rather than quoted.",
+      "blocker": "The volumes are an open client question and most figures cannot be verified without them. The measurement infrastructure is not blocked by that, and is tracked with the production-operations card.",
+      "clickupId": "86cbffvhb"
+    },
+    {
+      "key": "ticket-reopen",
+      "name": "Reopening a closed request",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "A customer replying to a closed request within the agreed window reopens it, keeping its original reference. Beyond the window a new request is created and linked to the old one, so the history stays connected.\n\nThe window is settled — fourteen calendar days from closure, ratified as decision 10. Neither behaviour is built.\n\nThe code is honest about this rather than silently wrong: the status graph documents the omission, and a reply to a closed request is currently refused instead of guessing. **It still had no card.**\n\nThe beyond-the-window half additionally needs request-to-request linking, which is not built either and is on this card for that reason.",
+      "blocker": "Depends on an inbound channel for the general case — a customer reply arriving by email is the usual trigger. The portal reply path exists today and could carry it sooner.",
+      "clickupId": "86cbffvhg"
+    },
+    {
+      "key": "accessibility-mobile",
+      "name": "Accessibility and use on a phone",
+      "tags": [
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "Two mandatory requirements and one strong recommendation, none tracked:\n\n- Every **agent** task completable on a phone or tablet, in both languages, including attaching a photograph taken on the device.\n- Every **customer** task completable on a phone browser, including attachment capture.\n- The whole product meeting the WCAG 2.1 AA accessibility standard with no level-A failures, fully operable from the keyboard.\n\nTen screens have been hand-built without a component library, two of them customer-facing, and **not one has had an accessibility or keyboard audit in either language**. That is recorded inside the project's own status notes and had never reached the board.\n\nRight-to-left keyboard behaviour deserves specific mention: the layout mirrors correctly, but no one has yet confirmed that focus order and arrow-key movement mirror with it.",
+      "blocker": "Nothing blocks this. It is unscheduled rather than gated — no client answer is outstanding and no other work has to land first. It is on the board so that \"nobody has started it\" stops looking the same as \"we are waiting on someone\".",
+      "clickupId": "86cbffvhn"
+    },
+    {
+      "key": "customer-record-depth",
+      "name": "The customer record, as specified",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "Four mandatory requirements on a screen that already exists and looks finished. That is what makes them easy to miss: the customer view is built and in use, and it is incomplete against its own specification rather than absent.",
+      "blocker": "Each child names its own; two of the four are blocked by nothing.",
+      "clickupId": "86cbffvhp",
+      "subtasks": [
+        {
+          "key": "customer-history",
+          "name": "One interaction history, all channels",
+          "tags": [
+            "backend",
+            "frontend"
+          ],
+          "description": "A single history of everything that has passed between the organisation and the customer — every channel, every request, logged telephone calls and portal actions — in one reverse-chronological list, filterable by channel, date and request.\n\nThe screen currently lists the customer's requests. That is not the same thing and does not become the same thing by adding channels later: the requirement is one merged timeline, which is a different query and a different screen.",
+          "blocker": "Only partly. Channel messages cannot appear until channels exist, but requests, portal actions and notes could be merged into one timeline now.",
+          "status": "not started",
+          "clickupId": "86cbffvhv"
+        },
+        {
+          "key": "customer-segments-entitlement",
+          "name": "Segments and entitlement on the record",
+          "tags": [
+            "backend",
+            "frontend"
+          ],
+          "description": "The customer view is required to show segments and current entitlement, and to say explicitly when entitlement could not be determined rather than leaving the space blank. Neither appears today; segments additionally point at a record type that does not exist.",
+          "blocker": "Entitlement has to come from somewhere, and which system owns it is an open question tied to the ERP integration. Segments are not blocked.",
+          "status": "not started",
+          "clickupId": "86cbffvj1"
+        },
+        {
+          "key": "customer-bulk-import",
+          "name": "Bulk import with a per-row report",
+          "tags": [
+            "backend"
+          ],
+          "description": "Loading many customers from a file, where every row is checked before any row is written, only valid rows are created, and the operator gets back a report naming each rejected row and the reason. Partial imports that half-succeed are the usual failure here, and the requirement is written specifically to prevent one.",
+          "blocker": "Nothing blocks this. It is unscheduled rather than gated — no client answer is outstanding and no other work has to land first. It is on the board so that \"nobody has started it\" stops looking the same as \"we are waiting on someone\".",
+          "status": "not started",
+          "clickupId": "86cbffvj3"
+        },
+        {
+          "key": "customer-merge-organisation",
+          "name": "Merging duplicates, and the organisation view",
+          "tags": [
+            "backend",
+            "frontend"
+          ],
+          "description": "Merging two customer records so that everything — requests, history, attachments, notes, consent and contact details — moves to the survivor, the merged record still resolves to it, and the merge cannot be undone. Plus an organisation view listing every request raised by any of its members.\n\nThe customer record already carries the field that points a merged record at its survivor. **The field exists and the operation does not** — the same shape of gap as the missing record types above.",
+          "blocker": "Nothing blocks this. It is unscheduled rather than gated — no client answer is outstanding and no other work has to land first. It is on the board so that \"nobody has started it\" stops looking the same as \"we are waiting on someone\".",
+          "status": "not started",
+          "clickupId": "86cbffvja"
+        }
+      ]
+    },
+    {
+      "key": "search-arabic-diacritics",
+      "name": "Arabic search that ignores diacritics",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "Search is required to work across subject, message bodies, tags, reference, customer identity and text extracted from attachments, in Arabic and English, and to match Arabic **regardless of diacritics**.\n\nSearch exists. The diacritic rule does not, and without it an Arabic search behaves inconsistently depending on how the person typing happened to write the word — which in practice means Arabic search is less reliable than English search, in a product whose first principle is that the two languages are equals.",
+      "blocker": "Nothing blocks this. It is unscheduled rather than gated — no client answer is outstanding and no other work has to land first. It is on the board so that \"nobody has started it\" stops looking the same as \"we are waiting on someone\".",
+      "clickupId": "86cbffvjj"
     }
   ],
   "retiredIds": []

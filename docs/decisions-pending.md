@@ -1125,3 +1125,98 @@ the story is written as an explicit, dated amendment, and says so.
 agent, per period, against a configurable threshold. **It flags; it does not
 block.** A legitimate long wait on a customer is common, so this is a
 supervision signal rather than an enforcement mechanism.
+
+---
+
+## 13. Spec defect — `004 FR-009` cannot be satisfied without changing the permission model
+
+**Found by the board audit, 2026-09-09. Reported, not fixed.** The same category
+as `Team` in §7 and shared contact points in §11: nobody wrote a `[CLARIFY]` for
+it, so the clarification gate could never have raised it. Spec `004` carries five
+open markers and this is not among them.
+
+### The requirement
+
+> `004 FR-009` (**MUST**, traces `AD-09`): *"An agent MUST be able to mention a
+> colleague in an internal note; the mention MUST notify them and **MUST grant
+> them access to that ticket only**, recorded in history."*
+
+### What it collides with
+
+| Source | Statement |
+|---|---|
+| **Constitution IV** | Scope is enforced server-side per request, evaluated against the target record. Out-of-scope is 404, not 403 |
+| `010 FR-004` (**MUST**) | *"Every read and write MUST apply a scope predicate over branch, department and team, evaluated server-side against the target record"* |
+| `010 FR-002` (**MUST**) | *"Permissions MUST be assigned through roles only. **Per-user permission overrides MUST NOT exist.**"* |
+| `010 §3`, Role assignment | The only grant shape in the system: a role, plus `branch_ids`, `department_ids`, `team_ids` |
+
+**`010 FR-002` is the decisive one.** A mention grants one named person access to
+one named record. That is a per-user permission override by any reading, and
+`FR-002` forbids per-user overrides in the same **MUST** breath that `FR-009`
+requires one. Two MUSTs in two specs, directly opposed.
+
+There is also no shape to express it. `RoleAssignment` scopes by branch,
+department and team — it has no record-level dimension, and adding one changes
+the predicate that every read and write in the codebase runs through.
+
+### Why this is not an implementation detail
+
+Three ways out, none of which an implementer should pick quietly:
+
+1. **Add a record-level grant** — a new entity, and a second thing the scope
+   predicate must consult on every read. It weakens the single strongest
+   invariant in the system, in exchange for a convenience feature.
+2. **Notify without granting** — the colleague is told they were mentioned and
+   gets a 404 if they follow the link. Satisfies the notify clause, breaches the
+   access clause, and produces a genuinely confusing experience.
+3. **Widen the mentioner's options** — only allow mentioning colleagues who
+   already hold scope on that ticket. Satisfies both MUSTs and quietly reduces
+   the feature to something the spec did not ask for. Cheapest, and arguably the
+   honest reading of what mentions are for.
+
+**⚠ AWAITING A DECISION BY THE PROJECT OWNER.** Flagged rather than resolved,
+because the choice trades the project's most load-bearing guarantee against a
+feature, and constitution VII forbids guessing at an unknown. Tracked on the
+board as `agent-mention`, under the agent workspace card, with the blocker
+naming this section.
+
+---
+
+## 14. Spec defect — `002 FR-007` (MUST) depends on `002 FR-008` (SHOULD)
+
+**Found by the board audit, 2026-09-09.** Not a marker; spec `002` carries **zero**
+open markers and is the only spec that does, which is exactly why this survived.
+
+### The dependency
+
+> `002 FR-007` (**MUST**): *"A ticket MUST hold exactly one status **from the
+> administrator-defined set**; each status MUST carry `pauses_sla` and `terminal`
+> flags."*
+>
+> `002 FR-008` (**SHOULD**): *"Administrators MUST be able to define statuses and
+> the legal transitions between them."*
+
+`FR-007` is mandatory and requires the status set to be *administrator-defined*.
+The only requirement that provides administrator definition is `FR-008`, which is
+merely recommended. **A MUST rests on a SHOULD**, so a compliant implementation
+could decline to build `FR-008` and thereby make `FR-007` unsatisfiable.
+
+Note the wording of `FR-008` itself: its *text* says "MUST be able to", while its
+*level column* says SHOULD. The row disagrees with itself. This pattern recurs —
+`001 FR-005` is levelled SHOULD over text reading *"outbound messaging MUST default
+to the primary"* — which suggests the level column was filled in separately from
+the requirement text and is not reliable on its own.
+
+### How the shipped code resolves it, and why that is not a resolution
+
+Statuses are a **code constant** in `utils/ticket-status.js`, with a default
+transition graph authored under decision 22 because `FR-008` supplies none. That
+satisfies `FR-007`'s "exactly one status" and its two flags, and fails its
+"administrator-defined" clause outright. It was the right call for delivery and it
+is not compliance.
+
+**No decision is requested here.** Unlike §12 this needs no judgement — it needs
+the administrator configuration work, which is now tracked as `admin-configuration`
+on the board and additionally carries `010 FR-011`, itself an unblocked **MUST**.
+Recorded so that the defect is attributable to the spec rather than looking like an
+implementation shortcut.
