@@ -13,7 +13,7 @@ import { AuthLayout } from './layouts/auth-layout/auth-layout';
 import { MainLayout } from './layouts/main-layout/main-layout';
 import { authGuard } from './core/auth/guards/auth.guard';
 import { PortalLayout } from './layouts/portal-layout/portal-layout';
-import { portalGuard } from './core/auth/guards/portal.guard';
+import { portalGuard, portalSignedOutGuard } from './core/auth/guards/portal.guard';
 
 export const routes: Routes = [
   {
@@ -36,6 +36,7 @@ export const routes: Routes = [
     children: [
       {
         path: 'signin',
+        canActivate: [portalSignedOutGuard],
         loadComponent: () => import('./features/portal/signin/portal-signin').then(m => m.PortalSignin)
       },
       {

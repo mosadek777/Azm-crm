@@ -13,3 +13,14 @@ export const portalGuard: CanActivateFn = () => {
   const router = inject(Router);
   return portalAuth.isSignedIn() ? true : router.createUrlTree(['/portal/signin']);
 };
+
+// The mirror of the above: someone who already has a session has no business
+// looking at a sign-in card. Without this, a customer returning to /portal/signin
+// sees a form they do not need, and — before the shell stopped rendering it —
+// their own name in the header above it, which is the confusing state that
+// prompted this guard.
+export const portalSignedOutGuard: CanActivateFn = () => {
+  const portalAuth = inject(PortalAuthService);
+  const router = inject(Router);
+  return portalAuth.isSignedIn() ? router.createUrlTree(['/portal/tickets']) : true;
+};

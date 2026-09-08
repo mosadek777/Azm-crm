@@ -55,14 +55,52 @@ export class PortalAuthService {
   }
 
   signOut() {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(CUSTOMER_KEY);
-    this._customer.set(null);
+    this.clear();
     this.router.navigate(['/portal/signin']);
   }
 
   token(): string | null {
     return localStorage.getItem(TOKEN_KEY);
+  }
+
+  // Confirms the stored session is actually alive, rather than trusting the
+  // cached customer object.
+  //
+  // Without this, `isSignedIn()` answers yes for any browser that has ever held
+  // a session, however dead the token is — the object in localStorage outlives
+  // the identity it describes. A reseeded database, a revoked identity or an
+  // expired token all leave a browser claiming to be signed in, which shows a
+  // customer's name in the header before they have proved anything and lets
+  // `portalGuard` wave a request through to a screen whose first call then
+  // 401s. Two symptoms, one cause.
+  //
+  // Called once when the portal shell loads. A failure is a 401, which the
+  // interceptor already turns into a sign-out — this only makes it happen at
+  // load rather than at the first screen that needs data.
+  verify() {
+    const checking = this.token();
+    if (!checking) return;
+
+    this.http.get<{ customer: PortalCustomer }>(`${this.api}/portal/me`).subscribe({
+      next: response => {
+        // Only if this is still the session being checked. A customer can sign
+        // in while this is in flight, and the reply would then describe the
+        // previous identity.
+        if (this.token() !== checking) return;
+        // The server is the authority on who this is; refresh the cache from it.
+        localStorage.setItem(CUSTOMER_KEY, JSON.stringify(response.customer));
+        this._customer.set(response.customer);
+      },
+      // Same guard, and it matters more here: without it a dead token's refusal
+      // arriving after a successful sign-in wipes the new session.
+      error: () => { if (this.token() === checking) this.clear(); }
+    });
+  }
+
+  private clear() {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(CUSTOMER_KEY);
+    this._customer.set(null);
   }
 
   private readStored(): PortalCustomer | null {

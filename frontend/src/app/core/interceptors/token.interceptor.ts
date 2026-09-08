@@ -45,7 +45,20 @@ export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
       const isSignInAttempt =
         req.url.endsWith('/auth/login') || req.url.endsWith('/portal/auth/signin');
 
-      if (error.status === 401 && !isSignInAttempt) {
+      // A 401 only ends the session THAT REQUEST BELONGED TO.
+      //
+      // Without this comparison a late refusal destroys a good session. The
+      // sequence is real and was reproduced: a browser holding a dead token
+      // issues a request, the customer signs in successfully while it is still
+      // in flight, and the old request's 401 then arrives and signs them
+      // straight back out — landing them on the sign-in card a moment after a
+      // sign-in that genuinely worked, with their name having flashed up in the
+      // header on the way. Comparing the token the request was sent with against
+      // the one held now makes a stale refusal harmless.
+      const current = portal ? portalAuth.token() : auth.token();
+      const staleRefusal = token !== null && token !== current;
+
+      if (error.status === 401 && !isSignInAttempt && !staleRefusal) {
         if (portal) portalAuth.signOut();
         else auth.signOut();
       }

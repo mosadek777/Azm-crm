@@ -4,20 +4,34 @@
 <div class="min-h-screen bg-surface-100 flex flex-col">
   <header class="bg-white border-b border-surface-200">
     <div class="mx-auto max-w-4xl px-4 py-3 flex items-center gap-4">
-      <a routerLink="/portal/tickets" class="font-semibold text-surface-900 no-underline">
-        {{ 'portal.name' | translate: i18n.lang() }}
-      </a>
+      <!-- Not a link when signed out: it would lead to a guarded route. -->
+      @if (portalAuth.isSignedIn()) {
+        <a routerLink="/portal/tickets" class="font-semibold text-surface-900 no-underline">
+          {{ 'portal.name' | translate: i18n.lang() }}
+        </a>
+      } @else {
+        <span class="font-semibold text-surface-900">
+          {{ 'portal.name' | translate: i18n.lang() }}
+        </span>
+      }
 
       <div class="ms-auto flex items-center gap-4 text-sm">
-        @if (portalAuth.customer(); as customer) {
-          <span class="text-surface-600 hidden sm:inline">{{ customer.displayName }}</span>
-        }
+        <!-- The only language toggle in the portal. Present signed out too,
+             because FR-011 says switchable at any time and the sign-in screen
+             is one of the times. -->
         <button type="button" class="text-primary-700 hover:underline" (click)="i18n.toggle()">
           {{ 'lang.switchTo' | translate: i18n.lang() }}
         </button>
-        <button type="button" class="text-surface-600 hover:underline" (click)="portalAuth.signOut()">
-          {{ 'portal.signOut' | translate: i18n.lang() }}
-        </button>
+
+        <!-- Nothing below appears until a session exists. -->
+        @if (portalAuth.isSignedIn()) {
+          @if (portalAuth.customer(); as customer) {
+            <span class="text-surface-600 hidden sm:inline">{{ customer.displayName }}</span>
+          }
+          <button type="button" class="text-surface-600 hover:underline" (click)="portalAuth.signOut()">
+            {{ 'portal.signOut' | translate: i18n.lang() }}
+          </button>
+        }
       </div>
     </div>
   </header>
