@@ -153,7 +153,18 @@ export const DICTIONARY: Translations = {
   'portal.backToList': { ar: 'العودة إلى طلباتي', en: 'Back to my requests' },
   'portal.conversation': { ar: 'المحادثة', en: 'Conversation' },
   'portal.fromYou': { ar: 'أنت', en: 'You' },
-  'portal.fromSupport': { ar: 'الدعم', en: 'Support' },
+  // WHAT LABELS A SUPPORT REPLY.
+  //
+  // Not the agent: 002 [CLARIFY-6] was resolved 2026-09-08 (decision 29) — a
+  // customer sees the owning team and no individual, including the person who
+  // replied. So the label is an ORGANISATION label.
+  //
+  // It is not the team either, and deliberately not pretending to be. 008
+  // FR-003 (MUST) says the view shows "the owning team", but Team is not built
+  // (decision 20, extended to this surface by decision 35), so naming a team
+  // here would be inventing one. When R2 lands, this label is replaced by the
+  // ticket's actual owning team and FR-003 is satisfied for the first time.
+  'portal.fromSupport': { ar: 'فريق دعم عزم', en: 'AZM Support' },
   'portal.noMessages': { ar: 'لا توجد رسائل بعد.', en: 'No messages yet.' },
   'portal.loading': { ar: 'جارٍ التحميل…', en: 'Loading…' },
   // Read-only for now: X4 and X6 add submit and reply. Saying so is better than

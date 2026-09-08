@@ -20,11 +20,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../core/auth/services/auth.service';
 import { LanguageService } from '../../../core/i18n/language.service';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
+import { PasswordField } from '../../../shared/components/password-field/password-field';
 import { ApiRefusal, LocalizedText } from '../../../core/models/user.model';
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule, TranslatePipe],
+  imports: [FormsModule, TranslatePipe, PasswordField],
   templateUrl: './login.html'
 })
 export class Login {
@@ -34,7 +35,6 @@ export class Login {
 
   protected readonly email = signal('');
   protected readonly password = signal('');
-  protected readonly showPassword = signal(false);
   protected readonly submitting = signal(false);
   protected readonly refusal = signal<LocalizedText | null>(null);
 

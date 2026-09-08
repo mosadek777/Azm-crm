@@ -1,15 +1,15 @@
-<a routerLink="/portal/tickets" class="text-sm text-primary-700 hover:underline">
+<a routerLink="/portal/tickets" class="mx-auto block max-w-3xl text-sm text-primary-700 hover:underline">
   ← {{ 'portal.backToList' | translate: i18n.lang() }}
 </a>
 
 @if (loading()) {
   <p class="mt-4 text-surface-500">{{ 'portal.loading' | translate: i18n.lang() }}</p>
 } @else if (notFound() || !ticket()) {
-  <p class="mt-4 text-surface-500 bg-white border border-surface-200 rounded-xl p-6 text-center">
+  <p class="mx-auto max-w-3xl mt-4 text-surface-500 bg-white border border-surface-200 rounded-xl p-6 text-center">
     {{ 'ticket.notFound' | translate: i18n.lang() }}
   </p>
 } @else if (ticket(); as t) {
-  <div class="mt-4 bg-white border border-surface-200 rounded-xl p-5">
+  <div class="mx-auto max-w-3xl mt-4 bg-white border border-surface-200 rounded-xl p-5">
     <div class="flex flex-wrap items-center gap-3 mb-2">
       <span dir="ltr" class="text-sm text-surface-500 font-medium">{{ t.reference }}</span>
       <span class="inline-block rounded-full px-2.5 py-0.5 text-xs" [class]="t.status | statusTone">
@@ -22,34 +22,43 @@
     </p>
   </div>
 
-  <h2 class="mt-6 mb-3 text-sm font-medium text-surface-700">
+  <h2 class="mx-auto max-w-3xl mt-6 mb-3 text-sm font-medium text-surface-700">
     {{ 'portal.conversation' | translate: i18n.lang() }}
   </h2>
 
   @if (messages().length === 0) {
     <p class="text-surface-500">{{ 'portal.noMessages' | translate: i18n.lang() }}</p>
   } @else {
-    <ul class="space-y-3">
+    <ul class="mx-auto max-w-3xl space-y-4">
       @for (m of messages(); track m._id) {
-        <!-- The customer's own messages sit at the start edge, ours at the end
-             edge, using ms-auto/me-auto so the whole thread mirrors in Arabic
-             without a second stylesheet (008 AS-10). -->
-        <li class="max-w-[85%] rounded-xl px-4 py-3 border"
+        <!-- A conversation, not a list. The customer's own words sit at the
+             START edge and ours at the END edge, using ms-auto / me-auto and
+             text-start / text-end, so the whole thread mirrors in Arabic
+             without a second stylesheet (008 AS-10).
+             The two sides differ by SIDE, BACKGROUND and BORDER together — not
+             by colour alone, which anyone who cannot distinguish these hues
+             would not see at all. -->
+        <li class="flex" [class]="m.from === 'you' ? 'justify-start' : 'justify-end'">
+          <div class="max-w-[80%] rounded-2xl border px-4 py-3"
             [class]="m.from === 'you'
-              ? 'me-auto bg-white border-surface-200'
-              : 'ms-auto bg-primary-50 border-primary-100'">
-          <p class="text-xs text-surface-500 mb-1">
-            {{ (m.from === 'you' ? 'portal.fromYou' : 'portal.fromSupport') | translate: i18n.lang() }}
-            · {{ m.sentAt | date: 'short' }}
-          </p>
-          <p class="text-surface-900 whitespace-pre-wrap">{{ m.body }}</p>
+              ? 'bg-surface-0 border-surface-200 rounded-es-sm'
+              : 'bg-primary-50 border-primary-200 rounded-ee-sm'">
+            <p class="mb-1 flex items-baseline gap-2 text-xs">
+              <span [class]="m.from === 'you' ? 'font-medium text-surface-700' : 'font-medium text-primary-800'">
+                {{ (m.from === 'you' ? 'portal.fromYou' : 'portal.fromSupport') | translate: i18n.lang() }}
+              </span>
+              <!-- A timestamp does not reverse, in either direction. -->
+              <span dir="ltr" class="text-surface-400">{{ m.sentAt | date: 'short' }}</span>
+            </p>
+            <p class="whitespace-pre-wrap text-surface-900">{{ m.body }}</p>
+          </div>
         </li>
       }
     </ul>
   }
 
   @if (canReply()) {
-    <form (ngSubmit)="sendReply()" class="mt-5 bg-white border border-surface-200 rounded-xl p-4">
+    <form (ngSubmit)="sendReply()" class="mx-auto max-w-3xl mt-5 bg-white border border-surface-200 rounded-xl p-4">
       <label for="reply-body" class="block text-sm text-surface-700 mb-1">
         {{ 'portal.yourReply' | translate: i18n.lang() }}
       </label>
@@ -71,7 +80,7 @@
       </button>
     </form>
   } @else {
-    <p class="mt-5 text-sm text-surface-500 bg-surface-50 border border-surface-200 rounded-xl px-4 py-3">
+    <p class="mx-auto max-w-3xl mt-5 text-sm text-surface-500 bg-surface-50 border border-surface-200 rounded-xl px-4 py-3">
       {{ 'portal.closedNoReply' | translate: i18n.lang() }}
     </p>
   }

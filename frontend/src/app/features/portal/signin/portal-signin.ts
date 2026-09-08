@@ -21,11 +21,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { PortalAuthService } from '../../../core/auth/services/portal-auth.service';
 import { LanguageService } from '../../../core/i18n/language.service';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
+import { PasswordField } from '../../../shared/components/password-field/password-field';
 import { ApiRefusal, LocalizedText } from '../../../core/models/user.model';
 
 @Component({
   selector: 'app-portal-signin',
-  imports: [FormsModule, TranslatePipe],
+  imports: [FormsModule, TranslatePipe, PasswordField],
   templateUrl: './portal-signin.html'
 })
 export class PortalSignin {
@@ -35,7 +36,6 @@ export class PortalSignin {
 
   protected readonly email = signal('');
   protected readonly password = signal('');
-  protected readonly showPassword = signal(false);
   protected readonly submitting = signal(false);
   protected readonly refusal = signal<LocalizedText | null>(null);
 
