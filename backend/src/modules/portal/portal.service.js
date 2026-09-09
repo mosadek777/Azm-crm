@@ -14,6 +14,9 @@
 // here in full. That rule is the part with a disclosure consequence.
 
 import bcrypt from 'bcrypt'
+import mongoose from 'mongoose'
+import { openSession } from '../../utils/session.js'
+import { isLockedOut, registerFailure, clearFailures } from '../../utils/lockout.js'
 import jwt from 'jsonwebtoken'
 import { ContactPoint } from '../../DB/models/contact-point.model.js'
 import { Customer } from '../../DB/models/customer.model.js'
@@ -113,26 +116,55 @@ export const signIn = async (req, res, next) => {
     if (identity.state !== 'active') return await refuse(`identity_${identity.state}`)
     if (!identity.passwordHash) return await refuse('no_credential')
 
+    // FR-007 lockout, shared with the staff path so the two cannot drift.
+    // Checked before the password comparison so a locked identity cannot be
+    // probed for whether the password was right. `008 §3` gives this identity
+    // a `locked` state for exactly this and points at 010 FR-007 for the rule.
+    if (isLockedOut(identity)) return await refuse('locked_out')
+
     const ok = await bcrypt.compare(String(password), identity.passwordHash)
-    if (!ok) return await refuse('bad_password')
+    if (!ok) {
+      await registerFailure(PortalIdentity, identity, {
+        actorRef: customerActorRef(identity.customerId), req
+      })
+      return await refuse('bad_password')
+    }
+    await clearFailures(PortalIdentity, identity)
 
     const customer = await Customer.findById(identity.customerId)
     if (!customer) return await refuse('customer_missing')
 
-    // §10: "Session created … identity, timestamp, cause".
-    await recordAudit({
-      actorRef: customerActorRef(identity.customerId),
-      action: 'portal.signin_succeeded',
-      entityType: 'PortalIdentity',
-      entityId: identity._id,
-      after: { method: identity.authMethod, customerId: String(identity.customerId) },
-      severity: 'normal',
-      req,
-      session: null
-    })
+    // §10: "Session created … identity, timestamp, cause". The entry and the
+    // session record now commit together — a portal sign-in writes a row, so
+    // constitution II applies to it exactly as it does to the staff path.
+    let sessionId
+    const txn = await mongoose.startSession()
+    try {
+      await txn.withTransaction(async () => {
+        await recordAudit({
+          actorRef: customerActorRef(identity.customerId),
+          action: 'portal.signin_succeeded',
+          entityType: 'PortalIdentity',
+          entityId: identity._id,
+          after: { method: identity.authMethod, customerId: String(identity.customerId) },
+          severity: 'normal',
+          req,
+          session: txn
+        })
+        sessionId = await openSession({
+          subjectId: identity._id,
+          audience: 'portal',
+          actorRef: customerActorRef(identity.customerId),
+          req,
+          session: txn
+        })
+      })
+    } finally {
+      await txn.endSession()
+    }
 
     const token = jwt.sign(
-      { sub: identity._id.toString(), aud: PORTAL_AUDIENCE },
+      { sub: identity._id.toString(), aud: PORTAL_AUDIENCE, sid: sessionId.toString() },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     )

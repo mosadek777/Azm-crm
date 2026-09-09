@@ -18,6 +18,7 @@
 
 import jwt from 'jsonwebtoken'
 import { Customer } from '../DB/models/customer.model.js'
+import { touchSession } from '../utils/session.js'
 import { PortalIdentity } from '../DB/models/portal-identity.model.js'
 import { PORTAL_AUDIENCE } from '../modules/portal/portal.service.js'
 
@@ -54,9 +55,17 @@ export const authenticatePortal = async (req, res, next) => {
       return res.status(401).json({ message: UNAUTHENTICATED })
     }
 
+    // FR-007: the token proves who; the session record decides whether that
+    // proof is still live — idle timeout, absolute lifetime, revocation. Same
+    // check and same policy values as the staff middleware, from the same
+    // helper, so the two audiences cannot drift apart.
+    const live = await touchSession(payload.sid, identity._id, 'portal')
+    if (!live.ok) return res.status(401).json({ message: UNAUTHENTICATED })
+
     const customer = await Customer.findById(identity.customerId)
     if (!customer) return res.status(401).json({ message: UNAUTHENTICATED })
 
+    req.portalSession = live.session
     req.portalIdentity = identity
     req.customer = customer
     return next()

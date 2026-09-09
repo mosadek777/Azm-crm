@@ -57,6 +57,14 @@ const portalIdentitySchema = new Schema({
   // defers rate limiting and lockout for the demo — but sign-in already refuses
   // any state other than `active`, so enabling lockout later is a writer, not a
   // new check.
+
+  // spec 010 FR-007 — failed-attempt lockout. See utils/lockout.js.
+  // The counter resets on a successful sign-in and when a lock is applied;
+  // `lockedUntil` in the future means sign-in is refused, with the SAME body
+  // as every other refusal (§8 discloses nothing).
+  failedSignInCount: { type: Number, default: 0 },
+  lockedUntil: { type: Date, default: null },
+
   state: { type: String, enum: PORTAL_STATES, default: 'active', required: true }
 }, { timestamps: true })
 

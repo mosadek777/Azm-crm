@@ -12,9 +12,16 @@
 // It also re-checks `state`, so FR-001's "deactivation MUST terminate sessions"
 // holds immediately rather than within NFR-003's 60 seconds.
 
+// FR-007 ADDED A SECOND CHECK. The token proves WHO; the session record decides
+// whether that proof is still live — idle timeout, absolute lifetime, and
+// revocation, none of which a signed token can express on its own. The refusal
+// body is the same in every case, deliberately: "your session went idle" and
+// "your session was revoked" tell a caller whether somebody else ended it.
+
 import jwt from 'jsonwebtoken'
 import { User } from '../DB/models/user.model.js'
 import { RoleAssignment } from '../DB/models/role-assignment.model.js'
+import { touchSession } from '../utils/session.js'
 
 const UNAUTHENTICATED = {
   ar: 'الجلسة غير صالحة أو منتهية',
@@ -42,9 +49,13 @@ export const authenticate = async (req, res, next) => {
       return res.status(401).json({ message: UNAUTHENTICATED })
     }
 
+    const live = await touchSession(payload.sid, user._id, 'staff')
+    if (!live.ok) return res.status(401).json({ message: UNAUTHENTICATED })
+
     const assignments = await RoleAssignment.find({ userId: user._id })
 
     req.user = user
+    req.session = live.session
 
     // The ASSIGNMENTS, not a flattened role list. A flattened list loses which
     // scope each role was held in, and the scope is the point (FR-005, AS-03).

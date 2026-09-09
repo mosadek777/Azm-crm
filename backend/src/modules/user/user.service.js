@@ -12,6 +12,7 @@
 // step 5. Deactivation is therefore ~90% of FR-001, not all of it.
 
 import bcrypt from 'bcrypt'
+import { checkPassword, passwordRefusal } from '../../utils/password-policy.js'
 import mongoose from 'mongoose'
 import { User, LANGUAGES } from '../../DB/models/user.model.js'
 import { RoleAssignment, ROLES } from '../../DB/models/role-assignment.model.js'
@@ -39,6 +40,13 @@ export const createUser = async (req, res, next) => {
         fields: missing
       })
     }
+
+    // spec 010 FR-007 — the password policy, enforced where a password is set.
+    // Never at sign-in: applying it there would lock out every account whose
+    // password predates the policy. Values are unratified, see
+    // config/security-policy.js.
+    const policy = checkPassword(password)
+    if (!policy.ok) return res.status(400).json(passwordRefusal(policy.failures))
 
     if (!LANGUAGES.includes(defaultLanguage)) {
       return res.status(400).json({

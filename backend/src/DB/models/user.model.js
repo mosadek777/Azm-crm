@@ -45,6 +45,14 @@ const userSchema = new Schema({
   // spec 010 E-07: the configured break-glass administrator, permitted by the
   // provisional answer to [CLARIFY-3]. Its sign-in is a high-severity audit
   // event, which is the only reason this flag exists.
+
+  // spec 010 FR-007 — failed-attempt lockout. See utils/lockout.js.
+  // The counter resets on a successful sign-in and when a lock is applied;
+  // `lockedUntil` in the future means sign-in is refused, with the SAME body
+  // as every other refusal (§8 discloses nothing).
+  failedSignInCount: { type: Number, default: 0 },
+  lockedUntil: { type: Date, default: null },
+
   breakGlass: { type: Boolean, default: false }
 }, { timestamps: true })
 

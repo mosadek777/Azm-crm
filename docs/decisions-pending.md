@@ -678,6 +678,49 @@ becomes a closure over descendants, which is one function in
 `src/utils/scope.js` plus a materialised ancestor path on the Department
 document. Contained, because the predicate was deliberately built in one place.
 
+## 1b. AWAITING RATIFICATION — the five `010 FR-007` values
+
+**Built 2026-09-09. The MECHANISM is delivered and tested; the NUMBERS are a
+proposal.** `FR-007` requires a *configurable* password policy, session timeout,
+absolute session lifetime, failed-attempt lockout and concurrent-session limit.
+**No spec states any figure** — all thirteen were searched. So the requirement is
+met by the mechanism, and the values below are the developer's recommendation
+awaiting the project owner's word. Every one is overridable from `.env` without
+a code change, which is what makes "configurable" true rather than nominal.
+
+| # | Setting | Proposed | Why this number |
+|---|---|---|---|
+| 1 | Password minimum length | **12 characters**, no composition rule | Length is what costs an attacker; composition rules ("one capital, one digit, one symbol") reliably produce a small set of predictable shapes. This follows current guidance rather than the older habit. Mixed-case, digit and symbol rules exist and are **off**, kept only for a client whose own policy mandates them |
+| 2 | Idle session timeout | **30 minutes** | Long enough not to interrupt an agent mid-ticket, short enough that an unlocked machine at lunch is not an open session all afternoon |
+| 3 | Absolute session lifetime | **12 hours** | Covers a full shift including overrun, and forces a fresh sign-in daily no matter how active the session was. Replaces the old 8-hour token expiry, which was the only session control that existed |
+| 4 | Failed-attempt lockout | **10 attempts, 15-minute lock** | Five is the reflex and it is too low: it generates support load, and it is a denial-of-service anybody can trigger against a known email address. Ten still stops online guessing dead. The lock **expires on its own** — an administrator-only unlock turns every mistyped password into a ticket |
+| 5 | Concurrent sessions | **3** | Desk browser, laptop, phone. Exceeding it revokes the **oldest**, never the newest: refusing the new session locks somebody out of the device in front of them because of one they abandoned elsewhere |
+
+**⚠ One conflict, surfaced rather than absorbed.** The value in `DEMO_PASSWORD`
+is **eleven** characters, one short of the proposed twelve. The
+demo seed refused to run the moment the policy landed, which is the policy
+working. Rather than quietly lowering the default to fit,
+`PASSWORD_MIN_LENGTH=11` is set in `.env` with the reason written beside it, and
+the code's default stays **12**. Resolve it either way — lengthen the demo
+password by one character and delete the override, or ratify 11.
+
+**Verified, not asserted.** `backend/tests/security.test.js` proves each of the
+five **refuses**: a short password is rejected by name, the correct password is
+refused after ten failures *and the refusal is byte-identical to a wrong-password
+refusal* (`010 §8`), a still-valid token is refused once its session goes idle,
+an **active** session is refused past its absolute ceiling, and the oldest
+session is evicted when a fourth is opened. The suite found two real faults on
+its first run.
+
+**A constitutional consequence, recorded.** `auth.service.js` used to carry a
+comment explaining that it deliberately used no transaction, because a sign-in
+wrote nothing — and ending: *"If a future change adds a database write to this
+file — a lockout counter under FR-007, a session record — it MUST open a session
+and pass it to both."* Both were added. Sign-in is now transactional on both the
+staff and portal paths, and `E-11` holds by atomicity rather than by ordering.
+
+---
+
 ## 2. Recommended but **not applied** — with the client
 
 Kept on record as reasoning, not as decisions. No code depends on any of these.
