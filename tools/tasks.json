@@ -1333,6 +1333,39 @@
       "description": "Search is required to work across subject, message bodies, tags, reference, customer identity and text extracted from attachments, in Arabic and English, and to match Arabic **regardless of diacritics**.\n\nSearch exists. The diacritic rule does not, and without it an Arabic search behaves inconsistently depending on how the person typing happened to write the word — which in practice means Arabic search is less reliable than English search, in a product whose first principle is that the two languages are equals.",
       "blocker": "Nothing blocks this. It is unscheduled rather than gated — no client answer is outstanding and no other work has to land first. It is on the board so that \"nobody has started it\" stops looking the same as \"we are waiting on someone\".",
       "clickupId": "86cbffvjj"
+    },
+    {
+      "key": "backup-snapshot-consistency",
+      "name": "Backups can straddle a change and its audit record",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "⚠ **This one is not a general backup improvement. It touches the guarantee the whole audit design rests on.**\n\nEvery change to data in this system is saved together with a record of who made it, in a single all-or-nothing operation. Nothing can change without leaving a trace, and that property is the reason the audit trail can be trusted at all.\n\nThe backup we take today cannot preserve it reliably.\n\nA backup is not instantaneous — it copies one collection of records, then the next, over however long it takes. If a change happens midway, the backup can copy the requests table from *before* that change and the audit table from *after* it. The result is a restored copy in which a change appears to have no record behind it, or a record appears to describe a change that is not there.\n\nNothing is lost from the live system, and no audit record is ever destroyed. But **a restored copy could show a gap that never existed**, and anyone auditing that copy would be right to treat it as a serious finding. For a system whose central claim is that nothing changes without a trace, that is the wrong failure to leave in place.\n\n**The fix is known and cheap; it just cannot be applied yet.** The database tool has a mode that makes a snapshot consistent to a single instant, and it refuses to run in that mode on a single database — it must cover the entire server. That is only sensible once the database server holds this application and nothing else, which is a hosting question. A managed database service solves it a different way, by continuously capturing changes rather than taking periodic snapshots.\n\nUntil then the restore drill reports record counts, so a gross mismatch is visible, and the audit-reconciliation command can be run against a restored copy to detect a straddled pair directly.",
+      "blocker": "The hosting decision — see docs/hosting-decision.md. Both fixes depend on it: whole-server snapshots need a server dedicated to this application, and continuous capture is a managed-service feature. Neither is buildable against a developer laptop, and building the wrong one now means building it twice.",
+      "clickupId": "86cbfq3h2"
+    },
+    {
+      "key": "backup-offsite-storage",
+      "name": "Backups are written to the same disk as the database",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "⚠ **As it stands, this is not a backup.**\n\nA copy of the data sitting on the same machine as the data protects against exactly one thing: somebody deleting records by mistake. It protects against nothing else. If the disk fails, the machine is lost, stolen or encrypted by ransomware, the database and every copy of it go together.\n\nThe backup command writes wherever a single setting points, and that setting currently points at a folder on the same computer. Changing it is one line. **The work is not the line — it is deciding where the backups should go, arranging access to that place, and confirming that a restore from it actually works** rather than assuming it will.\n\nThe restore procedure itself is already proven: it has been rehearsed end to end against a full copy of the data and every collection came back complete. What has not been proven is a restore from storage somewhere else, because there is nowhere else yet.\n\nThe requirement also expects backups to be encrypted, which is a property of wherever they end up rather than of the command that writes them — another reason this waits on the same decision.",
+      "blocker": "The hosting decision — see docs/hosting-decision.md. There is nowhere to put backups until it is known where the system runs. On a managed service this largely disappears, because backups are held separately as part of the service.",
+      "clickupId": "86cbfq3hb"
+    },
+    {
+      "key": "backup-portability",
+      "name": "Backup scripts depend on tools nobody installs automatically",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "The backup and restore commands rely on two programs that are a **separate download from the database itself** — installing the database does not install them. That surprised us during development and it will surprise the next person.\n\n**What works today.** The commands look for the tools on the system path first, then in the standard install locations for the operating system they are running on, and only then fall back to a setting that names an exact folder. On a colleague's machine with a normal install, they work with no configuration. On a machine without the tools, they stop immediately with a message naming the install command for that platform, rather than half-running.\n\n**What does not work.** Nothing installs the tools, checks they are present, or keeps their version in step with the database. A fresh machine or a new server has no backups until somebody notices and installs them by hand — and the moment that gets forgotten is unlikely to be the moment anyone checks.\n\nThe exact-folder setting is also an absolute path and therefore specific to one machine. It is a local convenience and a server must not depend on it; the file that holds it is excluded from version control, so it never travels to anyone else in any case.\n\n**What this card is for:** making tool installation part of however the system gets deployed, and adding a startup or scheduled check that reports their absence instead of waiting for a backup to fail.",
+      "blocker": "Depends on knowing how the system is deployed, which is the hosting decision (docs/hosting-decision.md). A managed database service removes the problem entirely, since backups are the provider's responsibility and no local tooling is involved.",
+      "clickupId": "86cbfq3hk"
     }
   ],
   "retiredIds": []

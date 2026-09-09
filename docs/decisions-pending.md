@@ -125,6 +125,40 @@ unscoped form would wrongly protect.
 **Reversal cost: low.** Two index definitions in `customer.model.js`, plus a
 reindex. No application code reads the filter.
 
+### Thirteenth batch — ratified 2026-09-09, the security-policy values
+
+| # | Decision | Kind | Marker | Basis |
+|---|---|---|---|---|
+| 40 | **The five `010 FR-007` values are set: password minimum 12 with no composition rule; idle timeout 30 minutes; absolute session lifetime 12 hours; lockout after 10 failed attempts for 15 minutes, self-releasing; 3 concurrent sessions, oldest evicted** | **The project owner's.** Explicitly **not** a reading — all thirteen specs were searched and **none states any figure** | No marker. `FR-007` requires the values be *configurable* and supplies none | **`010 FR-007` (MUST):** *"The system MUST enforce a **configurable** password policy, session timeout, absolute session lifetime, failed-attempt lockout and concurrent-session limit."* The only related text anywhere is **`008 §3`**, which gives a portal identity a `locked` state and points back at `FR-007` for what causes it, and **`010 §9`**, which marks the sign-in endpoints *"rate-limited; lockout per `FR-007`"*. Both establish that lockout must exist. Neither supplies a number, and no other spec does |
+
+**Ratified by the project owner 2026-09-09**, on a proposal from the developer.
+The reasoning the owner singled out, recorded because it is the reasoning rather
+than the numbers that will matter when these are revisited:
+
+- **No composition rule.** Length beats character classes. Mandating "one
+  capital, one digit, one symbol" reliably produces a small, guessable family of
+  shapes — `Password1!` and its cousins — while length is what actually costs an
+  attacker. The mixed-case, digit and symbol switches exist in
+  `config/security-policy.js` and are **off**; they are there for a client whose
+  own policy mandates them, not as a recommendation.
+- **Ten attempts, not five.** Five is the reflex. It is also a denial-of-service
+  anybody can trigger against a known email address: a handful of deliberate
+  wrong guesses locks a real person out. Ten still stops online guessing dead,
+  and the lock **self-releases** after fifteen minutes so a mistyped password
+  never becomes a support ticket.
+
+**These are now the code defaults and nothing overrides them.** The
+`PASSWORD_MIN_LENGTH=11` override that existed for one day — because the demo
+password was eleven characters — has been **deleted**, and the demo password
+lengthened to twelve instead. The override is recorded here rather than
+forgotten, because the reason it was refused is the general rule: *a policy
+weakened to fit a demo password is exactly the kind of thing that becomes
+permanent unnoticed.*
+
+**Reversal cost: nil.** Every value is a `.env` line. That is the point of
+`FR-007`'s word *configurable*, and it is why the mechanism could be built and
+tested before the numbers were settled.
+
 ### Twelfth batch — ratified 2026-09-09, the mention conflict
 
 | # | Decision | Kind | Marker | Basis |
@@ -678,10 +712,12 @@ becomes a closure over descendants, which is one function in
 `src/utils/scope.js` plus a materialised ancestor path on the Department
 document. Contained, because the predicate was deliberately built in one place.
 
-## 1b. AWAITING RATIFICATION — the five `010 FR-007` values
+## 1b. RATIFIED 2026-09-09 — the five `010 FR-007` values (decision 40)
 
-**Built 2026-09-09. The MECHANISM is delivered and tested; the NUMBERS are a
-proposal.** `FR-007` requires a *configurable* password policy, session timeout,
+**✅ Built and ratified 2026-09-09. The mechanism is delivered and tested; the
+numbers below were ratified as proposed — see decision 40 for the reasoning and
+the attribution.** The table is kept in its original form because it is the
+proposal that was accepted. `FR-007` requires a *configurable* password policy, session timeout,
 absolute session lifetime, failed-attempt lockout and concurrent-session limit.
 **No spec states any figure** — all thirteen were searched. So the requirement is
 met by the mechanism, and the values below are the developer's recommendation
@@ -696,13 +732,14 @@ a code change, which is what makes "configurable" true rather than nominal.
 | 4 | Failed-attempt lockout | **10 attempts, 15-minute lock** | Five is the reflex and it is too low: it generates support load, and it is a denial-of-service anybody can trigger against a known email address. Ten still stops online guessing dead. The lock **expires on its own** — an administrator-only unlock turns every mistyped password into a ticket |
 | 5 | Concurrent sessions | **3** | Desk browser, laptop, phone. Exceeding it revokes the **oldest**, never the newest: refusing the new session locks somebody out of the device in front of them because of one they abandoned elsewhere |
 
-**⚠ One conflict, surfaced rather than absorbed.** The value in `DEMO_PASSWORD`
-is **eleven** characters, one short of the proposed twelve. The
-demo seed refused to run the moment the policy landed, which is the policy
-working. Rather than quietly lowering the default to fit,
-`PASSWORD_MIN_LENGTH=11` is set in `.env` with the reason written beside it, and
-the code's default stays **12**. Resolve it either way — lengthen the demo
-password by one character and delete the override, or ratify 11.
+**⚠ One conflict, surfaced rather than absorbed — now CLOSED.** The value in
+`DEMO_PASSWORD` was **eleven** characters, one short of twelve, and the demo seed
+refused to run the moment the policy landed. That was the policy working. Rather
+than lower the default to fit, a `PASSWORD_MIN_LENGTH=11` override was set in
+`.env` with the reason beside it. **Resolved 2026-09-09 the other way:** the demo
+password was lengthened to twelve characters and the override **deleted**, so the
+ratified value of 12 is the only one in play. All four accounts were re-verified
+signing in, and the previous password confirmed refused.
 
 **Verified, not asserted.** `backend/tests/security.test.js` proves each of the
 five **refuses**: a short password is rejected by name, the correct password is

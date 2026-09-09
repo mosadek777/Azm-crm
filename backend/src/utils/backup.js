@@ -35,13 +35,19 @@ import { join, resolve } from 'node:path'
 import 'dotenv/config'
 import { DB_NAME } from '../DB/connection.db.js'
 
-// The tools are not on PATH on a default Windows install, so look where the
-// installer puts them before giving up.
-const CANDIDATES = [
-  'mongodump',
-  'C:/Program Files/MongoDB/Tools/100/bin/mongodump.exe',
-  'C:/Program Files/MongoDB/Tools/bin/mongodump.exe'
-]
+// PATH first, then the places each platform's installer puts them. PATH is the
+// normal case on Linux and macOS; on Windows the MSI does not always add itself,
+// which is why the explicit paths exist.
+const CANDIDATES = process.platform === 'win32'
+  ? [
+      'C:/Program Files/MongoDB/Tools/100/bin/mongodump.exe',
+      'C:/Program Files/MongoDB/Tools/bin/mongodump.exe'
+    ]
+  : [
+      '/usr/bin/mongodump',
+      '/usr/local/bin/mongodump',
+      '/opt/homebrew/bin/mongodump'
+    ]
 
 export const findTool = (name) => {
   if (process.env.MONGO_TOOLS_DIR) {
@@ -51,11 +57,17 @@ export const findTool = (name) => {
     if (existsSync(bare)) return bare
   }
   for (const c of CANDIDATES.map(p => p.replace('mongodump', name))) {
-    if (c === name) continue
     if (existsSync(c)) return c
   }
-  // Try bare name last: it works if the tools are on PATH.
+  // Bare name last, which resolves through PATH. This is the portable case and
+  // the one a server should rely on; MONGO_TOOLS_DIR is a local convenience.
   return name
+}
+
+const INSTALL_HINT = {
+  win32: '  winget install MongoDB.DatabaseTools',
+  darwin: '  brew install mongodb-database-tools',
+  linux: '  see https://www.mongodb.com/docs/database-tools/installation/'
 }
 
 export const toolMissingMessage = (name) => [
@@ -65,10 +77,12 @@ export const toolMissingMessage = (name) => [
   'installing the server does not install them. Nothing here can back up or',
   'restore without them.',
   '',
-  '  winget install MongoDB.DatabaseTools',
+  INSTALL_HINT[process.platform] ?? INSTALL_HINT.linux,
   '',
-  'or download from https://www.mongodb.com/try/download/database-tools and set',
-  'MONGO_TOOLS_DIR in backend/.env to the bin directory.'
+  'Then either put them on PATH, or set MONGO_TOOLS_DIR in backend/.env to the',
+  'directory holding the binaries. PATH is preferred: MONGO_TOOLS_DIR is an',
+  'absolute path and therefore machine-specific — see the board card',
+  '`backup-portability` for why a server should not rely on it.'
 ].join('\n')
 
 export const run = (cmd, args) => new Promise((resolvePromise) => {
@@ -140,6 +154,10 @@ export const takeBackup = async ({ quiet = false } = {}) => {
 }
 
 // Run directly:  npm run backup
-if (import.meta.url === `file://${process.argv[1].replace(/\\/g, '/')}`) {
+//
+// `process.argv[1]` is undefined when this module is imported from an evaluated
+// script rather than run as one, and reading .replace on it threw — so importing
+// backup.js could crash before exporting anything. Guarded rather than assumed.
+if (process.argv[1] && import.meta.url === `file://${process.argv[1].replace(/\\/g, '/')}`) {
   takeBackup().catch(err => { console.error(err.message); process.exit(1) })
 }
