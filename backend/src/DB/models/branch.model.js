@@ -24,7 +24,22 @@ const branchSchema = new Schema({
   // §3: required; drives period boundaries in spec 009 E-19.
   timezone: { type: String, required: true },
 
-  // §3: required. Null until spec 005 unblocks — see the note above.
+  // ⚠ DANGLING REFERENCES — NEITHER BusinessCalendar NOR HolidaySet EXISTS.
+  // Both are plain ObjectIds with no `ref:` at all, so nothing can populate
+  // them and nothing reports that they point nowhere. `012 FR-008` (MUST)
+  // requires every branch to own a timezone, a business calendar and a holiday
+  // set: the timezone above is real, these two are placeholders keeping the
+  // shape stable.
+  //
+  // They are also a hard dependency of the service-level engine — a clock
+  // cannot pause correctly overnight, at a weekend or on a public holiday
+  // without them — which is why they read as "waiting on spec 005". That is
+  // half true and was misleading: the RECORD SHAPES are not blocked on 005 or
+  // on anything else. Only the working hours and holiday dates inside them are
+  // a client answer.
+  //
+  // Tracked as `entity-business-calendar` and `entity-holiday-set` under the
+  // `missing-entities` card. Add `ref:` when the models exist.
   businessCalendarId: { type: Schema.Types.ObjectId, default: null },
   holidaySetId: { type: Schema.Types.ObjectId, default: null },
 

@@ -125,6 +125,45 @@ unscoped form would wrongly protect.
 **Reversal cost: low.** Two index definitions in `customer.model.js`, plus a
 reindex. No application code reads the filter.
 
+### Twelfth batch — ratified 2026-09-09, the mention conflict
+
+| # | Decision | Kind | Marker | Basis |
+|---|---|---|---|---|
+| 39 | **A mention may only name a colleague who already holds scope on that ticket.** The mention notifies them; it grants nothing. `004 FR-009`'s granting clause is **declined**, and the requirement is met in the only form that does not contradict `010 FR-002` | **The developer's.** Both readings are available and the specs do not choose between them | No marker exists. Recorded as spec defect §13 | **`010 FR-002` (MUST):** *"Permissions MUST be assigned through roles only. **Per-user permission overrides MUST NOT exist.**"* against **`004 FR-009` (MUST):** *"the mention ... MUST grant them access to that ticket only"*. A grant to one named person over one named record is a per-user permission override on any reading, so the two MUSTs cannot both be honoured. `010 §3` supplies no shape for it either: `RoleAssignment` carries `branch_ids`, `department_ids` and `team_ids` and has no record-level dimension |
+
+**Why this option and not the other two.** Three ways out were put to the
+project owner:
+
+1. **Add a record-level grant.** A new entity, and a second thing the scope
+   predicate consults on every read — weakening the single strongest invariant
+   in the system in exchange for a convenience feature.
+2. **Notify without granting.** Satisfies the notify clause, breaches the access
+   clause, and sends the colleague to a 404.
+3. **Restrict who may be mentioned** — chosen. Both MUSTs hold, the predicate is
+   untouched, and the feature keeps the part that matters: a colleague who can
+   already see the ticket is told their attention is wanted.
+
+Ratified by the project owner 2026-09-09, on the reasoning that *a per-record
+exception to the one invariant that has never been compromised, traded for a
+convenience feature, is a bad deal.*
+
+**What is given up, stated plainly.** The spec's version lets an agent pull in
+somebody outside the ticket's branch or department — a specialist in another
+department, say. Under decision 39 that is impossible: the specialist must first
+be granted a role covering that scope, through the normal audited route. That is
+slower, and it is the cost of the invariant. **If the client later says
+cross-scope mentions are a real need, this decision is what to reopen** — and
+option 1 is what it reopens into, with the predicate change costed properly
+rather than smuggled in behind a notification feature.
+
+**Reversal cost: low, and it rises.** Nothing is built yet. The restriction is a
+validation on the mention endpoint. Reversing it later means the record-level
+grant of option 1, which is a change to the scope predicate and therefore to
+every read and write in the system.
+
+**This resolves spec defect §13 rather than deferring it.** §13 stays on the
+record — an erased defect is unattributable — and is marked RESOLVED.
+
 ### Eleventh batch — ratified 2026-09-08, credential rendering
 
 | # | Decision | Kind | Marker | Basis |
@@ -1128,7 +1167,7 @@ supervision signal rather than an enforcement mechanism.
 
 ---
 
-## 13. Spec defect — `004 FR-009` cannot be satisfied without changing the permission model
+## 13. Spec defect — `004 FR-009` cannot be satisfied without changing the permission model (RESOLVED 2026-09-09)
 
 **Found by the board audit, 2026-09-09. Reported, not fixed.** The same category
 as `Team` in §7 and shared contact points in §11: nobody wrote a `[CLARIFY]` for
@@ -1174,11 +1213,13 @@ Three ways out, none of which an implementer should pick quietly:
    the feature to something the spec did not ask for. Cheapest, and arguably the
    honest reading of what mentions are for.
 
-**⚠ AWAITING A DECISION BY THE PROJECT OWNER.** Flagged rather than resolved,
-because the choice trades the project's most load-bearing guarantee against a
-feature, and constitution VII forbids guessing at an unknown. Tracked on the
-board as `agent-mention`, under the agent workspace card, with the blocker
-naming this section.
+**✅ RESOLVED 2026-09-09 — decision 39, option 3.** Mentions are restricted to
+colleagues who already hold scope on the ticket. Both MUSTs hold and the scope
+predicate is untouched. The defect record stays as written above, because the
+conflict is real and a future reader needs to see it was found rather than
+absent; what changed is that it now has an answer. Full reasoning, what is given
+up, and what to reopen if the client needs cross-scope mentions: decision 39,
+twelfth batch. Tracked on the board as `agent-mention`.
 
 ---
 

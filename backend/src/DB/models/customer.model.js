@@ -56,8 +56,21 @@ const customerSchema = new Schema({
   // constraint is weaker than it is.
   organisationId: { type: Schema.Types.ObjectId, ref: 'Customer', default: null },
 
-  // Admin-authored labels, and therefore bilingual — on the Segment model,
-  // which is not part of this review point.
+  // ⚠ DANGLING REFERENCE — THE Segment MODEL DOES NOT EXIST.
+  // `ref: 'Segment'` names a model nothing registers, so a populate on this
+  // path resolves to nothing. It does not throw: mongoose only complains when
+  // the populate actually runs, and nothing populates segments today. That is
+  // why it survived unnoticed until the board audit of 2026-09-09.
+  //
+  // Segment IS specified — `001 §3` defines it alongside Contact point, and
+  // `001 FR-003` (MUST) requires the customer view to show a customer's
+  // segments, which it currently cannot. Its labels are admin-authored and
+  // therefore bilingual, so the model carries { ar, en } when it is built.
+  //
+  // Tracked as `entity-segment` under the `missing-entities` card. Do not
+  // build a Segment model to satisfy this line alone — read that card first,
+  // because `001 FR-013` also makes segments selectable as conditions in the
+  // automation rules of spec `005`, which changes the shape.
   segments: { type: [{ type: Schema.Types.ObjectId, ref: 'Segment' }], default: [] },
 
   // FR-016: visible on every surface where the name appears to staff.
