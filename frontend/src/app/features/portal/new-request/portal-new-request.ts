@@ -17,6 +17,7 @@ import { PortalApiService } from '../../../core/services/portal-api.service';
 import { LanguageService } from '../../../core/i18n/language.service';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { ApiRefusal, LocalizedText } from '../../../core/models/user.model';
+import { ToastService } from '../../../core/notifications/toast.service';
 
 @Component({
   selector: 'app-portal-new-request',
@@ -24,6 +25,7 @@ import { ApiRefusal, LocalizedText } from '../../../core/models/user.model';
   templateUrl: './portal-new-request.html'
 })
 export class PortalNewRequest {
+  private readonly toast = inject(ToastService);
   private readonly api = inject(PortalApiService);
   private readonly router = inject(Router);
   protected readonly i18n = inject(LanguageService);
@@ -48,7 +50,10 @@ export class PortalNewRequest {
       description: this.description(),
       category: this.category()
     }).subscribe({
-      next: response => this.router.navigate(['/portal/tickets', response.ticket._id]),
+      next: response => {
+        this.toast.success('toast.requestSubmitted', { ar: response.ticket.reference, en: response.ticket.reference });
+        this.router.navigate(['/portal/tickets', response.ticket._id]);
+      },
       error: (error: HttpErrorResponse) => {
         this.submitting.set(false);
         const body = error.error as ApiRefusal | null;

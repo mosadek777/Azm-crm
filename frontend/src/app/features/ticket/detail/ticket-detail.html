@@ -6,10 +6,10 @@
     </div>
   }
 
-  @if (refusal(); as message) {
-    <p class="m-0 rounded-lg border-s-4 border-red-600 bg-red-50 px-3 py-2 text-sm text-red-800"
-       role="alert">{{ message[i18n.lang()] }}</p>
-  }
+  <!-- The inline refusal banner that stood here was removed with 012 FR-016.
+       It and the toast reported the same server message in two places at once,
+       and this one carried no field-level detail the toast lacks. Form screens
+       keep theirs, because those DO name the offending fields. -->
 
   @if (ticket(); as t) {
     <div class="flex flex-wrap items-center gap-3">

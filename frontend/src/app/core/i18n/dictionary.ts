@@ -204,4 +204,19 @@ export const DICTIONARY: Translations = {
   'toast.info': { ar: 'معلومة', en: 'Information' },
   'toast.dismiss': { ar: 'إغلاق الإشعار', en: 'Dismiss notification' },
   'toast.regionLabel': { ar: 'إشعارات', en: 'Notifications' },
+
+  // 012 FR-016 — outcome messages for the five actions. Successes are phrased
+  // as completed facts, not as "saving…", because they appear after the fact.
+  'toast.ticketCreated': { ar: 'تم إنشاء التذكرة', en: 'Ticket created' },
+  'toast.ticketAssigned': { ar: 'تم تحديث المسؤول عن التذكرة', en: 'Ticket assignment updated' },
+  'toast.statusChanged': { ar: 'تم تغيير حالة التذكرة', en: 'Ticket status changed' },
+  'toast.messageSent': { ar: 'تم إرسال الرسالة', en: 'Message sent' },
+  'toast.customerCreated': { ar: 'تم إنشاء العميل', en: 'Customer created' },
+  'toast.customerSaved': { ar: 'تم حفظ بيانات العميل', en: 'Customer saved' },
+  'toast.requestSubmitted': { ar: 'تم إرسال طلبك', en: 'Your request has been submitted' },
+  'toast.replySent': { ar: 'تم إرسال ردك', en: 'Your reply has been sent' },
+  // The only client-authored failure text in the app: used when the response
+  // carries no bilingual refusal at all, which means the request never reached
+  // the server. Everything else renders what the server said.
+  'toast.unreachable': { ar: 'تعذر الاتصال بالخادم', en: 'Could not reach the server' },
 };

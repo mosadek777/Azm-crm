@@ -182,6 +182,13 @@ Standard shapes. A brand configuration may be global or per entity per
 **And** every control has an accessible name in the active interface language
 **And** contrast holds in both light and dark presentation
 
+### AS-14 — An action's outcome is confirmed in the interface
+**Given** an Arabic interface and an action the server refuses
+**When** the refusal is returned
+**Then** the message shown is the Arabic text the server sent, not a client-side translation
+**And** it remains visible until dismissed
+**And** it is announced to assistive technology without moving keyboard focus
+
 ## 5. Functional requirements
 
 | ID | Requirement | Level | Traces |
@@ -201,6 +208,7 @@ Standard shapes. A brand configuration may be global or per entity per
 | `FR-013` | The system MAY provide a dark presentation, meeting the same contrast requirements. | MAY | `PLT-13` |
 | `FR-014` | The system MAY provide in-app guidance and role-based training content, authored in both languages. | MAY | `PLT-14`, constitution I |
 | `FR-015` | Departments and branches MUST be deactivatable but MUST NOT be deletable while any record references them; historical records MUST retain their reference per spec `009` `FR-023`. | MUST | spec `010` `E-05` |
+| `FR-016` | The agent workspace and the customer portal MUST both confirm the outcome of a user-initiated action in the interface. A failure MUST render the refusal message the server returned rather than a client-authored string. Confirmations MUST dismiss themselves; failures MUST persist until dismissed. Every such message MUST be dismissible by keyboard and announced to assistive technology, and MUST NOT convey its kind by colour alone. | SHOULD | `PLT-15` |
 
 ## 6. Edge cases and failure behaviour
 
@@ -225,6 +233,7 @@ Standard shapes. A brand configuration may be global or per entity per
 | E-17 | Push registration invalid or expired | Falls back to in-app and email; the failure is logged (spec `004` `E-10`). |
 | E-18 | Entity isolation enabled and a record somehow references another entity | Treated as a security defect, not a data-quality issue. |
 | E-19 | Hijri and Gregorian dates disagree at a boundary | The stored instant is authoritative; both renderings derive from it; neither is stored separately. |
+| E-20 | Several confirmations are produced in quick succession | They stack without overlapping and without moving the page beneath them; the newest is nearest the screen edge it is anchored to. |
 
 ## 7. Non-functional requirements
 

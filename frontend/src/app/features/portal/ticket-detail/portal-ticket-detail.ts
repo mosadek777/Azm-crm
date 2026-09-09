@@ -27,6 +27,7 @@ import { LanguageService } from '../../../core/i18n/language.service';
 import { ApiRefusal, LocalizedText } from '../../../core/models/user.model';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { StatusTonePipe } from '../../../shared/pipes/status-tone.pipe';
+import { ToastService } from '../../../core/notifications/toast.service';
 
 @Component({
   selector: 'app-portal-ticket-detail',
@@ -34,6 +35,7 @@ import { StatusTonePipe } from '../../../shared/pipes/status-tone.pipe';
   templateUrl: './portal-ticket-detail.html'
 })
 export class PortalTicketDetail {
+  private readonly toast = inject(ToastService);
   private readonly api = inject(PortalApiService);
   protected readonly i18n = inject(LanguageService);
 
@@ -95,14 +97,14 @@ export class PortalTicketDetail {
         this.messages.update(list => [...list, response.message]);
         this.draft.set('');
         this.sending.set(false);
+        this.toast.success('toast.replySent');
       },
       error: (error: HttpErrorResponse) => {
         this.sending.set(false);
         const body = error.error as ApiRefusal | null;
-        this.replyRefusal.set(body?.message ?? {
-          ar: 'تعذر إرسال الرد',
-          en: 'Could not send the reply'
-        });
+        const fallback = { ar: 'تعذر إرسال الرد', en: 'Could not send the reply' };
+        this.replyRefusal.set(body?.message ?? fallback);
+        this.toast.fromHttpError(error, fallback);
       }
     });
   }

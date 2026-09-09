@@ -19,6 +19,7 @@ import { ApiService } from '../../../core/services/api.service';
 import { LanguageService } from '../../../core/i18n/language.service';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { LocalizedText } from '../../../core/models/user.model';
+import { ToastService } from '../../../core/notifications/toast.service';
 
 interface CollisionMatch {
   id: string;
@@ -32,6 +33,7 @@ interface CollisionMatch {
   templateUrl: './customer-create.html'
 })
 export class CustomerCreate {
+  private readonly toast = inject(ToastService);
   private readonly api = inject(ApiService);
   private readonly router = inject(Router);
   protected readonly i18n = inject(LanguageService);
@@ -81,7 +83,10 @@ export class CustomerCreate {
     }
 
     this.api.createCustomer(this.payload(confirmCollision)).subscribe({
-      next: r => this.router.navigate(['/customers', r.customer._id]),
+      next: r => {
+        this.toast.success('toast.customerCreated', { ar: r.customer.displayName, en: r.customer.displayName });
+        this.router.navigate(['/customers', r.customer._id]);
+      },
       error: (e: HttpErrorResponse) => {
         this.busy.set(false);
 

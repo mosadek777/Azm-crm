@@ -72,6 +72,7 @@ every search index — a rewrite disguised as a translation task.
 | `PLT-12` | AGT | keyboard navigation, screen-reader labels, adequate contrast | colleagues with disabilities can do this job | Should |
 | `PLT-13` | AGT | a dark interface | a nine-hour shift is easier on my eyes | Could |
 | `PLT-14` | AGT | in-app guidance and role-based training content | a new agent is productive in days, not weeks | Could |
+| `PLT-15` | AGT | immediate confirmation in the interface that what I just did succeeded or failed, in the language I am working in | I know whether my work was saved without re-reading the screen to check | Should |
 
 **14 stories** — 6 Must · 5 Should · 3 Could
 

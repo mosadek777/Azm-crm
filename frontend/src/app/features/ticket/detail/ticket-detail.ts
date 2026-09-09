@@ -21,6 +21,7 @@ import { LocalizedText } from '../../../core/models/user.model';
 import {
   Ticket, Customer, TicketMessage, HistoryEntry, Sla, Visibility, TicketMeta
 } from '../../../core/models/domain.model';
+import { ToastService } from '../../../core/notifications/toast.service';
 
 @Component({
   selector: 'app-ticket-detail',
@@ -28,6 +29,7 @@ import {
   templateUrl: './ticket-detail.html'
 })
 export class TicketDetail {
+  private readonly toast = inject(ToastService);
   private readonly api = inject(ApiService);
   private readonly route = inject(ActivatedRoute);
   protected readonly i18n = inject(LanguageService);
@@ -87,9 +89,12 @@ export class TicketDetail {
     });
   }
 
+  // FR-016: the refusal the SERVER sent, never a client-authored string. The
+  // inline banner this used to set has been removed from the template — it and
+  // a toast said the same thing in two places.
   private readonly fail = (e: HttpErrorResponse): void => {
     this.busy.set(false);
-    this.refusal.set(e.error?.message ?? null);
+    this.toast.fromHttpError(e, { ar: 'تعذر الاتصال بالخادم', en: 'Could not reach the server' });
   };
 
   protected applyStatus(): void {
@@ -100,7 +105,7 @@ export class TicketDetail {
       reason: this.statusReason() || undefined,
       followUpAt: this.followUpAt() || undefined
     }).subscribe({
-      next: () => { this.busy.set(false); this.load(); },
+      next: () => { this.busy.set(false); this.toast.success('toast.statusChanged'); this.load(); },
       error: this.fail
     });
   }
@@ -109,7 +114,7 @@ export class TicketDetail {
     this.refusal.set(null);
     this.busy.set(true);
     this.api.assign(this.id, { assignedAgentId: null, reason: this.assignReason() })
-      .subscribe({ next: () => { this.busy.set(false); this.assignReason.set(''); this.load(); }, error: this.fail });
+      .subscribe({ next: () => { this.busy.set(false); this.assignReason.set(''); this.toast.success('toast.ticketAssigned'); this.load(); }, error: this.fail });
   }
 
   protected claim(): void {
@@ -119,7 +124,7 @@ export class TicketDetail {
     // The id comes from the stored session; the server re-checks scope anyway.
     const me = JSON.parse(localStorage.getItem('azm.user') ?? 'null');
     this.api.assign(this.id, { assignedAgentId: me?.id, reason: this.assignReason() })
-      .subscribe({ next: () => { this.busy.set(false); this.assignReason.set(''); this.load(); }, error: this.fail });
+      .subscribe({ next: () => { this.busy.set(false); this.assignReason.set(''); this.toast.success('toast.ticketAssigned'); this.load(); }, error: this.fail });
   }
 
   protected send(): void {
@@ -127,7 +132,7 @@ export class TicketDetail {
     this.busy.set(true);
     this.api.addMessage(this.id, { body: this.reply(), visibility: this.visibility() })
       .subscribe({
-        next: () => { this.busy.set(false); this.reply.set(''); this.visibility.set(''); this.load(); },
+        next: () => { this.busy.set(false); this.reply.set(''); this.visibility.set(''); this.toast.success('toast.messageSent'); this.load(); },
         error: this.fail
       });
   }

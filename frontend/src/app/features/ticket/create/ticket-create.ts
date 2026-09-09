@@ -17,6 +17,7 @@ import { LanguageService } from '../../../core/i18n/language.service';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { LocalizedText } from '../../../core/models/user.model';
 import { Customer, Priority, TicketMeta } from '../../../core/models/domain.model';
+import { ToastService } from '../../../core/notifications/toast.service';
 
 @Component({
   selector: 'app-ticket-create',
@@ -24,6 +25,7 @@ import { Customer, Priority, TicketMeta } from '../../../core/models/domain.mode
   templateUrl: './ticket-create.html'
 })
 export class TicketCreate {
+  private readonly toast = inject(ToastService);
   private readonly api = inject(ApiService);
   private readonly router = inject(Router);
   protected readonly i18n = inject(LanguageService);
@@ -94,7 +96,12 @@ export class TicketCreate {
       priority: this.priority(),
       tags: this.tags().split(',').map(t => t.trim()).filter(Boolean)
     }).subscribe({
-      next: r => this.router.navigate(['/tickets', r.ticket._id]),
+      next: r => {
+        // The reference is the thing the agent will quote, so it goes in the
+        // detail line rather than being left for them to find on the next page.
+        this.toast.success('toast.ticketCreated', { ar: r.ticket.reference, en: r.ticket.reference });
+        this.router.navigate(['/tickets', r.ticket._id]);
+      },
       error: (e: HttpErrorResponse) => {
         this.busy.set(false);
         // The server's bilingual refusal, rendered in the viewing language.

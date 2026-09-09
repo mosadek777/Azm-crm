@@ -262,6 +262,38 @@ client's own words — only to derived material the README itself calls
 
 ---
 
+## ⚠ There is no `frontend-design` skill. Stop asking for one.
+
+**Checked 2026-09-09.** The assistant's available skills are `design`,
+`dataviz`, `artifact-design`, `artifact-diagramming`, `artifact-capabilities`,
+`update-config`, `keybindings-help`, `code-review`, `simplify`,
+`fewer-permission-prompts`, `loop`, `schedule`, `claude-api`,
+`workflow-authoring`, `run`, `init` and `security-review`. **None of them
+covers in-app frontend design.** It was asked for repeatedly across 2026-09-09
+and was never there.
+
+`artifact-design` is the near miss and is the wrong tool: it governs published
+Artifacts — standalone HTML pages hosted on claude.ai — not an Angular
+application. Following it here would import conventions from a different medium.
+
+**What to use instead, which is the better answer anyway:** this application's
+own design tokens, in `frontend/src/styles.css`. They are the authority because
+they are what the seven existing screens already use.
+
+| Concern | Where it is defined |
+|---|---|
+| Colour | `@theme` — violet `--color-primary-*`, warm stone `--color-surface-*`. Deliberately not blue-on-white, and the neutrals are warm so the background does not reintroduce it |
+| Type | `--text-xs` … `--text-3xl`, a fourth-ish ratio rounded to whole pixels at the small end |
+| Typeface | Cairo, one stack for both languages, self-hosted, unicode-range split |
+| Card treatment | `rounded-xl`, `border-surface-200`, `shadow-lg` — copy an existing screen rather than inventing a variant |
+| Direction | Logical properties only (`ms-`/`me-`/`ps-`/`pe-`/`start`/`end`). The **only** sanctioned `[dir="rtl"]` rule in the codebase is the toast keyframe, because CSS keyframes have no logical-property form |
+
+A new component is judged by whether it looks like it was always there. The test
+for that is a screenshot beside an existing screen, in both languages — not a
+description.
+
+---
+
 ## Constraints that outrank everything
 
 | | Rule |

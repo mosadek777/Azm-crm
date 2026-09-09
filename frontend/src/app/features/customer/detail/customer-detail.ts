@@ -16,6 +16,7 @@ import { LanguageService } from '../../../core/i18n/language.service';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { Customer, ContactPoint, Sla } from '../../../core/models/domain.model';
 import { LocalizedText } from '../../../core/models/user.model';
+import { ToastService } from '../../../core/notifications/toast.service';
 
 @Component({
   selector: 'app-customer-detail',
@@ -23,6 +24,7 @@ import { LocalizedText } from '../../../core/models/user.model';
   templateUrl: './customer-detail.html'
 })
 export class CustomerDetail {
+  private readonly toast = inject(ToastService);
   private readonly api = inject(ApiService);
   private readonly route = inject(ActivatedRoute);
   protected readonly router = inject(Router);
@@ -84,10 +86,11 @@ export class CustomerDetail {
         this.saved.set(r.changed);
         this.editing.set(false);
         this.busy.set(false);
+        this.toast.success('toast.customerSaved');
       },
       error: (e: HttpErrorResponse) => {
         this.busy.set(false);
-        this.refusal.set(e.error?.message ?? null);
+        this.toast.fromHttpError(e, { ar: 'تعذر الاتصال بالخادم', en: 'Could not reach the server' });
       }
     });
   }

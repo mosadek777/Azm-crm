@@ -1366,6 +1366,27 @@
       "description": "The backup and restore commands rely on two programs that are a **separate download from the database itself** — installing the database does not install them. That surprised us during development and it will surprise the next person.\n\n**What works today.** The commands look for the tools on the system path first, then in the standard install locations for the operating system they are running on, and only then fall back to a setting that names an exact folder. On a colleague's machine with a normal install, they work with no configuration. On a machine without the tools, they stop immediately with a message naming the install command for that platform, rather than half-running.\n\n**What does not work.** Nothing installs the tools, checks they are present, or keeps their version in step with the database. A fresh machine or a new server has no backups until somebody notices and installs them by hand — and the moment that gets forgotten is unlikely to be the moment anyone checks.\n\nThe exact-folder setting is also an absolute path and therefore specific to one machine. It is a local convenience and a server must not depend on it; the file that holds it is excluded from version control, so it never travels to anyone else in any case.\n\n**What this card is for:** making tool installation part of however the system gets deployed, and adding a startup or scheduled check that reports their absence instead of waiting for a backup to fail.",
       "blocker": "Depends on knowing how the system is deployed, which is the hosting decision (docs/hosting-decision.md). A managed database service removes the problem entirely, since backups are the provider's responsibility and no local tooling is involved.",
       "clickupId": "86cbfq3hk"
+    },
+    {
+      "key": "mobile-overflow-fix",
+      "name": "Every screen scrolled sideways on a phone — fixed",
+      "tags": [
+        "frontend"
+      ],
+      "status": "done",
+      "description": "On a 390px-wide phone screen, **every page in the staff interface scrolled sideways.** The content was 466 pixels wide in a 390 pixel window, so roughly a fifth of every screen sat off the edge and had to be dragged into view.\n\nThe cause was a single row. The bar across the top of the staff interface — product name, area label, navigation, language switch, account button — was laid out as one line that was not allowed to wrap. On a wide screen it fits. On a phone it does not, and rather than folding onto a second line it pushed the page wider than the window, taking every screen with it.\n\nThe fix is that the bar now wraps. Content width at a 390px window: **was 466, now 390.**\n\n**How it was found is the part worth recording.** Nobody reported it and no check would have caught it. It surfaced only because a new notification appeared in the wrong place on a phone — the notification sits at a fixed position relative to the window, so a window the page had made too wide dragged it off the edge. The notification was the symptom; the header was the fault. Without that accident it would still be there.\n\n**All ten screens were then measured at 390px in both languages** — the two sign-in pages, the ticket list and detail, the customer list, detail and creation forms, and all three customer-portal screens — rather than assuming one fix had covered everything. All twenty measurements now show no sideways scroll. Wide tables were already handled correctly: they scroll inside their own frame instead of stretching the page.",
+      "clickupId": "86cbfqvkg"
+    },
+    {
+      "key": "mobile-overflow-guard",
+      "name": "Nothing checks that screens fit on a phone",
+      "tags": [
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "A guard against the defect above happening again — and more importantly, against the *class* of defect it belongs to.\n\nThe sideways-scrolling bug survived because there was no way for it to be noticed. It broke nothing that raised an error, no test covered it, and on the desktop screens the team works on every day it was invisible. It was found by accident, months in.\n\nThe check itself is mechanical: load each screen at a phone-sized window in both languages and confirm the content is no wider than the window. It already exists as a one-off script written during the investigation; what is missing is running it automatically rather than when somebody happens to think of it.\n\nThis is worth more than the one bug it would have caught. Anything that only shows up at a narrow width — a table, a long unbroken reference number, a row of buttons, an untranslated string that runs longer in one language than the other — is currently invisible to every check the project has.",
+      "blocker": "Nothing blocks this. It is unscheduled rather than gated. The measurement approach is proven and the script exists; it needs to be made permanent and run with the other automated checks.",
+      "clickupId": "86cbfqvkh"
     }
   ],
   "retiredIds": []
