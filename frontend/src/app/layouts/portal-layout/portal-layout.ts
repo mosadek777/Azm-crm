@@ -23,10 +23,11 @@ import { RouterOutlet, RouterLink } from '@angular/router';
 import { LanguageService } from '../../core/i18n/language.service';
 import { PortalAuthService } from '../../core/auth/services/portal-auth.service';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
+import { ToastHost } from '../../shared/components/toast-host/toast-host';
 
 @Component({
   selector: 'app-portal-layout',
-  imports: [RouterOutlet, RouterLink, TranslatePipe],
+  imports: [RouterOutlet, RouterLink, TranslatePipe, ToastHost],
   templateUrl: './portal-layout.html'
 })
 export class PortalLayout {

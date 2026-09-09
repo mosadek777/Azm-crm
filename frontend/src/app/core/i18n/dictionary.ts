@@ -193,5 +193,15 @@ export const DICTIONARY: Translations = {
   'portal.closedNoReply': {
     ar: 'هذا الطلب مغلق ولا يقبل ردودًا. أنشئ طلبًا جديدًا إذا عادت المشكلة.',
     en: 'This request is closed and accepts no reply. Raise a new request if the problem returns.'
-  }
+  },
+
+  // Proposed 012 FR-016 / PLT-15 — in-app action feedback.
+  // The kind is spelled out in words as well as shown as an icon, so colour and
+  // glyph are never the only carriers of meaning.
+  'toast.success': { ar: 'تم', en: 'Done' },
+  'toast.error': { ar: 'خطأ', en: 'Error' },
+  'toast.warning': { ar: 'تنبيه', en: 'Warning' },
+  'toast.info': { ar: 'معلومة', en: 'Information' },
+  'toast.dismiss': { ar: 'إغلاق الإشعار', en: 'Dismiss notification' },
+  'toast.regionLabel': { ar: 'إشعارات', en: 'Notifications' },
 };

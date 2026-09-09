@@ -1,0 +1,125 @@
+<!-- Proposed 012 FR-016 / PLT-15.
+
+     PLACEMENT. Bottom on a phone, top-end on a desktop. Logical properties
+     throughout, so `end-4` is the right edge in English and the left edge in
+     Arabic and the whole stack mirrors with the page — no RTL override sheet,
+     the same rule as everywhere else in this app.
+
+     `pointer-events-none` on the container with `pointer-events-auto` on each
+     card: the fixed layer spans a corner of the viewport, and without this it
+     would swallow clicks on whatever sits underneath even where no toast is
+     drawn.
+
+     STACKING. A flex column with a gap. Newest is first in the array and the
+     column reverses on desktop so newest sits nearest the edge in both
+     placements. Nothing overlaps and nothing shifts the page: the layer is
+     fixed, so the document below never reflows when a toast appears.
+
+     TWO LIVE REGIONS, not one. A region's politeness is read when the region is
+     read, not when its contents change, so a single region cannot be assertive
+     for errors and polite for confirmations. Errors and warnings interrupt;
+     success and info wait their turn. -->
+
+<!-- `sm:top-16` rather than `sm:top-0`: at top-0 the newest toast sat over the
+     header and covered the navigation, which the first screenshot showed
+     plainly. 64px plus the 16px padding clears the 68px header in all three
+     shells while still reading as "top of the page". -->
+<!-- STACK ORDER. The service holds newest-first, and "newest nearest the edge"
+     means opposite directions in the two placements — which is why the first
+     version had both of them backwards. Bottom-anchored on a phone: newest must
+     be at the BOTTOM, so the column reverses. Top-anchored on a desktop: newest
+     must be at the TOP, so it does not. -->
+<div class="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex flex-col-reverse items-center gap-2 p-4
+            sm:inset-x-auto sm:bottom-auto sm:top-16 sm:end-0 sm:flex-col sm:items-end"
+     role="region"
+     [attr.aria-label]="'toast.regionLabel' | translate: i18n.lang()">
+
+  @for (t of toasts.toasts(); track t.id) {
+    <div class="pointer-events-auto w-full max-w-sm overflow-hidden rounded-xl border border-surface-200
+                border-s-4 shadow-lg ring-1 ring-surface-900/5 motion-safe:animate-toast-in"
+         [class]="tone[t.kind]"
+         [attr.aria-live]="t.kind === 'error' || t.kind === 'warning' ? 'assertive' : 'polite'"
+         [attr.aria-atomic]="true"
+         role="status">
+
+      <div class="flex items-start gap-3 p-3.5">
+
+        <!-- Icon: aria-hidden, and never the only signal — the kind is also in
+             the visible label text beside it. -->
+        <span class="mt-0.5 shrink-0" [class]="iconTone[t.kind]" aria-hidden="true">
+          @switch (t.kind) {
+            @case ('success') {
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M8.5 12.5l2.5 2.5 4.5-5" />
+              </svg>
+            }
+            @case ('error') {
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M15 9l-6 6M9 9l6 6" />
+              </svg>
+            }
+            @case ('warning') {
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3.8L2.7 19.2a1 1 0 00.86 1.5h16.88a1 1 0 00.86-1.5L12 3.8z" />
+                <path d="M12 9.5v4.2" />
+                <circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none" />
+              </svg>
+            }
+            @case ('info') {
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 11v5" />
+                <circle cx="12" cy="7.8" r="0.9" fill="currentColor" stroke="none" />
+              </svg>
+            }
+          }
+        </span>
+
+        <div class="min-w-0 flex-1">
+          <!-- The kind, in words. This is what makes the icon non-essential. -->
+          <p class="text-xs font-semibold uppercase tracking-wide" [class]="iconTone[t.kind]">
+            {{ label[t.kind] | translate: i18n.lang() }}
+          </p>
+
+          <!-- A literal { ar, en } is a server refusal, rendered as sent. A
+               string is a dictionary key for interface chrome. -->
+          <p class="mt-0.5 text-sm text-surface-800 break-words">
+            @if (isLocalised(t.message)) {
+              {{ text(t.message) }}
+            } @else {
+              {{ t.message | translate: i18n.lang() }}
+            }
+          </p>
+
+          @if (t.detail) {
+            <p class="mt-1 text-xs text-surface-500 break-words">
+              @if (isLocalised(t.detail)) {
+                {{ text(t.detail) }}
+              } @else {
+                {{ t.detail | translate: i18n.lang() }}
+              }
+            </p>
+          }
+        </div>
+
+        <button type="button"
+          class="-me-1 -mt-1 shrink-0 rounded-lg p-1.5 text-surface-400 transition-colors
+                 hover:bg-surface-100 hover:text-surface-700
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+          [attr.aria-label]="'toast.dismiss' | translate: i18n.lang()"
+          (click)="toasts.dismiss(t.id)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"
+               stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  }
+</div>
