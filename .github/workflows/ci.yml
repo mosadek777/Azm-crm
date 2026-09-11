@@ -81,7 +81,14 @@ jobs:
             sleep 1
           done
 
-          docker exec mongo mongosh --quiet --eval 'rs.initiate()'
+          # ⚠ THE MEMBER HOST MUST BE EXPLICIT, and this is what broke the first
+          # run. `rs.initiate()` with no argument advertises the CONTAINER's own
+          # hostname. A check run with `docker exec` then passes happily, while
+          # the application — which connects from the host — discovers a primary
+          # at `<container-id>:27017`, cannot resolve it, and fails in a way that
+          # looks like a timing problem and is not one.
+          docker exec mongo mongosh --quiet --eval \
+            'rs.initiate({_id: "rs0", members: [{_id: 0, host: "localhost:27017"}]})'
 
           # And wait for the set to elect a primary. Transactions fail until it
           # has one, which would look like a test failure rather than a timing
@@ -103,11 +110,55 @@ jobs:
         working-directory: backend
         run: npm ci
 
-      # The suite starts and stops the API itself, drops the database between
-      # suites and re-seeds the break-glass account, so nothing else is needed.
-      - name: npm test — acceptance suites
+      # Prove from the HOST, in Node, that a transaction commits — before any
+      # suite runs. Constitution II depends on transactions, so if this fails
+      # every suite fails and the cause is the database rather than the code.
+      # Checking it separately means the step NAME says which it was, which
+      # matters because job logs are not readable without authentication.
+      - name: Transactions work from the host
         working-directory: backend
-        run: npm test
+        run: |
+          node --input-type=module -e '
+            import mongoose from "mongoose";
+            await mongoose.connect(process.env.MONGO_URI, { dbName: "ci_probe" });
+            const M = mongoose.model("Probe", new mongoose.Schema({ n: Number }));
+            const s = await mongoose.startSession();
+            await s.withTransaction(async () => { await M.create([{ n: 1 }], { session: s }); });
+            await s.endSession();
+            const n = await M.countDocuments();
+            await mongoose.connection.dropDatabase();
+            await mongoose.disconnect();
+            if (n !== 1) { console.error("transaction did not commit"); process.exit(1); }
+            console.log("a transaction committed from the host — the replica set is usable");
+          '
+
+      # ONE STEP PER SUITE, so a failure names the suite in the step title.
+      # The runner drops the database and restarts the API between suites in
+      # either arrangement, so this costs nothing and says much more when
+      # something breaks.
+      - name: scope suite
+        working-directory: backend
+        run: npm test -- scope.test.js
+
+      - name: customer suite
+        working-directory: backend
+        run: npm test -- customer.test.js
+
+      - name: ticket suite
+        working-directory: backend
+        run: npm test -- ticket.test.js
+
+      - name: portal suite
+        working-directory: backend
+        run: npm test -- portal.test.js
+
+      - name: security suite
+        working-directory: backend
+        run: npm test -- security.test.js
+
+      - name: story suites
+        working-directory: backend
+        run: npm test -- story
 
       # Runs after the suite, against the database it leaves behind. It proves
       # no change exists without an audit record and no record without a change,
@@ -167,7 +218,7 @@ jobs:
           # like `export const BREAKGLASS_PASSWORD = require_(...)` does not trip
           # it while `BREAKGLASS_PASSWORD=hunter2` does. .env.example holds keys
           # with empty values by design and is excluded.
-          if git grep -nE '(BREAKGLASS_PASSWORD|JWT_SECRET|CLICKUP_TOKEN|DEMO_PASSWORD)=[^[:space:]"'"'"']' \
+          if git grep -nE '(BREAKGLASS_PASSWORD|JWT_SECRET|CLICKUP_TOKEN|DEMO_PASSWORD)=[^[:space:]"'"'"'$]' \
                -- . ':!backend/.env.example' ':!.github/workflows/ci.yml'; then
             echo "a credential appears to be assigned a value in a tracked file"
             exit 1
