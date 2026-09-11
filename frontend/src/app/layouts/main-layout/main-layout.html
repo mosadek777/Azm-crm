@@ -1,96 +1,120 @@
-<div class="min-h-screen flex flex-col bg-surface-50">
-  <!-- Header. All directional spacing is logical (ps-/pe-/ms-/me-, start/end),
-       so the bar mirrors under dir="rtl" with no override sheet — FR-002. -->
-  <!-- STAFF header. Deliberately unlike the portal's: pale, with a primary
-       top rule and a "Staff" chip. Both interfaces live on the same host and
-       look alike otherwise, so a glance has to be enough to tell them apart —
-       and the person it matters most for is the customer, who should never
-       wonder whether they are on a staff screen. -->
-  <header class="sticky top-0 z-20 border-b border-surface-200 border-t-4 border-t-primary-600
-                 bg-surface-0/95 backdrop-blur">
-    <div class="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
-    <span class="text-lg font-semibold tracking-tight text-primary-700">
-      {{ 'app.name' | translate: i18n.lang() }}
-    </span>
-    <span class="rounded-full bg-surface-100 px-2 py-0.5 text-xs font-medium text-surface-600">
-      {{ 'nav.staffArea' | translate: i18n.lang() }}
-    </span>
+<!-- STAFF SHELL. spec 012 FR-002, FR-005.
+     A sidebar plus a slim top bar, replacing the top-bar-only navigation.
 
-    <nav class="flex items-center gap-1 ms-0 sm:ms-6">
-      <a routerLink="/tickets"
-         routerLinkActive="bg-primary-50 text-primary-700 font-medium"
-         class="rounded-md px-3 py-1.5 text-sm text-surface-600 no-underline
-                hover:bg-surface-100 hover:text-surface-900 transition-colors">
-        {{ 'nav.tickets' | translate: i18n.lang() }}
-      </a>
-      <a routerLink="/customers"
-         routerLinkActive="bg-primary-50 text-primary-700 font-medium"
-         class="rounded-md px-3 py-1.5 text-sm text-surface-600 no-underline
-                hover:bg-surface-100 hover:text-surface-900 transition-colors">
-        {{ 'nav.customers' | translate: i18n.lang() }}
-      </a>
-    </nav>
+     WHY THE CHANGE. The top bar held two links and the product has thirteen
+     modules. It does not scale horizontally, and it breaks sooner in Arabic
+     than the English labels suggest. Administration will need a group with
+     several children, which a horizontal bar cannot hold at all.
 
-    <span class="flex-1"></span>
+     The CUSTOMER PORTAL keeps its top bar — see portal-layout.html. A customer
+     has two screens.
 
-    <button
-      type="button"
-      class="rounded-md px-2.5 py-1.5 text-sm font-medium text-primary-600
-             hover:bg-primary-50 hover:text-primary-700 transition-colors"
-      (click)="i18n.toggle()">
-      {{ 'lang.switchTo' | translate: i18n.lang() }}
-    </button>
+     WIDTH DISCIPLINE. `min-w-0` on the content column is load-bearing: a flex
+     child defaults to `min-width: auto`, so a wide table inside it would push
+     the column — and the page — wider than the window rather than scrolling in
+     its own frame. That is exactly how every staff screen came to scroll
+     sideways at 390px before. -->
+<div class="min-h-screen bg-surface-50 lg:flex">
 
-    <!-- User menu, once signed in. -->
-    @if (auth.isSignedIn()) {
-      <div class="relative ms-1">
-        <button
-          type="button"
-          class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-600
-                 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
-          [attr.aria-expanded]="userMenuOpen()"
-          [attr.aria-label]="auth.user()?.displayName"
-          (click)="userMenuOpen.set(!userMenuOpen())">
-          {{ initials(auth.user()?.displayName) }}
+  <app-sidebar class="contents" />
+
+  <div class="flex min-h-screen min-w-0 flex-1 flex-col">
+    <!-- Top bar: identity, language, account. Navigation has moved out of it.
+         It keeps the primary top rule and the "Staff" chip, because telling the
+         two interfaces apart at a glance still matters most to a customer who
+         should never wonder whether they are on a staff screen. -->
+    <header class="sticky top-0 z-20 border-b border-surface-200 border-t-4 border-t-primary-600
+                   bg-surface-0/95 backdrop-blur">
+      <div class="flex w-full flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
+
+        <!-- Drawer trigger. Below the large breakpoint only; it shares state
+             with the panel through SidebarState. -->
+        <button type="button"
+          class="inline-flex items-center gap-2 rounded-md border border-surface-300 bg-surface-0
+                 px-2.5 py-1.5 text-sm text-surface-700 hover:bg-surface-100 lg:hidden
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+          [attr.aria-expanded]="sidebar.drawerOpen()"
+          aria-controls="staff-nav"
+          [attr.aria-label]="'nav.openMenu' | translate: i18n.lang()"
+          (click)="sidebar.openDrawer()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
         </button>
 
-        @if (userMenuOpen()) {
-          <!-- end-0: the panel hangs from the trailing edge in both directions. -->
-          <div class="absolute end-0 top-11 z-30 w-56 overflow-hidden rounded-lg border
-                      border-surface-200 bg-surface-0 shadow-lg">
-            <div class="border-b border-surface-200 px-3 py-2">
-              <!-- User-authored name: single language, direction detected by the
-                   browser per value, never translated (spec 012 §8). -->
-              <p class="m-0 truncate text-sm font-medium text-surface-900">
-                {{ auth.user()?.displayName }}
-              </p>
-              <p class="m-0 truncate text-xs text-surface-500"><span class="ltr">{{ auth.user()?.email }}</span></p>
-            </div>
+        <span class="text-lg font-semibold tracking-tight text-primary-700">
+          {{ 'app.name' | translate: i18n.lang() }}
+        </span>
+        <span class="rounded-full bg-surface-100 px-2 py-0.5 text-xs font-medium text-surface-600">
+          {{ 'nav.staffArea' | translate: i18n.lang() }}
+        </span>
+
+        <span class="flex-1"></span>
+
+        <button
+          type="button"
+          class="rounded-md px-2.5 py-1.5 text-sm font-medium text-primary-600
+                 hover:bg-primary-50 hover:text-primary-700 transition-colors
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+          (click)="i18n.toggle()">
+          {{ 'lang.switchTo' | translate: i18n.lang() }}
+        </button>
+
+        <!-- User menu, once signed in. -->
+        @if (auth.isSignedIn()) {
+          <div class="relative ms-1">
             <button
               type="button"
-              class="w-full px-3 py-2 text-start text-sm text-surface-700 hover:bg-surface-100"
-              (click)="signOut()">
-              {{ 'workspace.signOut' | translate: i18n.lang() }}
+              class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-600
+                     text-sm font-semibold text-white hover:bg-primary-700 transition-colors
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+              [attr.aria-expanded]="userMenuOpen()"
+              [attr.aria-label]="auth.user()?.displayName"
+              (click)="userMenuOpen.set(!userMenuOpen())">
+              {{ initials(auth.user()?.displayName) }}
             </button>
+
+            @if (userMenuOpen()) {
+              <!-- end-0: the panel hangs from the trailing edge in both directions. -->
+              <div class="absolute end-0 top-11 z-30 w-56 overflow-hidden rounded-lg border
+                          border-surface-200 bg-surface-0 shadow-lg">
+                <div class="border-b border-surface-200 px-3 py-2">
+                  <!-- User-authored name: single language, direction detected by
+                       the browser per value, never translated (spec 012 §8). -->
+                  <p class="m-0 truncate text-sm font-medium text-surface-900">
+                    {{ auth.user()?.displayName }}
+                  </p>
+                  <p class="m-0 truncate text-xs text-surface-500"><span class="ltr">{{ auth.user()?.email }}</span></p>
+                </div>
+                <button
+                  type="button"
+                  class="w-full px-3 py-2 text-start text-sm text-surface-700 hover:bg-surface-100
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                  (click)="signOut()">
+                  {{ 'workspace.signOut' | translate: i18n.lang() }}
+                </button>
+              </div>
+            }
           </div>
         }
       </div>
-    }
-    </div>
-  </header>
+    </header>
 
-  <!-- Content, centred with a readable max width. Every screen renders here. -->
-  <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
-    <router-outlet />
-  </main>
+    <!-- Content. `min-w-0` again for the same reason as the column above. -->
+    <main class="w-full min-w-0 flex-1 px-4 py-6">
+      <div class="mx-auto w-full max-w-6xl">
+        <router-outlet />
+      </div>
+    </main>
 
-  <!-- Footer: minimal — product name and version. -->
-  <footer class="border-t border-surface-200 bg-surface-0 ps-4 pe-4 py-3 text-center
-                 text-sm text-surface-500">
-    {{ 'app.name' | translate: i18n.lang() }} — v0.1.0
-  </footer>
+    <footer class="border-t border-surface-200 bg-surface-0 px-4 py-3 text-center
+                   text-sm text-surface-500">
+      {{ 'app.name' | translate: i18n.lang() }} — v0.1.0
+    </footer>
+  </div>
 </div>
 
-<!-- Proposed 012 FR-016 / PLT-15. Mounted once per shell; a fixed layer, so it
-     never moves the page beneath it. -->
+<!-- 012 FR-016 / PLT-15. Mounted once per shell; a fixed layer, so it never
+     moves the page beneath it. -->
 <app-toast-host />

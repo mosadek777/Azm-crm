@@ -61,6 +61,17 @@ export const DICTIONARY: Translations = {
   'ticket.changeCustomer': { ar: 'تغيير العميل', en: 'Change customer' },
   'nav.customers': { ar: 'العملاء', en: 'Customers' },
   'nav.tickets': { ar: 'التذاكر', en: 'Tickets' },
+
+  // spec 012 FR-002, FR-012 — the staff sidebar. Every control that is
+  // icon-only when collapsed still carries a name here, because an icon with no
+  // accessible name is invisible to a screen reader however clear it looks.
+  'nav.primary': { ar: 'التنقل الرئيسي', en: 'Main navigation' },
+  'nav.menu': { ar: 'القائمة', en: 'Menu' },
+  'nav.openMenu': { ar: 'فتح قائمة التنقل', en: 'Open navigation menu' },
+  'nav.closeMenu': { ar: 'إغلاق قائمة التنقل', en: 'Close navigation menu' },
+  'nav.collapse': { ar: 'طيّ القائمة', en: 'Collapse menu' },
+  'nav.expand': { ar: 'توسيع القائمة', en: 'Expand menu' },
+  'nav.administration': { ar: 'الإدارة', en: 'Administration' },
   'common.unavailable': { ar: 'غير متاح', en: 'unavailable' },
   'common.yes': { ar: 'نعم', en: 'Yes' },
   'common.no': { ar: 'لا', en: 'No' },
