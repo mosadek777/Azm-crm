@@ -31,28 +31,16 @@
   } @else {
     <ul class="space-y-4">
       @for (m of messages(); track m._id) {
-        <!-- A conversation, not a list. The customer's own words sit at the
-             START edge and ours at the END edge, using ms-auto / me-auto and
-             text-start / text-end, so the whole thread mirrors in Arabic
-             without a second stylesheet (008 AS-10).
-             The two sides differ by SIDE, BACKGROUND and BORDER together — not
-             by colour alone, which anyone who cannot distinguish these hues
-             would not see at all. -->
-        <li class="flex" [class]="m.from === 'you' ? 'justify-start' : 'justify-end'">
-          <div class="max-w-[80%] rounded-2xl border px-4 py-3"
-            [class]="m.from === 'you'
-              ? 'bg-surface-0 border-surface-200 rounded-es-sm'
-              : 'bg-primary-50 border-primary-200 rounded-ee-sm'">
-            <p class="mb-1 flex items-baseline gap-2 text-xs">
-              <span [class]="m.from === 'you' ? 'font-medium text-surface-700' : 'font-medium text-primary-800'">
-                {{ (m.from === 'you' ? 'portal.fromYou' : 'portal.fromSupport') | translate: i18n.lang() }}
-              </span>
-              <!-- A timestamp does not reverse, in either direction. -->
-              <span dir="ltr" class="text-surface-400">{{ m.sentAt | date: 'short' }}</span>
-            </p>
-            <p class="whitespace-pre-wrap text-surface-900">{{ m.body }}</p>
-          </div>
-        </li>
+        <!-- The SAME component the staff thread uses. Two things differ, and
+             only two: this thread is never handed an internal note, because
+             internal content is excluded in the QUERY (008 FR-019) rather than
+             hidden here; and support is named by the organisation rather than
+             by the individual agent (decision 29). -->
+        <app-message-bubble
+          [fromCustomer]="m.from === 'you'"
+          [authorKey]="m.from === 'you' ? 'portal.fromYou' : 'portal.fromSupport'"
+          [body]="m.body"
+          [sentAt]="m.sentAt" />
       }
     </ul>
   }

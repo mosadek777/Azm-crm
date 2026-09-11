@@ -1,0 +1,41 @@
+<!-- One message. See message-bubble.ts for why this is shared between the staff
+     thread and the customer portal, and for the only two things that differ. -->
+<li [class]="rowClass()">
+  <article [class]="bubbleClass()">
+
+    <p class="m-0 mb-1 flex flex-wrap items-baseline gap-2 text-xs text-surface-500">
+      <!-- Who. A role or an organisation label, never an individual agent on
+           the portal side — the caller decides which. -->
+      <span [class]="authorClass()">
+        {{ authorKey() | translate: i18n.lang() }}
+      </span>
+
+      <!-- When. A timestamp is a direction-neutral value and does not reverse
+           inside Arabic text. -->
+      @if (sentAt()) {
+        <span dir="ltr" class="text-surface-400">{{ sentAt() | date: 'short' }}</span>
+      }
+
+      <!-- Staff only. The chip is text as well as colour, so an internal note
+           is identifiable without distinguishing amber from grey. -->
+      @if (showVisibility()) {
+        @if (internal()) {
+          <span class="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-900">
+            {{ 'ticket.internal' | translate: i18n.lang() }}
+          </span>
+        } @else {
+          <span class="rounded-full bg-surface-100 px-2 py-0.5 text-surface-700">
+            {{ 'ticket.customerVisible' | translate: i18n.lang() }}
+          </span>
+        }
+      }
+    </p>
+
+    <!-- User-authored content: single language, direction detected per message
+         by the browser rather than forced (spec 012 AS-05). `whitespace-pre-wrap`
+         so the line breaks somebody typed survive — they did on the portal and
+         were collapsed on the staff side, which is one of the differences this
+         component removes. -->
+    <p class="m-0 whitespace-pre-wrap text-sm text-surface-900">{{ body() }}</p>
+  </article>
+</li>

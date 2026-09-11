@@ -174,35 +174,15 @@
            Both signals are shape and text as well as colour. -->
       <ul class="m-0 flex list-none flex-col gap-3 p-0">
         @for (m of messages(); track m._id) {
-          <li class="flex" [class]="m.authorKind === 'customer' ? 'justify-start' : 'justify-end'">
-            <article class="max-w-[80%] rounded-lg border p-3"
-              [class]="(m.authorKind === 'customer'
-                          ? 'border-surface-200 bg-surface-0 rounded-es-sm '
-                          : 'border-primary-200 bg-primary-50/60 rounded-ee-sm ')
-                       + (m.visibility === 'internal' ? 'border-s-4 border-s-amber-400' : '')">
-              <div class="mb-1 flex flex-wrap items-center gap-2 text-xs text-surface-500">
-                <span class="font-medium"
-                  [class]="m.authorKind === 'customer' ? 'text-surface-700' : 'text-primary-800'">
-                  {{ (m.authorKind === 'customer' ? 'ticket.authorCustomer'
-                      : m.authorKind === 'system' ? 'ticket.authorSystem'
-                      : 'ticket.authorStaff') | translate: i18n.lang() }}
-                </span>
-                <span dir="ltr">{{ m.sentAt }}</span>
-                @if (m.visibility === 'internal') {
-                  <span class="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-900">
-                    {{ 'ticket.internal' | translate: i18n.lang() }}
-                  </span>
-                } @else {
-                  <span class="rounded-full bg-surface-100 px-2 py-0.5 text-surface-700">
-                    {{ 'ticket.customerVisible' | translate: i18n.lang() }}
-                  </span>
-                }
-              </div>
-              <!-- User-authored: single language, direction detected per message
-                   by the browser (spec 012 AS-05). -->
-              <p class="m-0 text-sm text-surface-800">{{ m.body }}</p>
-            </article>
-          </li>
+          <app-message-bubble
+            [fromCustomer]="m.authorKind === 'customer'"
+            [authorKey]="m.authorKind === 'customer' ? 'ticket.authorCustomer'
+                        : m.authorKind === 'system' ? 'ticket.authorSystem'
+                        : 'ticket.authorStaff'"
+            [body]="m.body"
+            [sentAt]="m.sentAt"
+            [internal]="m.visibility === 'internal'"
+            [showVisibility]="true" />
         }
       </ul>
 

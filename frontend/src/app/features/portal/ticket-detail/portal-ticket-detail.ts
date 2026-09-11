@@ -28,10 +28,11 @@ import { ApiRefusal, LocalizedText } from '../../../core/models/user.model';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { StatusTonePipe } from '../../../shared/pipes/status-tone.pipe';
 import { ToastService } from '../../../core/notifications/toast.service';
+import { MessageBubble } from '../../../shared/components/message-bubble/message-bubble';
 
 @Component({
   selector: 'app-portal-ticket-detail',
-  imports: [FormsModule, RouterLink, DatePipe, TranslatePipe, StatusTonePipe],
+  imports: [FormsModule, RouterLink, DatePipe, TranslatePipe, StatusTonePipe, MessageBubble],
   templateUrl: './portal-ticket-detail.html'
 })
 export class PortalTicketDetail {

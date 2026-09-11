@@ -22,10 +22,11 @@ import {
   Ticket, Customer, TicketMessage, HistoryEntry, Sla, Visibility, TicketMeta
 } from '../../../core/models/domain.model';
 import { ToastService } from '../../../core/notifications/toast.service';
+import { MessageBubble } from '../../../shared/components/message-bubble/message-bubble';
 
 @Component({
   selector: 'app-ticket-detail',
-  imports: [FormsModule, TranslatePipe, StatusTonePipe],
+  imports: [FormsModule, TranslatePipe, StatusTonePipe, MessageBubble],
   templateUrl: './ticket-detail.html'
 })
 export class TicketDetail {
