@@ -55,11 +55,25 @@ cases already written begins with its acceptance criteria agreed.
 
 ## Two things carried across from the coverage audit
 
-**The 17 partial cases are marked partial and say what is missing.** The clearest
+**Thirty cases are marked partial, and each says what is missing.** The clearest
 is `TM-09` in `002`: the automated checks prove a reason is *required* when
 reassigning a ticket, and nothing ever reads that reason back. The story asks
 that nobody wonders later why. Half of that is proven and half is not, and the
 case says so.
+
+**The overall picture, counted from the cases themselves:**
+
+| Status | Cases |
+|---|---|
+| Automated | **14** |
+| Partial | **30** |
+| Manual | **1** |
+| Not testable yet | **208** |
+| **Total** | **253** |
+
+208 of 253 are not testable because the module is unbuilt — which is the honest
+shape of a product with five modules built out of thirteen, not a gap in this
+folder. Each of those cases names what blocks it.
 
 **Spec `013`'s ten stories were once thought to trace to no requirement.** They
 do — see the note at the top of `013-cross-cutting.md` for what actually

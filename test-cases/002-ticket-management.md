@@ -3,7 +3,7 @@
 **32 cases.** The support request lifecycle: creating, categorising,
 prioritising, assigning, moving through statuses, and the conversation on each.
 
-**Coverage:** 5 automated · 7 partial · 0 manual · 20 not testable yet
+**Coverage:** 4 automated · 8 partial · 0 manual · 20 not testable yet
 
 ---
 

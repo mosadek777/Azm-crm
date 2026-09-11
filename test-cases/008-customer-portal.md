@@ -3,7 +3,7 @@
 **18 cases.** The customer-facing side: signing in, raising a request, following
 it, and replying — without telephoning anyone.
 
-**Coverage:** 4 automated · 4 partial · 0 manual · 10 not testable yet
+**Coverage:** 1 automated · 6 partial · 0 manual · 11 not testable yet
 
 ---
 
