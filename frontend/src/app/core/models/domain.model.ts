@@ -1,3 +1,4 @@
+import { LocalizedText } from './user.model';
 // spec 001 + 002 — client-side shapes for what the API actually returns.
 // Deviations carried through from the backend: no owningTeamId (decision 20),
 // category is a flat string (decision 21).
@@ -85,4 +86,21 @@ export interface TicketMeta {
   statuses: { key: TicketStatus; pausesSla: boolean | null; terminal: boolean }[];
   priorities: Priority[];
   transitions: Record<TicketStatus, TicketStatus[]>;
+}
+
+// spec 012 FR-007, FR-008. Branch and Department names are ADMINISTRATOR-authored
+// labels, so they carry both languages and the API refuses a save with only one.
+// `active` is the only disposal: neither can be deleted, here or in the API.
+export interface Branch {
+  _id: string;
+  name: LocalizedText;
+  timezone: string;
+  defaultLocale: 'ar' | 'en';
+  active: boolean;
+}
+
+export interface Department {
+  _id: string;
+  name: LocalizedText;
+  active: boolean;
 }

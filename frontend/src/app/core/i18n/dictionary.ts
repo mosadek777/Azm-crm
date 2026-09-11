@@ -72,6 +72,45 @@ export const DICTIONARY: Translations = {
   'nav.collapse': { ar: 'طيّ القائمة', en: 'Collapse menu' },
   'nav.expand': { ar: 'توسيع القائمة', en: 'Expand menu' },
   'nav.administration': { ar: 'الإدارة', en: 'Administration' },
+
+  // Administration screens — spec 012 FR-007, FR-008, FR-015.
+  'admin.branches': { ar: 'الفروع', en: 'Branches' },
+  'admin.departments': { ar: 'الأقسام', en: 'Departments' },
+  'admin.newBranch': { ar: 'فرع جديد', en: 'New branch' },
+  'admin.newDepartment': { ar: 'قسم جديد', en: 'New department' },
+  'admin.name': { ar: 'الاسم', en: 'Name' },
+  'admin.nameAr': { ar: 'الاسم بالعربية', en: 'Name in Arabic' },
+  'admin.nameEn': { ar: 'الاسم بالإنجليزية', en: 'Name in English' },
+  'admin.timezone': { ar: 'المنطقة الزمنية', en: 'Timezone' },
+  'admin.defaultLocale': { ar: 'اللغة الافتراضية', en: 'Default language' },
+  'admin.state': { ar: 'الحالة', en: 'State' },
+  'admin.action': { ar: 'إجراء', en: 'Action' },
+  'admin.active': { ar: 'نشط', en: 'Active' },
+  'admin.inactive': { ar: 'غير نشط', en: 'Inactive' },
+  'admin.deactivate': { ar: 'إيقاف', en: 'Deactivate' },
+  'admin.reactivate': { ar: 'إعادة تنشيط', en: 'Reactivate' },
+  'admin.branchCreated': { ar: 'تم إنشاء الفرع', en: 'Branch created' },
+  'admin.departmentCreated': { ar: 'تم إنشاء القسم', en: 'Department created' },
+  'admin.deactivated': { ar: 'تم الإيقاف', en: 'Deactivated' },
+  'admin.reactivated': { ar: 'تمت إعادة التنشيط', en: 'Reactivated' },
+  'admin.noBranches': { ar: 'لا توجد فروع ضمن نطاقك.', en: 'There are no branches within your scope.' },
+  'admin.noDepartments': { ar: 'لا توجد أقسام ضمن نطاقك.', en: 'There are no departments within your scope.' },
+  // Said on the screen rather than left implicit: an administrator attached to
+  // one branch sees one branch, and that is the system working.
+  'admin.scopeNote': {
+    ar: 'تعرض هذه القائمة ما يقع ضمن نطاقك فقط.',
+    en: 'This list shows only what falls within your own scope.'
+  },
+  // Why there is no delete button, on the screen where somebody would look for
+  // one — rather than leaving them to wonder.
+  'admin.noDeleteNote': {
+    ar: 'لا يمكن الحذف: السجلات القائمة تشير إلى هذه العناصر. الإيقاف هو البديل، وهو قابل للتراجع.',
+    en: 'Deletion is not offered: existing records reference these. Deactivation is the alternative, and it is reversible.'
+  },
+
+  'common.loading': { ar: 'جارٍ التحميل…', en: 'Loading…' },
+  'lang.arabic': { ar: 'العربية', en: 'Arabic' },
+  'lang.english': { ar: 'الإنجليزية', en: 'English' },
   'common.unavailable': { ar: 'غير متاح', en: 'unavailable' },
   'common.yes': { ar: 'نعم', en: 'Yes' },
   'common.no': { ar: 'لا', en: 'No' },

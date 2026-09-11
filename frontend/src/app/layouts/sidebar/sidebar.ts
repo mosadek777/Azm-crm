@@ -76,10 +76,17 @@ export class Sidebar {
   protected readonly items: NavItem[] = [
     { labelKey: 'nav.tickets', route: '/tickets', icon: 'tickets' },
     { labelKey: 'nav.customers', route: '/customers', icon: 'customers' },
-    // Administration is a GROUP with no destination of its own — the reason the
-    // sidebar needs grouping at all. Its children are the screens that do not
-    // exist yet; listing them here is all that will be required.
-    { labelKey: 'nav.administration', icon: 'administration', children: [] }
+    // Administration: a GROUP with no destination of its own, which is why the
+    // sidebar needed grouping. It renders only once it has children — an empty
+    // section reads as broken — and these are the first two.
+    {
+      labelKey: 'nav.administration',
+      icon: 'administration',
+      children: [
+        { labelKey: 'admin.branches', route: '/admin/branches' },
+        { labelKey: 'admin.departments', route: '/admin/departments' }
+      ]
+    }
   ];
 
   /** A group with no children is not rendered — an empty section reads as broken. */

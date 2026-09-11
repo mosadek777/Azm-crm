@@ -89,6 +89,25 @@ export const routes: Routes = [
       {
         path: 'tickets/:id',
         loadComponent: () => import('./features/ticket/detail/ticket-detail').then(m => m.TicketDetail)
+      },
+      // Administration. Guarded by authGuard only — signed in, nothing more.
+      //
+      // There is deliberately NO role guard, for the reason auth.guard.ts gives
+      // in full: constitution IV says the interface hides what somebody may not
+      // see as a COURTESY, and the API refuses it as the CONTROL. A permission
+      // check living only in the client does not exist.
+      //
+      // So these routes are reachable by any signed-in member of staff. Listing
+      // branches and departments is permitted to them and is already scoped by
+      // the server; creating and deactivating are refused with 403 unless they
+      // hold ADM. Nothing is exposed that the server would not have given them.
+      {
+        path: 'admin/branches',
+        loadComponent: () => import('./features/admin/branches/branches').then(m => m.AdminBranches)
+      },
+      {
+        path: 'admin/departments',
+        loadComponent: () => import('./features/admin/departments/departments').then(m => m.AdminDepartments)
       }
     ]
   },

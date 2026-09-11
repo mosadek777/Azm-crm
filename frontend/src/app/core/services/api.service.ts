@@ -4,8 +4,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import {
-  Customer, ContactPoint, Ticket, TicketMessage, HistoryEntry, TicketMeta, Sla
+  Customer, ContactPoint, Ticket, TicketMessage, HistoryEntry, TicketMeta, Sla,
+  Branch, Department
 } from '../models/domain.model';
+import { LocalizedText } from '../models/user.model';
 
 const API = 'http://localhost:3000';
 
@@ -79,5 +81,39 @@ export class ApiService {
 
   addMessage(id: string, body: unknown) {
     return this.http.post<{ message: TicketMessage }>(`${API}/ticket/${id}/message`, body);
+  }
+
+  // --- platform: branches and departments (spec 012 FR-007, FR-008) ---
+  //
+  // Both lists are SCOPE-FILTERED BY THE SERVER. An administrator attached to
+  // one branch receives one branch — the interface does no filtering of its
+  // own, so a screen cannot accidentally show more than the caller may see.
+  listBranches() {
+    return this.http.get<{ branches: Branch[] }>(`${API}/platform/branches`);
+  }
+
+  createBranch(body: { name: LocalizedText; timezone: string; defaultLocale: 'ar' | 'en' }) {
+    return this.http.post<{ branch: Branch }>(`${API}/platform/branches`, body);
+  }
+
+  // There is NO delete, by design: a branch is referenced by every record
+  // created in it and throughout the audit trail. Deactivation is reversible
+  // and is the only disposal the API offers (spec 012 FR-015).
+  setBranchActive(id: string, active: boolean) {
+    return this.http.patch<{ branch: Branch; changed: boolean }>(
+      `${API}/platform/branches/${id}/active`, { active });
+  }
+
+  listDepartments() {
+    return this.http.get<{ departments: Department[] }>(`${API}/platform/departments`);
+  }
+
+  createDepartment(body: { name: LocalizedText }) {
+    return this.http.post<{ department: Department }>(`${API}/platform/departments`, body);
+  }
+
+  setDepartmentActive(id: string, active: boolean) {
+    return this.http.patch<{ department: Department; changed: boolean }>(
+      `${API}/platform/departments/${id}/active`, { active });
   }
 }

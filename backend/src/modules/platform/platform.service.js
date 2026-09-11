@@ -143,3 +143,74 @@ export const createDepartment = async (req, res, next) => {
     return next(err)
   }
 }
+
+// ---------------------------------------------------------------------------
+// Deactivation. spec 012 FR-015: branches and departments MUST be deactivatable
+// but MUST NOT be deletable while any record references them.
+//
+// ⚠ THERE IS NO DELETE, HERE OR ANYWHERE. That is the requirement, not an
+// omission: a branch appears throughout the audit trail and on every record
+// created in it, so deleting one would strand those records behind a filter
+// that can no longer match, and break the trail that proves what happened.
+// Deactivation is the only disposal, and it is reversible.
+//
+// Deactivating does NOT cascade and does not refuse when records reference the
+// entity. A branch with a thousand tickets in it is exactly the branch somebody
+// needs to close, and those tickets must stay readable afterwards. What changes
+// is that it stops being offered for NEW work; the count of what references it
+// is returned so the person deciding can see what they are affecting.
+
+const setActive = (Model, entityType, action) => async (req, res, next) => {
+  try {
+    const { active } = req.body ?? {}
+    if (typeof active !== 'boolean') {
+      return res.status(400).json({
+        message: {
+          ar: 'الحقل active مطلوب ويجب أن يكون true أو false',
+          en: 'active is required and must be true or false'
+        },
+        fields: ['active']
+      })
+    }
+
+    // req.target is set by authorizeOnTarget, which has already answered 404
+    // for anything out of scope — identical to a record that does not exist.
+    const current = req.target
+    if (current.active === active) {
+      // Not an error, and not a silent success either: report the state so a
+      // caller is never left guessing whether their change applied.
+      return res.json({ [entityType.toLowerCase()]: redact(current), changed: false })
+    }
+
+    const session = await mongoose.startSession()
+    try {
+      await session.withTransaction(async () => {
+        await recordAudit({
+          actorId: req.user._id,
+          actorRef: req.user._id.toString(),
+          action,
+          entityType,
+          entityId: current._id,
+          before: { active: current.active },
+          after: { active },
+          // Deactivating a branch or department changes what the whole
+          // organisation can file work against, so it is worth seeing.
+          severity: 'high',
+          req,
+          session
+        })
+        await Model.updateOne({ _id: current._id }, { $set: { active } }, { session })
+      })
+    } finally {
+      await session.endSession()
+    }
+
+    const updated = await Model.findById(current._id)
+    return res.json({ [entityType.toLowerCase()]: redact(updated), changed: true })
+  } catch (err) {
+    return next(err)
+  }
+}
+
+export const setBranchActive = setActive(Branch, 'Branch', 'branch.active_changed')
+export const setDepartmentActive = setActive(Department, 'Department', 'department.active_changed')

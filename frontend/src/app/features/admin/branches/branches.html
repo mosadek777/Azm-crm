@@ -1,0 +1,160 @@
+<!-- Administration — branches. See branches.ts for the three rules built in
+     here rather than added after: server-side scope, deactivate-never-delete,
+     and both languages or neither. -->
+<div class="flex flex-col gap-6">
+
+  <div class="flex flex-wrap items-center gap-3">
+    <h1 class="m-0 text-2xl font-semibold text-surface-900">
+      {{ 'admin.branches' | translate: i18n.lang() }}
+    </h1>
+    @if (!loading()) {
+      <span class="rounded-full bg-surface-100 px-2.5 py-0.5 text-sm text-surface-600">
+        {{ activeCount() }} / {{ rows().length }}
+      </span>
+    }
+    <span class="flex-1"></span>
+    <button type="button"
+      class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white
+             hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+      [attr.aria-expanded]="creating()"
+      (click)="creating.set(!creating())">
+      {{ (creating() ? 'action.cancel' : 'admin.newBranch') | translate: i18n.lang() }}
+    </button>
+  </div>
+
+  <!-- ONLY WHAT THE CALLER MAY SEE. The list arrives already filtered by the
+       server; nothing here narrows or widens it. -->
+  <p class="m-0 text-sm text-surface-500">
+    {{ 'admin.scopeNote' | translate: i18n.lang() }}
+  </p>
+
+  @if (creating()) {
+    <form class="flex flex-col gap-4 rounded-xl border border-surface-200 bg-surface-0 p-4"
+          (ngSubmit)="submit()">
+      <h2 class="m-0 text-sm font-semibold text-surface-900">
+        {{ 'admin.newBranch' | translate: i18n.lang() }}
+      </h2>
+
+      <!-- BOTH LANGUAGES, side by side, because the server refuses a save with
+           only one and a form that hides that fact just produces a refusal the
+           person cannot act on. -->
+      <div class="grid gap-4 sm:grid-cols-2">
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-medium text-surface-700">
+            {{ 'admin.nameAr' | translate: i18n.lang() }}
+          </span>
+          <input name="nameAr" dir="rtl" required
+            [ngModel]="nameAr()" (ngModelChange)="nameAr.set($event)"
+            class="w-full rounded-lg border border-surface-300 px-3 py-2 text-start
+                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25" />
+        </label>
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-medium text-surface-700">
+            {{ 'admin.nameEn' | translate: i18n.lang() }}
+          </span>
+          <input name="nameEn" dir="ltr" required
+            [ngModel]="nameEn()" (ngModelChange)="nameEn.set($event)"
+            class="w-full rounded-lg border border-surface-300 px-3 py-2 text-start
+                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25" />
+        </label>
+
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-medium text-surface-700">
+            {{ 'admin.timezone' | translate: i18n.lang() }}
+          </span>
+          <!-- A timezone identifier is a direction-neutral value. -->
+          <input name="timezone" dir="ltr" required
+            [ngModel]="timezone()" (ngModelChange)="timezone.set($event)"
+            class="w-full rounded-lg border border-surface-300 px-3 py-2 text-start
+                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25" />
+        </label>
+
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-medium text-surface-700">
+            {{ 'admin.defaultLocale' | translate: i18n.lang() }}
+          </span>
+          <select name="defaultLocale"
+            [ngModel]="defaultLocale()" (ngModelChange)="defaultLocale.set($event)"
+            class="w-full rounded-lg border border-surface-300 bg-surface-0 px-3 py-2
+                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25">
+            <option value="ar">{{ 'lang.arabic' | translate: i18n.lang() }}</option>
+            <option value="en">{{ 'lang.english' | translate: i18n.lang() }}</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- The server's own refusal, rendered as sent. -->
+      @if (refusal(); as message) {
+        <p class="m-0 rounded-lg border-s-4 border-red-600 bg-red-50 px-3 py-2 text-sm text-red-800"
+           role="alert">{{ message[i18n.lang()] }}</p>
+      }
+
+      <div>
+        <button type="submit" [disabled]="!canSubmit() || busy() === 'create'"
+          class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white
+                 hover:bg-primary-700 disabled:opacity-50
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
+          {{ 'action.save' | translate: i18n.lang() }}
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (loading()) {
+    <p class="m-0 text-sm text-surface-500">{{ 'common.loading' | translate: i18n.lang() }}</p>
+  } @else if (!rows().length) {
+    <p class="m-0 rounded-xl border border-surface-200 bg-surface-0 p-6 text-center text-sm text-surface-500">
+      {{ 'admin.noBranches' | translate: i18n.lang() }}
+    </p>
+  } @else {
+    <!-- The table scrolls inside its own frame; the page never scrolls
+         sideways, on any width. -->
+    <div class="overflow-x-auto rounded-xl border border-surface-200 bg-surface-0">
+      <table class="w-full border-collapse text-sm">
+        <thead>
+          <tr class="border-b border-surface-200 bg-surface-50">
+            <th class="px-4 py-2.5 text-start font-semibold text-surface-700">{{ 'admin.name' | translate: i18n.lang() }}</th>
+            <th class="px-4 py-2.5 text-start font-semibold text-surface-700">{{ 'admin.timezone' | translate: i18n.lang() }}</th>
+            <th class="px-4 py-2.5 text-start font-semibold text-surface-700">{{ 'admin.defaultLocale' | translate: i18n.lang() }}</th>
+            <th class="px-4 py-2.5 text-start font-semibold text-surface-700">{{ 'admin.state' | translate: i18n.lang() }}</th>
+            <th class="px-4 py-2.5 text-end font-semibold text-surface-700">{{ 'admin.action' | translate: i18n.lang() }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (b of rows(); track b._id) {
+            <tr class="border-b border-surface-100 last:border-0" [class.opacity-60]="!b.active">
+              <td class="px-4 py-2.5 text-surface-900">{{ label(b.name) }}</td>
+              <td class="px-4 py-2.5"><span class="ltr text-surface-600">{{ b.timezone }}</span></td>
+              <td class="px-4 py-2.5 text-surface-600">
+                {{ (b.defaultLocale === 'ar' ? 'lang.arabic' : 'lang.english') | translate: i18n.lang() }}
+              </td>
+              <td class="px-4 py-2.5">
+                <!-- State is a word, not only a colour. -->
+                <span class="rounded-full px-2 py-0.5 text-xs font-medium"
+                  [class]="b.active ? 'bg-emerald-100 text-emerald-900' : 'bg-surface-200 text-surface-700'">
+                  {{ (b.active ? 'admin.active' : 'admin.inactive') | translate: i18n.lang() }}
+                </span>
+              </td>
+              <td class="px-4 py-2.5 text-end">
+                <!-- DEACTIVATE, NEVER DELETE. There is no delete in the API and
+                     none here. The label says what will happen, so it is never
+                     mistaken for a destructive action. -->
+                <button type="button" [disabled]="busy() === b._id"
+                  class="rounded-md border border-surface-300 px-2.5 py-1.5 text-sm
+                         text-surface-700 hover:bg-surface-100 disabled:opacity-50
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                  (click)="toggleActive(b)">
+                  {{ (b.active ? 'admin.deactivate' : 'admin.reactivate') | translate: i18n.lang() }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p class="m-0 text-xs text-surface-500">
+      {{ 'admin.noDeleteNote' | translate: i18n.lang() }}
+    </p>
+  }
+</div>

@@ -10,6 +10,7 @@
 
 import * as platformservice from './platform.service.js'
 import { Branch } from '../../DB/models/branch.model.js'
+import { Department } from '../../DB/models/department.model.js'
 import { authenticate } from '../../middlewares/auth.middleware.js'
 import { authorize, authorizeOnTarget } from '../../middlewares/permission.middleware.js'
 import { Router } from 'express'
@@ -91,5 +92,49 @@ router.get(
 
 router.post("/branches", authenticate, authorize('ADM'), platformservice.createBranch)
 router.post("/departments", authenticate, authorize('ADM'), platformservice.createDepartment)
+
+/**
+ * @openapi
+ * /platform/branches/{id}/active:
+ *   patch:
+ *     tags: [Platform]
+ *     summary: Deactivate or reactivate a branch (spec 012 FR-015)
+ *     description: >
+ *       There is no delete, by design. A branch is referenced by every record
+ *       created in it and throughout the audit trail, so deletion would strand
+ *       those records and break the trail. Deactivation is the only disposal and
+ *       it is reversible. Out-of-scope ids answer 404, identical to absent ones.
+ *     responses:
+ *       200: { description: 'Updated. `changed` is false when it already held that state.' }
+ *       400: { description: 'active missing or not a boolean' }
+ *       404: { description: 'Not found — identical body whether out of scope or genuinely absent' }
+ */
+// ADM only, AND scoped: authorizeOnTarget answers 404 for a branch outside the
+// caller's scope before the handler runs, so an administrator of one branch
+// cannot deactivate another's.
+router.patch(
+  "/branches/:id/active",
+  authenticate,
+  authorizeOnTarget(req => Branch.findById(req.params.id).catch(() => null), 'ADM'),
+  platformservice.setBranchActive
+)
+
+/**
+ * @openapi
+ * /platform/departments/{id}/active:
+ *   patch:
+ *     tags: [Platform]
+ *     summary: Deactivate or reactivate a department (spec 012 FR-015)
+ *     responses:
+ *       200: { description: 'Updated. `changed` is false when it already held that state.' }
+ *       400: { description: 'active missing or not a boolean' }
+ *       404: { description: 'Not found — identical body whether out of scope or genuinely absent' }
+ */
+router.patch(
+  "/departments/:id/active",
+  authenticate,
+  authorizeOnTarget(req => Department.findById(req.params.id).catch(() => null), 'ADM'),
+  platformservice.setDepartmentActive
+)
 
 export default router
