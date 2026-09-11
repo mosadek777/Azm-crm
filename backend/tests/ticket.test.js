@@ -120,7 +120,12 @@ chk('FR-010: an agent may self-assign an unassigned ticket', (await call('PATCH'
 chk('and the assignee really is them', (await call('GET', `/ticket/${T}`, { token: sara })).body?.ticket?.assignedAgentId, saraId)
 chk('and may release their own ticket', (await call('PATCH', `/ticket/${T}/assign`, { token: sara, body: { assignedAgentId: null, reason: 'releasing' } })).status, 200)
 
-console.log('\n--- FR-005: roles compose per record, they do not union ---')
+// QUALIFIED: this is spec 010's FR-005, not 002's. In a suite that otherwise
+// covers spec 002, a bare "FR-005" reads as 002 FR-005 — "each category node
+// MUST support a default priority, owning team and SLA policy" — which is not
+// built at all. The test below is correct; the LABEL claimed the wrong
+// requirement, and a label is what a coverage map reads.
+console.log('\n--- spec 010 FR-005: roles compose per record, they do not union ---')
 // The union bug: someone holding AGT in one branch and LEAD in another must not
 // wield LEAD in the branch where they are only an agent. scope.test.js checks
 // rolesForTarget() as a pure function; this checks the consequence through the

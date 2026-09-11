@@ -32,7 +32,7 @@
 
 import 'dotenv/config'
 import { spawn } from 'node:child_process'
-import { readdirSync } from 'node:fs'
+import { existsSync, readdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import mongoose from 'mongoose'
@@ -54,14 +54,26 @@ if (!process.env.MONGO_URI) {
 // against the smallest suite rather than as noise inside the ticket run.
 const ORDER = ['scope.test.js', 'customer.test.js', 'ticket.test.js', 'portal.test.js', 'security.test.js']
 
+// STORY SUITES run after the contract suites, from tests/stories/. They are a
+// separate LAYER, not a replacement: the contract suites prove the endpoints,
+// these prove the user need behind them. They run last because a broken
+// endpoint should report as a contract failure first — a story failure on top
+// of it is noise.
+const storyDir = join(__dirname, 'stories')
+const storySuites = existsSync(storyDir)
+  ? readdirSync(storyDir).filter(f => f.endsWith('.test.js')).sort().map(f => `stories/${f}`)
+  : []
+
 const filter = process.argv[2]
-const suites = readdirSync(__dirname)
-  .filter(f => f.endsWith('.test.js'))
-  .sort((a, b) => {
-    const ia = ORDER.indexOf(a), ib = ORDER.indexOf(b)
-    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib) || a.localeCompare(b)
-  })
-  .filter(f => !filter || f.includes(filter))
+const suites = [
+  ...readdirSync(__dirname)
+    .filter(f => f.endsWith('.test.js'))
+    .sort((a, b) => {
+      const ia = ORDER.indexOf(a), ib = ORDER.indexOf(b)
+      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib) || a.localeCompare(b)
+    }),
+  ...storySuites
+].filter(f => !filter || f.includes(filter))
 
 if (!suites.length) {
   console.error(filter ? `No suite matches "${filter}".` : 'No *.test.js files in backend/tests/.')

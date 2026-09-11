@@ -166,7 +166,7 @@ console.log(`      ${omarEmails.join(', ')}`)
 const leakedNour = omarEmails.includes('nour@azmsquad.com')
 check('branch-C lead is NOT visible to the branch-B admin', leakedNour, false)
 
-console.log('\n--- UNIT: rolesForTarget composes without widening (FR-005) ---')
+console.log('\n--- UNIT: rolesForTarget composes without widening (spec 010 FR-005) ---')
 // These four are a UNIT test of a pure function, not an acceptance test, and
 // they are labelled that way because the distinction matters: the input below is
 // hand-written, so nothing here proves the API ever calls rolesForTarget or

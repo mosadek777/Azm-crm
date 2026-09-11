@@ -21,6 +21,10 @@ example below is not hypothetical — it is live in this repository today.
 cell is a story id: **253 stories**. Every `FR`/`NFR` row in all thirteen specs,
 with its `Traces` column: this gives requirement → story.
 
+⚠ **Read the Traces column by HEADER POSITION, not as the last cell.** Spec
+`013` has a fifth `Status` column and the first extractor silently read that
+instead — see the `013` section for what it cost.
+
 **The mapping is 1:1 throughout.** Every story traces to exactly one
 requirement, and almost every requirement to exactly one story. That is
 convenient and slightly misleading — it means the chain has no redundancy, so a
@@ -248,13 +252,26 @@ board card naming what blocks it.
 | `009` reports | `RP-01`–`RP-21` |
 | `011` integrations | `INT-01`–`INT-17` |
 
-### `013` cross-cutting — 10 stories, no requirement traces to them
+### `013` cross-cutting — 10 stories, all traced, none tested
 
-`NFR-01`–`NFR-10` are the only stories in the repository that **no requirement
-traces back to**. Spec `013`'s requirement rows carry no `Traces` column
-entries pointing at them. That is a traceability break in its own right — under
-constitution VIII every requirement traces to a story, and here the stories
-exist with nothing claiming them.
+**⚠ CORRECTION, 2026-09-09.** An earlier revision of this document claimed
+`NFR-01`–`NFR-10` were the only stories no requirement traced back to, and
+called it a traceability break under constitution VIII. **That was wrong, and it
+was my parser's fault, not the specs'.**
+
+Spec `013` is the only one of the thirteen whose requirement table carries a
+fifth column — `| ID | Requirement | Level | Traces | Status |`. The extractor
+read the **last** cell as Traces, so for `013` it read *Status* and found no
+story ids. Every other spec ends at Traces, which is why only this one was
+affected.
+
+**All ten stories are correctly traced**, to `013 FR-001`–`FR-010`
+respectively. There is no traceability break and nothing to record. What is true
+is much more ordinary: all ten are **None** — nothing is built and nothing is
+tested, which the board now tracks as `cross-cutting-operations`.
+
+The correction is kept rather than silently edited, because a coverage document
+that quietly changes its own findings is worth no more than no document at all.
 
 ---
 

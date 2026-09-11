@@ -104,7 +104,9 @@ chk('no message carries an author name (002 [CLARIFY-6], decision 29)', JSON.str
 chk('no assignee is disclosed', 'assignedAgentId' in (portalView.body?.ticket ?? {}), false)
 chk('a message says only whether it is theirs or ours', portalView.body?.messages?.every(m => ['you', 'support'].includes(m.from)), true)
 
-console.log('\n--- FR-034 / constitution III: no duration is computed ---')
+// spec 002's FR-034, not 008's — this suite covers 008, so the cross-spec
+// reference is qualified. 008 has no FR-034.
+console.log('\n--- spec 002 FR-034 / constitution III: no duration is computed ---')
 chk('sla is read, not computed', portalView.body?.ticket?.sla?.status, 'unavailable')
 
 console.log('\n--- FR-020: portal actions are audited and attributable to the customer ---')
