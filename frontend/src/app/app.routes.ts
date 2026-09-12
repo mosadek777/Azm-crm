@@ -12,6 +12,7 @@ import { Routes } from '@angular/router';
 import { AuthLayout } from './layouts/auth-layout/auth-layout';
 import { MainLayout } from './layouts/main-layout/main-layout';
 import { authGuard } from './core/auth/guards/auth.guard';
+import { requiresHint } from './core/auth/guards/hint.guard';
 import { PortalLayout } from './layouts/portal-layout/portal-layout';
 import { portalGuard, portalSignedOutGuard } from './core/auth/guards/portal.guard';
 
@@ -103,18 +104,22 @@ export const routes: Routes = [
       // hold ADM. Nothing is exposed that the server would not have given them.
       {
         path: 'admin/branches',
+        canActivate: [requiresHint('administration')],
         loadComponent: () => import('./features/admin/branches/branches').then(m => m.AdminBranches)
       },
       {
         path: 'admin/departments',
+        canActivate: [requiresHint('administration')],
         loadComponent: () => import('./features/admin/departments/departments').then(m => m.AdminDepartments)
       },
       {
         path: 'admin/users',
+        canActivate: [requiresHint('staffDirectory')],
         loadComponent: () => import('./features/admin/users/users').then(m => m.AdminUsers)
       },
       {
         path: 'admin/roles',
+        canActivate: [requiresHint('staffDirectory')],
         loadComponent: () => import('./features/admin/roles/roles').then(m => m.AdminRoles)
       }
     ]

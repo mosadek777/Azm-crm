@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ApiService } from '../../../core/services/api.service';
+import { AuthService } from '../../../core/auth/services/auth.service';
 import { LanguageService } from '../../../core/i18n/language.service';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { StatusTonePipe } from '../../../shared/pipes/status-tone.pipe';
@@ -27,6 +28,12 @@ export class TicketList {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   protected readonly i18n = inject(LanguageService);
+  private readonly auth = inject(AuthService);
+
+  // An auditor is read-everything, change-nothing (002 §9): creating is
+  // refused for them every time, so it is not offered. A rendering hint,
+  // not a permission check — the server decides and refuses regardless.
+  protected readonly canWrite = computed(() => this.auth.show().ticketWrite);
 
   protected readonly rows = signal<Ticket[]>([]);
   protected readonly total = signal(0);

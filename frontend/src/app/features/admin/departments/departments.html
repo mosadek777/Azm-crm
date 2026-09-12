@@ -12,20 +12,30 @@
       </span>
     }
     <span class="flex-1"></span>
-    <button type="button"
-      class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white
-             hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-      [attr.aria-expanded]="creating()"
-      (click)="creating.set(!creating())">
-      {{ (creating() ? 'action.cancel' : 'admin.newDepartment') | translate: i18n.lang() }}
-    </button>
+    @if (canManage()) {
+      <button type="button"
+        class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white
+               hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+        [attr.aria-expanded]="creating()"
+        (click)="creating.set(!creating())">
+        {{ (creating() ? 'action.cancel' : 'admin.newDepartment') | translate: i18n.lang() }}
+      </button>
+    }
   </div>
 
   <p class="m-0 text-sm text-surface-500">
     {{ 'admin.scopeNote' | translate: i18n.lang() }}
   </p>
+  <!-- READ-ONLY. Listing is open below ADM (010 §9, 012 §9); creating and
+       deactivating are not. Rather than offering controls that are refused
+       every time, the screen says what it is. -->
+  @if (!canManage()) {
+    <p class="m-0 rounded-lg border-s-4 border-surface-300 bg-surface-100 px-3 py-2 text-sm text-surface-600">
+      {{ 'admin.readOnlyNote' | translate: i18n.lang() }}
+    </p>
+  }
 
-  @if (creating()) {
+  @if (creating() && canManage()) {
     <form class="flex flex-col gap-4 rounded-xl border border-surface-200 bg-surface-0 p-4"
           (ngSubmit)="submit()">
       <h2 class="m-0 text-sm font-semibold text-surface-900">
@@ -99,6 +109,7 @@
                 </span>
               </td>
               <td class="px-4 py-2.5 text-end">
+                @if (canManage()) {
                 <!-- Deactivate, never delete. -->
                 <button type="button" [disabled]="busy() === d._id"
                   class="rounded-md border border-surface-300 px-2.5 py-1.5 text-sm
@@ -107,6 +118,7 @@
                   (click)="toggleActive(d)">
                   {{ (d.active ? 'admin.deactivate' : 'admin.reactivate') | translate: i18n.lang() }}
                 </button>
+                              }
               </td>
             </tr>
           }

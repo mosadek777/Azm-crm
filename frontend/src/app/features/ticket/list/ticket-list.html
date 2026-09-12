@@ -6,13 +6,18 @@
     </h1>
     <span class="rounded-full bg-surface-200 px-2 py-0.5 text-xs text-surface-600">{{ total() }}</span>
     <span class="flex-1"></span>
-    <button type="button"
-      class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white
-             hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500/40
-             transition-colors"
-      (click)="create()">
-      {{ 'ticket.new' | translate: i18n.lang() }}
-    </button>
+    <!-- An auditor is read-everything, change-nothing (002 §9): create is
+         refused for them every time, so it is not offered. The server still
+         refuses it regardless of what the client believes. -->
+    @if (canWrite()) {
+      <button type="button"
+        class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white
+               hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500/40
+               transition-colors"
+        (click)="create()">
+        {{ 'ticket.new' | translate: i18n.lang() }}
+      </button>
+    }
   </div>
 
   <div class="flex flex-wrap items-center gap-2 rounded-xl border border-surface-200

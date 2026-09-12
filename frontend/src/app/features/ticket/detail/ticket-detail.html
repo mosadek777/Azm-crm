@@ -81,7 +81,11 @@
           {{ 'ticket.changeStatus' | translate: i18n.lang() }}
         </h2>
 
-        @if (reachable().length === 0) {
+        @if (!canWrite()) {
+          <p class="m-0 text-sm text-surface-500">
+            {{ 'ticket.readOnly' | translate: i18n.lang() }}
+          </p>
+        } @else if (reachable().length === 0) {
           <p class="m-0 text-sm text-surface-500">
             {{ 'ticket.terminal' | translate: i18n.lang() }}
           </p>
@@ -124,6 +128,14 @@
         <h2 class="m-0 mb-3 text-sm font-semibold text-surface-900">
           {{ 'ticket.assignment' | translate: i18n.lang() }}
         </h2>
+        <!-- An auditor may read this ticket and may never assign it (002 §9).
+             The controls are not offered, rather than offered and refused —
+             and the server refuses regardless of what this decides. -->
+        @if (!canWrite()) {
+          <p class="m-0 text-sm text-surface-500">
+            {{ 'ticket.readOnly' | translate: i18n.lang() }}
+          </p>
+        } @else {
         <div class="flex flex-col gap-3">
           <!-- AS-06 / FR-009: a reason is required for every assignment and
                reassignment, so the buttons stay disabled without one rather
@@ -154,6 +166,7 @@
             {{ 'ticket.assignNote' | translate: i18n.lang() }}
           </p>
         </div>
+        }
       </section>
     </div>
 
@@ -186,7 +199,7 @@
         }
       </ul>
 
-      @if (!t.terminal) {
+      @if (!t.terminal && canWrite()) {
         <div class="mt-4 flex flex-col gap-3 border-t border-surface-200 pt-4">
           <textarea rows="3" [ngModel]="reply()" (ngModelChange)="reply.set($event)"
             [placeholder]="'ticket.reply' | translate: i18n.lang()"
@@ -198,7 +211,11 @@
               class="rounded-lg border border-surface-300 bg-surface-0 px-3 py-2 text-sm
                      focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25">
               <option value="">{{ 'ticket.chooseVisibility' | translate: i18n.lang() }}</option>
-              <option value="customer">{{ 'ticket.customerVisible' | translate: i18n.lang() }}</option>
+              <!-- 002 §9: an administrator may annotate and may not speak to
+                   the customer. Not offered when the server would refuse it. -->
+              @if (canReplyToCustomer()) {
+                <option value="customer">{{ 'ticket.customerVisible' | translate: i18n.lang() }}</option>
+              }
               <option value="internal">{{ 'ticket.internal' | translate: i18n.lang() }}</option>
             </select>
             <button type="button" [disabled]="!reply().trim() || !visibility() || busy()"

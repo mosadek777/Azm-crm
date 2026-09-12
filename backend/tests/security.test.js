@@ -151,7 +151,15 @@ const bg = await login()
 const bgMe = await call('GET', '/auth/me', { token: bg.body.token })
 check('the break-glass administrator is told to show administration', bgMe.body?.show?.administration, true)
 check('and it carries no scope detail at all — nothing to authorise with',
-  JSON.stringify(Object.keys(bgMe.body?.show ?? {})), '["administration"]')
+  JSON.stringify(Object.keys(bgMe.body?.show ?? {}).sort()),
+  '["administration","customerReply","staffDirectory","ticketWrite"]')
+// THE PROPERTY THAT MATTERS as flags are added: every one is a bare boolean.
+// A branch id, a department id or a record id here would be the beginning of a
+// client-side scope decision; a boolean cannot be one.
+check('every flag is a bare boolean — no branch, department or record anywhere',
+  Object.values(bgMe.body?.show ?? {}).every(v => typeof v === 'boolean'), true)
+check('and there is at least one, so that is not vacuous',
+  Object.keys(bgMe.body?.show ?? {}).length > 0, true)
 check('nor any role list', bgMe.body?.roles === undefined, true)
 
 // An ordinary agent, created for this check.
@@ -192,6 +200,52 @@ check('...and creating a user', (await call('POST', '/user', {
 })).status, 403)
 check('the branch was not deactivated behind those refusals',
   (await call('GET', `/platform/branches/${brRes.body.branch._id}`, { token: bg.body.token })).body?.branch?.active, true)
+
+// THE OTHER FLAGS, held to the same standard: each one hides a control the
+// server refuses anyway, and the refusal is what actually protects the record.
+check('the agent is told they may not reach the staff directory',
+  agentMe.body?.show?.staffDirectory, false)
+check('and the server refuses them the staff list regardless',
+  (await call('GET', '/user', { token: agentTok })).status, 403)
+
+// Paired with a success, or a blanket-deny regression would satisfy every
+// refusal above: the same agent IS told they may write, and the server agrees.
+check('the same agent IS told they may write tickets', agentMe.body?.show?.ticketWrite, true)
+check('and IS told they may reply to a customer', agentMe.body?.show?.customerReply, true)
+
+// The break-glass administrator is the mirror image, which proves these two
+// flags are not simply always-true and always-false constants.
+check('the administrator is told NOT to offer a customer-visible reply',
+  bgMe.body?.show?.customerReply, false)
+// A ticket to try it on. The runner drops the database, so this suite makes
+// its own rather than depending on demo data that may or may not be there —
+// the earlier version of this check reported "no ticket to test against",
+// which is the empty-data failure mode dressed as a result.
+const probeCustomer = (await call('POST', '/customer', {
+  token: agentTok,
+  body: {
+    type: 'person', displayName: 'Visibility Probe', preferredLanguage: 'en',
+    contactPoints: [{ channelType: 'email', value: `vis.${Date.now()}@example.com` }]
+  }
+})).body?.customer
+const probeTicket = (await call('POST', '/ticket', {
+  token: agentTok,
+  body: {
+    customerId: probeCustomer?._id, subject: 'Visibility probe ticket',
+    description: 'Created so the customer-visible refusal has something to be refused on.',
+    category: 'general', priority: 'normal'
+  }
+})).body?.ticket
+check('a ticket exists to test the refusal against', !!probeTicket?._id, true)
+
+check('the administrator IS allowed an internal note on it',
+  (await call('POST', `/ticket/${probeTicket._id}/message`, {
+    token: bg.body.token, body: { body: 'Permitted: 002 §9 internal note', visibility: 'internal' }
+  })).status, 201)
+check('and the server refuses the customer-visible reply on the SAME ticket',
+  (await call('POST', `/ticket/${probeTicket._id}/message`, {
+    token: bg.body.token, body: { body: 'Refused: 002 §9', visibility: 'customer' }
+  })).status, 403)
 
 check('the endpoint itself requires a session', (await call('GET', '/auth/me')).status, 401)
 

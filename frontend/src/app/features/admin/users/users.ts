@@ -42,6 +42,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ApiService } from '../../../core/services/api.service';
+import { AuthService } from '../../../core/auth/services/auth.service';
 import { LanguageService } from '../../../core/i18n/language.service';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { ToastService } from '../../../core/notifications/toast.service';
@@ -59,6 +60,20 @@ export class AdminUsers {
   private readonly api = inject(ApiService);
   private readonly toast = inject(ToastService);
   protected readonly i18n = inject(LanguageService);
+  private readonly auth = inject(AuthService);
+
+  /**
+   * Whether to OFFER the controls that create and deactivate. Not whether
+   * they are allowed — the server decides that per request (E-04) and
+   * refuses regardless of what this says.
+   *
+   * It matters even behind the route guard. Listing branches, departments
+   * and staff is open below ADM (010 §9, 012 §9), so a lead or an auditor
+   * can legitimately READ this screen and can never use a single one of
+   * its buttons. Showing them a form whose save is refused every time is
+   * the defect; a read-only screen is the honest answer.
+   */
+  protected readonly canManage = computed(() => this.auth.show().administration);
 
   protected readonly rows = signal<StaffUser[]>([]);
   protected readonly loading = signal(true);

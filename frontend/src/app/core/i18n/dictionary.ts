@@ -103,6 +103,12 @@ export const DICTIONARY: Translations = {
   },
   // Why there is no delete button, on the screen where somebody would look for
   // one — rather than leaving them to wonder.
+  // Shown to somebody who may READ this screen and may not change it —
+  // a lead or an auditor. Better than buttons that are refused every time.
+  'admin.readOnlyNote': {
+    ar: 'لديك صلاحية الاطلاع فقط على هذه الشاشة. الإنشاء والإيقاف يتطلبان دور مدير نظام.',
+    en: 'You have read-only access to this screen. Creating and deactivating require an administrator role.'
+  },
   'admin.noDeleteNote': {
     ar: 'لا يمكن الحذف: السجلات القائمة تشير إلى هذه العناصر. الإيقاف هو البديل، وهو قابل للتراجع.',
     en: 'Deletion is not offered: existing records reference these. Deactivation is the alternative, and it is reversible.'
@@ -227,6 +233,12 @@ export const DICTIONARY: Translations = {
   'nav.group.access': { ar: 'الصلاحيات', en: 'Access' },
   'nav.unassigned': { ar: 'تذاكر غير مسندة', en: 'unassigned tickets' },
 
+  // Shown where a write control would otherwise sit, to somebody whose
+  // role may read the ticket and never change it (002 §9, the auditor).
+  'ticket.readOnly': {
+    ar: 'لديك صلاحية الاطلاع فقط. تغيير الحالة والإسناد والرد تتطلب دورًا يسمح بالكتابة.',
+    en: 'You have read-only access. Changing status, assigning and replying require a role that may write.'
+  },
   'common.loading': { ar: 'جارٍ التحميل…', en: 'Loading…' },
   'lang.arabic': { ar: 'العربية', en: 'Arabic' },
   'lang.english': { ar: 'الإنجليزية', en: 'English' },

@@ -42,6 +42,7 @@ import { AuthService } from '../../core/auth/services/auth.service';
 import { ApiService } from '../../core/services/api.service';
 import { LanguageService } from '../../core/i18n/language.service';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
+import { CapabilityHints } from '../../core/models/user.model';
 import { SidebarState } from './sidebar-state';
 
 export interface NavChild { labelKey: string; route: string }
@@ -54,6 +55,14 @@ export interface NavItem {
   children?: NavChild[];
   /** Which live count, if any, this item carries. */
   badge?: 'unassignedTickets';
+  /**
+   * The rendering hint this item depends on. Absent means always shown.
+   *
+   * This is NOT authorisation — it decides whether to OFFER a control, and
+   * the server refuses regardless. Its only job is that an agent is never
+   * shown a section where every action returns "not authorised".
+   */
+  requires?: keyof CapabilityHints;
 }
 
 /** A titled run of items, like the reference's "Navigation" and "Projects". */
@@ -126,6 +135,7 @@ export class Sidebar {
         {
           labelKey: 'nav.group.organisation',
           icon: 'organisation',
+          requires: 'administration',
           children: [
             { labelKey: 'admin.branches', route: '/admin/branches' },
             { labelKey: 'admin.departments', route: '/admin/departments' }
@@ -134,6 +144,7 @@ export class Sidebar {
         {
           labelKey: 'nav.group.access',
           icon: 'access',
+          requires: 'staffDirectory',
           children: [
             { labelKey: 'admin.users', route: '/admin/users' },
             { labelKey: 'admin.roles', route: '/admin/roles' }
@@ -143,11 +154,22 @@ export class Sidebar {
     }
   ];
 
-  /** A section with nothing in it is not rendered — an empty heading reads as broken. */
-  protected readonly visibleSections = computed(() =>
-    this.sections
-      .map(s => ({ ...s, items: s.items.filter(i => i.route || (i.children?.length ?? 0) > 0) }))
-      .filter(s => s.items.length > 0));
+  /**
+   * Items whose hint is false are not rendered AT ALL, and a section left
+   * with nothing in it goes with them — an empty heading reads as broken,
+   * and an "Administration" heading over nothing is worse than no heading.
+   *
+   * The hints start false and are replaced when /auth/me answers, so the
+   * panel briefly shows less rather than briefly showing too much.
+   */
+  protected readonly visibleSections = computed(() => {
+    const show = this.auth.show();
+    const permitted = (i: NavItem) =>
+      (i.route || (i.children?.length ?? 0) > 0) && (!i.requires || show[i.requires]);
+    return this.sections
+      .map(s => ({ ...s, items: s.items.filter(permitted) }))
+      .filter(s => s.items.length > 0);
+  });
 
   // --- the count badge ------------------------------------------------------
   //

@@ -59,3 +59,35 @@ export interface CreateUserRequest {
   roles: Role[];
   scope: { branchIds: string[]; departmentIds: string[] };
 }
+
+// --- GET /auth/me ------------------------------------------------------------
+//
+// RENDERING HINTS, NOT PERMISSIONS. Each flag means "this caller holds the role
+// somewhere", which cannot answer whether they may act on a PARTICULAR record —
+// the only question authorisation asks. The server decides that per request and
+// never reads these back. See backend/src/modules/auth/auth.service.js.
+export interface CapabilityHints {
+  /** Holds ADM: may create and deactivate branches, departments and users. */
+  administration: boolean;
+  /** Holds LEAD or above: GET /user is refused below that, so the Users and
+   *  Roles screens cannot load at all without it. */
+  staffDirectory: boolean;
+  /** Holds AGT/LEAD/MGR/ADM: an auditor is read-everything, change-nothing. */
+  ticketWrite: boolean;
+  /** Holds AGT/LEAD/MGR: 002 §9 forbids an administrator a customer-visible
+   *  reply while permitting them an internal note. */
+  customerReply: boolean;
+}
+
+/** The starting point, and what a failed lookup falls back to: show nothing. */
+export const NO_CAPABILITIES: CapabilityHints = {
+  administration: false,
+  staffDirectory: false,
+  ticketWrite: false,
+  customerReply: false
+};
+
+export interface MeResponse {
+  user: AuthenticatedUser;
+  show: CapabilityHints;
+}

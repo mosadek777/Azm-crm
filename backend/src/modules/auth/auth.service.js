@@ -208,8 +208,34 @@ export const me = async (req, res, next) => {
       },
       // Named `show`, not `can` or `permissions`, so the one legitimate use is
       // the one the name describes.
+      //
+      // EVERY FLAG IS "HOLDS THIS ROLE SOMEWHERE". None of them can answer
+      // "may this person do this to THAT record", which is the only question
+      // authorisation ever asks — see point 1 above. That coarseness is the
+      // protection and it is why adding flags here does not turn this into a
+      // permission oracle: a guard written on any of them would be obviously
+      // wrong rather than subtly wrong.
+      //
+      // Each exists because WITHOUT it the interface offers a control the
+      // server refuses every single time, for this caller, on every record.
       show: {
-        administration: roles.has('ADM')
+        // 010 FR-001: creating and deactivating branches, departments and
+        // users is ADM only. Everything else may READ those lists.
+        administration: roles.has('ADM'),
+
+        // 010 §9: listing staff at all requires LEAD or above. An agent gets
+        // 403 from GET /user, so the Users and Roles screens cannot even load
+        // for them — they must not be offered.
+        staffDirectory: ['LEAD', 'MGR', 'ADM', 'AUD'].some(r => roles.has(r)),
+
+        // 002 §9: an auditor is read-everything, change-nothing. Every create,
+        // assign, status change and message is refused for them.
+        ticketWrite: ['AGT', 'LEAD', 'MGR', 'ADM'].some(r => roles.has(r)),
+
+        // 002 §9 splits authorship BY VISIBILITY: an administrator may write an
+        // internal note and may NOT speak to the customer in the organisation's
+        // voice. Offering them the customer-visible option guarantees a 403.
+        customerReply: ['AGT', 'LEAD', 'MGR'].some(r => roles.has(r))
       }
     })
   } catch (err) {

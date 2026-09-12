@@ -9,12 +9,13 @@
 // offering moves the API refuses, and AS-03's correct refusal would look like
 // a bug to the agent.
 
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
 import { ApiService } from '../../../core/services/api.service';
+import { AuthService } from '../../../core/auth/services/auth.service';
 import { LanguageService } from '../../../core/i18n/language.service';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { StatusTonePipe } from '../../../shared/pipes/status-tone.pipe';
@@ -37,6 +38,21 @@ export class TicketDetail {
   private readonly api = inject(ApiService);
   private readonly route = inject(ActivatedRoute);
   protected readonly i18n = inject(LanguageService);
+  private readonly auth = inject(AuthService);
+
+  // RENDERING HINTS, not authorisation — the server refuses regardless and
+  // re-reads permissions per request (E-04).
+  //
+  // An AUDITOR is read-everything, change-nothing (002 §9), so every write
+  // control on this screen is refused for them, every time.
+  protected readonly canWrite = computed(() => this.auth.show().ticketWrite);
+
+  // 002 §9 splits authorship BY VISIBILITY: an ADMINISTRATOR may write an
+  // internal note and may NOT speak to the customer in the organisation's
+  // voice. Offering them the customer-visible option guarantees a 403 —
+  // which is exactly what the demo script warns about. The option is not
+  // offered; the server still refuses it if anybody sends it anyway.
+  protected readonly canReplyToCustomer = computed(() => this.auth.show().customerReply);
 
   private readonly id = this.route.snapshot.paramMap.get('id')!;
 
