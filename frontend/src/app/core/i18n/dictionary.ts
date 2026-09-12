@@ -213,6 +213,14 @@ export const DICTIONARY: Translations = {
   'actor.customer': { ar: 'العميل', en: 'Customer' },
   'history.rawKey': { ar: 'مفتاح الحدث', en: 'Event key' },
 
+  // Quiet section headings in the sidebar — the reference's "Navigation" and
+  // "Projects". Uppercasing is a STYLE, not baked into the string: Arabic has
+  // no case, so text-transform is simply a no-op there.
+  'nav.section.navigation': { ar: 'التنقل', en: 'Navigation' },
+  'nav.section.administration': { ar: 'الإدارة', en: 'Administration' },
+  // Read only by a screen reader, after the number on the badge.
+  'nav.unassigned': { ar: 'تذاكر غير مسندة', en: 'unassigned tickets' },
+
   'common.loading': { ar: 'جارٍ التحميل…', en: 'Loading…' },
   'lang.arabic': { ar: 'العربية', en: 'Arabic' },
   'lang.english': { ar: 'الإنجليزية', en: 'English' },

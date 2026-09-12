@@ -43,7 +43,11 @@
           </svg>
         </button>
 
-        <span class="text-lg font-semibold tracking-tight text-primary-700">
+        <!-- `lg:hidden`: above the breakpoint the sidebar's brand block carries
+             the product name, and printing it twice on one screen is exactly
+             the duplication the sidebar was meant to remove. Below it the panel
+             is off-canvas, so the header is the only place the name appears. -->
+        <span class="text-lg font-semibold tracking-tight text-primary-700 lg:hidden">
           {{ 'app.name' | translate: i18n.lang() }}
         </span>
         <span class="rounded-full bg-surface-100 px-2 py-0.5 text-xs font-medium text-surface-600">
@@ -52,52 +56,9 @@
 
         <span class="flex-1"></span>
 
-        <button
-          type="button"
-          class="rounded-md px-2.5 py-1.5 text-sm font-medium text-primary-600
-                 hover:bg-primary-50 hover:text-primary-700 transition-colors
-                 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-          (click)="i18n.toggle()">
-          {{ 'lang.switchTo' | translate: i18n.lang() }}
-        </button>
-
-        <!-- User menu, once signed in. -->
-        @if (auth.isSignedIn()) {
-          <div class="relative ms-1">
-            <button
-              type="button"
-              class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-600
-                     text-sm font-semibold text-white hover:bg-primary-700 transition-colors
-                     focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-              [attr.aria-expanded]="userMenuOpen()"
-              [attr.aria-label]="auth.user()?.displayName"
-              (click)="userMenuOpen.set(!userMenuOpen())">
-              {{ initials(auth.user()?.displayName) }}
-            </button>
-
-            @if (userMenuOpen()) {
-              <!-- end-0: the panel hangs from the trailing edge in both directions. -->
-              <div class="absolute end-0 top-11 z-30 w-56 overflow-hidden rounded-lg border
-                          border-surface-200 bg-surface-0 shadow-lg">
-                <div class="border-b border-surface-200 px-3 py-2">
-                  <!-- User-authored name: single language, direction detected by
-                       the browser per value, never translated (spec 012 §8). -->
-                  <p class="m-0 truncate text-sm font-medium text-surface-900">
-                    {{ auth.user()?.displayName }}
-                  </p>
-                  <p class="m-0 truncate text-xs text-surface-500"><span class="ltr">{{ auth.user()?.email }}</span></p>
-                </div>
-                <button
-                  type="button"
-                  class="w-full px-3 py-2 text-start text-sm text-surface-700 hover:bg-surface-100
-                         focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-                  (click)="signOut()">
-                  {{ 'workspace.signOut' | translate: i18n.lang() }}
-                </button>
-              </div>
-            }
-          </div>
-        }
+        <!-- THE LANGUAGE TOGGLE AND THE USER MENU HAVE MOVED to the foot of
+             the sidebar. One place to look for "me" beats two, and the header
+             now carries only the product identity and the drawer trigger. -->
       </div>
     </header>
 

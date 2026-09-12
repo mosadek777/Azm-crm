@@ -4,8 +4,7 @@
 // WHY A SIDEBAR, AND ONLY ON THE STAFF SIDE. The top bar held two links and the
 // product has thirteen modules. It does not scale horizontally, and it breaks
 // sooner in Arabic than the English labels suggest — "التذاكر" and "العملاء"
-// are not the widths of "Tickets" and "Customers" — and administration will add
-// a group with several children under it, which a horizontal bar cannot hold.
+// are not the widths of "Tickets" and "Customers".
 //
 // The CUSTOMER PORTAL keeps its top bar. A customer has two screens; a sidebar
 // there would be heavier than the content it navigates.
@@ -16,10 +15,31 @@
 // by accident. Hence the width discipline in the template and a measurement at
 // 390px as part of accepting this.
 //
-// State lives in SidebarState, shared with the trigger in the top bar.
+// THE SHAPE. Built to a supplied reference: a brand block, quiet uppercase
+// section headings, collapsible groups with chevrons and indented children,
+// count badges, and the signed-in user pinned at the foot with the sign-out and
+// language controls — which have MOVED OUT of the page header, so there is one
+// place to look for "me" rather than two.
+//
+// LIGHT, NOT DARK. The reference is dark; the rest of the product is not, and
+// two visual languages in one screen is worse than a less literal copy. The
+// active state is a light violet fill (primary-100) rather than a dark one and
+// the surface stays surface-0.
+//
+// ⚠ EVERY CLASS LIST IS COMPUTED IN ONE PLACE. A static `class` and a bound
+// `[class]` have EQUAL specificity, so the cascade falls back to whatever order
+// Tailwind happened to emit. That fault has appeared three times in this one
+// component: the panel 155px wide, the panel outside the viewport under RTL,
+// and `routerLinkActive` silently losing its text colour to the resting one.
+// Nothing here splits a decision across two attributes, and an inactive state
+// OMITS its utilities rather than overriding them.
+//
+// State lives in SidebarState, shared with the drawer trigger in the top bar.
 
 import { Component, computed, inject, signal, HostListener } from '@angular/core';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth/services/auth.service';
+import { ApiService } from '../../core/services/api.service';
 import { LanguageService } from '../../core/i18n/language.service';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { SidebarState } from './sidebar-state';
@@ -32,6 +52,14 @@ export interface NavItem {
   route?: string;
   icon: string;
   children?: NavChild[];
+  /** Which live count, if any, this item carries. */
+  badge?: 'unassignedTickets';
+}
+
+/** A titled run of items, like the reference's "Navigation" and "Projects". */
+export interface NavSection {
+  labelKey: string;
+  items: NavItem[];
 }
 
 @Component({
@@ -42,146 +70,191 @@ export interface NavItem {
 export class Sidebar {
   protected readonly i18n = inject(LanguageService);
   protected readonly state = inject(SidebarState);
+  protected readonly auth = inject(AuthService);
+  private readonly api = inject(ApiService);
   private readonly router = inject(Router);
 
   /** Groups start open, so nothing is hidden from somebody who has not used it. */
   private readonly closedGroups = new Set<string>();
 
-  // THE WHOLE CLASS LIST IS COMPUTED, deliberately, rather than split between a
-  // static `class` and a `[class]` binding. Two faults came from splitting it,
-  // both found by measuring rather than by reading:
-  //
-  //   1. `lg:w-auto` in the static list and `lg:w-60` from the binding have
-  //      equal specificity, so the stylesheet's own ordering decided the width —
-  //      and it chose auto. The panel sized to its content, 155px, not 240px.
-  //   2. `lg:translate-x-0` lost to `rtl:translate-x-full` for the same reason,
-  //      so at desktop width in Arabic the panel sat outside the viewport.
-  //
-  // Emitting exactly one class per decision removes the competition. The strings
-  // are written out in full because Tailwind scans source text: `lg:w-${n}`
-  // would compile to no CSS at all.
-  //
-  // `max-lg:` on the off-canvas transform means it does not exist above the
-  // breakpoint, rather than existing and being overridden.
+  // See the header note: one class per decision, never split between a static
+  // and a bound attribute.
   protected readonly asideClasses = computed(() => {
-    const base = 'fixed inset-y-0 start-0 z-40 flex w-64 flex-col border-e border-surface-200 '
+    const base = 'fixed inset-y-0 start-0 z-40 flex w-72 flex-col border-e border-surface-200 '
       + 'bg-surface-0 motion-safe:transition-transform lg:static lg:z-auto '
       + 'lg:motion-safe:transition-[width] ';
-    const width = this.state.collapsed() ? 'lg:w-16 ' : 'lg:w-60 ';
+    const width = this.state.collapsed() ? 'lg:w-[4.5rem] ' : 'lg:w-64 ';
     const offCanvas = this.state.drawerOpen()
       ? 'translate-x-0 '
       : 'max-lg:-translate-x-full rtl:max-lg:translate-x-full ';
     return base + width + offCanvas;
   });
 
-  protected readonly items: NavItem[] = [
-    { labelKey: 'nav.tickets', route: '/tickets', icon: 'tickets' },
-    { labelKey: 'nav.customers', route: '/customers', icon: 'customers' },
-    // Administration: a GROUP with no destination of its own, which is why the
-    // sidebar needed grouping. It renders only once it has children — an empty
-    // section reads as broken — and these are the first two.
+  protected readonly sections: NavSection[] = [
     {
-      labelKey: 'nav.administration',
-      icon: 'administration',
-      children: [
-        { labelKey: 'admin.branches', route: '/admin/branches' },
-        { labelKey: 'admin.departments', route: '/admin/departments' },
-        { labelKey: 'admin.users', route: '/admin/users' },
-        { labelKey: 'admin.roles', route: '/admin/roles' }
+      labelKey: 'nav.section.navigation',
+      items: [
+        { labelKey: 'nav.tickets', route: '/tickets', icon: 'tickets', badge: 'unassignedTickets' },
+        { labelKey: 'nav.customers', route: '/customers', icon: 'customers' }
+      ]
+    },
+    {
+      labelKey: 'nav.section.administration',
+      items: [
+        // A GROUP: a parent with a chevron and children indented beneath it,
+        // and no destination of its own.
+        {
+          labelKey: 'nav.administration',
+          icon: 'administration',
+          children: [
+            { labelKey: 'admin.branches', route: '/admin/branches' },
+            { labelKey: 'admin.departments', route: '/admin/departments' },
+            { labelKey: 'admin.users', route: '/admin/users' },
+            { labelKey: 'admin.roles', route: '/admin/roles' }
+          ]
+        }
       ]
     }
   ];
 
-  /** A group with no children is not rendered — an empty section reads as broken. */
-  protected readonly visibleItems = computed(() =>
-    this.items.filter(i => i.route || (i.children?.length ?? 0) > 0));
+  /** A section with nothing in it is not rendered — an empty heading reads as broken. */
+  protected readonly visibleSections = computed(() =>
+    this.sections
+      .map(s => ({ ...s, items: s.items.filter(i => i.route || (i.children?.length ?? 0) > 0) }))
+      .filter(s => s.items.length > 0));
 
-  protected isGroupOpen(key: string): boolean { return !this.closedGroups.has(key); }
+  // --- the count badge ------------------------------------------------------
+  //
+  // UNASSIGNED TICKETS, read from the server's own total. `GET /ticket` applies
+  // the scope predicate as the BASE of its query, so `total` is already the
+  // number this caller may see — AS-01: an out-of-scope ticket appears in "no
+  // list, search, count or aggregate". `limit=1` because only the count is
+  // wanted; nothing is counted client-side and no new endpoint was needed.
+  //
+  // It starts null, not zero. Zero unassigned tickets is good news and the
+  // badge is hidden for it; "not known yet" must not render as that.
+  protected readonly unassignedTickets = signal<number | null>(null);
 
-  /**
-   * The current path, as a signal.
-   *
-   * `routerLinkActive` is deliberately NOT used for styling any more. It works
-   * by ADDING classes to an element that already carries the resting ones, so
-   * `text-surface-600` and `text-primary-700` end up on the same element with
-   * equal specificity and Tailwind's emission order picks the winner — and
-   * since `primary` is declared before `surface` in the @theme block, the
-   * RESTING colour wins and the active one is silently ignored. That is the
-   * third time this shape of fault has appeared in this one component.
-   *
-   * Deciding here and emitting exactly one class per decision removes the
-   * competition entirely. `aria-current` is set from the same answer, so what
-   * is announced and what is drawn cannot disagree.
-   */
   private readonly url = signal(this.router.url.split('?')[0]);
 
   constructor() {
-    // The signal is the single source for both the class list and aria-current.
     this.router.events.subscribe(e => {
-      if (e instanceof NavigationEnd) this.url.set(e.urlAfterRedirects.split('?')[0]);
+      if (e instanceof NavigationEnd) {
+        this.url.set(e.urlAfterRedirects.split('?')[0]);
+        this.refreshBadges();
+      }
+    });
+    this.refreshBadges();
+  }
+
+  private refreshBadges(): void {
+    if (!this.auth.isSignedIn()) { this.unassignedTickets.set(null); return; }
+    this.api.listTickets({ unassigned: 'true', limit: '1' }).subscribe({
+      next: r => this.unassignedTickets.set(r.total),
+      // A failed count is not an error the navigation should report — the
+      // screen behind it will say so. The badge simply does not appear.
+      error: () => this.unassignedTickets.set(null)
     });
   }
 
+  protected badgeFor(item: NavItem): number | null {
+    if (item.badge !== 'unassignedTickets') return null;
+    const n = this.unassignedTickets();
+    return n && n > 0 ? n : null;
+  }
+
+  // --- active state ---------------------------------------------------------
   protected isRouteActive(route: string): boolean {
     const u = this.url();
     return u === route || u.startsWith(route + '/');
   }
 
-  /** Whether the current screen lives inside this group — see groupClasses. */
   protected isGroupActive(item: NavItem): boolean {
     return (item.children ?? []).some(c => this.isRouteActive(c.route));
   }
 
-  protected linkClasses(route: string, child = false): string {
-    const base = child
-      ? 'relative block rounded-lg px-3 py-2 text-sm no-underline motion-safe:transition-colors '
-        + 'hover:bg-surface-100 hover:text-surface-900 '
-        + 'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 '
-      : 'relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm no-underline '
-        + 'motion-safe:transition-colors hover:bg-surface-100 hover:text-surface-900 '
-        + 'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ';
-    const centred = !child && this.state.collapsed() ? 'lg:justify-center ' : '';
-    // The bar is ABSENT when inactive rather than transparent, so there is no
-    // opacity pair for the cascade to arbitrate. A child's bar sits exactly on
-    // the group's rail, so the rail itself lights up.
-    const bar = child
-      ? 'before:absolute before:inset-y-1.5 before:-start-[0.35rem] before:w-0.5 '
-        + 'before:rounded-full before:bg-primary-600 '
-      : 'before:absolute before:inset-y-1.5 before:start-0 before:w-1 '
-        + 'before:rounded-full before:bg-primary-600 ';
-    return base + centred + (this.isRouteActive(route)
-      ? 'bg-primary-50 text-primary-700 font-semibold ' + bar
-      : 'text-surface-600 ');
-  }
-
-  // THE WHOLE CLASS LIST, in one place, for the same reason the panel's own is:
-  // a static `class` and a bound `[class]` have EQUAL specificity, so a pair
-  // like `before:opacity-0` and `before:opacity-100` is decided by whatever
-  // order Tailwind happened to emit them in. This is the fault that made the
-  // panel 155px wide and the fault that put it outside the viewport under RTL.
-  //
-  // The bar is therefore not toggled by opacity at all: when the group is not
-  // active the `before:` utilities are simply ABSENT, so there is no competing
-  // pair to resolve. Same trick as `max-lg:` — make it not exist rather than
-  // make it lose.
-  protected groupClasses(item: NavItem): string {
-    const base = 'relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm '
-      + 'motion-safe:transition-colors hover:bg-surface-100 hover:text-surface-900 '
-      + 'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ';
-    const centred = this.state.collapsed() ? 'lg:justify-center ' : '';
-    // Only when collapsed: expanded, the active CHILD shows it, and marking
-    // both would say the same thing twice.
-    const active = this.state.collapsed() && this.isGroupActive(item)
-      ? 'bg-primary-50 text-primary-700 '
-        + 'before:absolute before:inset-y-1.5 before:start-0 before:w-1 '
-        + 'before:rounded-full before:bg-primary-600 '
-      : 'text-surface-600 ';
-    return base + centred + active;
-  }
+  protected isGroupOpen(key: string): boolean { return !this.closedGroups.has(key); }
 
   protected toggleGroup(key: string): void {
     this.closedGroups.has(key) ? this.closedGroups.delete(key) : this.closedGroups.add(key);
   }
+
+  // --- class lists ----------------------------------------------------------
+  //
+  // ACTIVE reads as SELECTED rather than as a tint: a primary-100 fill, the
+  // darker primary-800 text and semibold weight. Three signals, so it is never
+  // colour alone. Inactive omits all three rather than overriding them.
+  private readonly ROW = 'relative flex w-full items-center gap-3 rounded-lg '
+    + 'px-3 py-2.5 text-sm no-underline motion-safe:transition-colors '
+    + 'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ';
+
+  protected linkClasses(route: string): string {
+    const centred = this.state.collapsed() ? 'lg:justify-center lg:px-0 ' : '';
+    return this.ROW + centred + (this.isRouteActive(route)
+      ? 'bg-primary-100 font-semibold text-primary-800 '
+      : 'text-surface-700 hover:bg-surface-100 hover:text-surface-900 ');
+  }
+
+  protected groupClasses(item: NavItem): string {
+    const centred = this.state.collapsed() ? 'lg:justify-center lg:px-0 ' : '';
+    // Collapsed, the group answers for its children: they are hidden, so the
+    // child carrying aria-current would be drawn for nobody.
+    return this.ROW + centred + (this.state.collapsed() && this.isGroupActive(item)
+      ? 'bg-primary-100 font-semibold text-primary-800 '
+      : 'text-surface-700 hover:bg-surface-100 hover:text-surface-900 ');
+  }
+
+  protected childClasses(route: string): string {
+    const base = 'relative block rounded-lg px-3 py-2 text-sm no-underline '
+      + 'motion-safe:transition-colors '
+      + 'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ';
+    return base + (this.isRouteActive(route)
+      ? 'bg-primary-100 font-semibold text-primary-800 '
+      : 'text-surface-600 hover:bg-surface-100 hover:text-surface-900 ');
+  }
+
+  /**
+   * The group chevron's rotation — computed, because this is the FOURTH time
+   * two competing utilities have met on one element in this component.
+   *
+   * `rtl:rotate-180` (static) and `rotate-90` (bound) both set Tailwind v4's
+   * individual `rotate` property at equal specificity, so in Arabic an OPEN
+   * group's chevron pointed left instead of down: 180 won and 90 was ignored.
+   *
+   * The behaviour wanted is simple once stated. The base glyph points along
+   * the reading direction. Open, it points DOWN in both directions, which is
+   * the same 90° turn either way. Shut, it points the way the eye travels:
+   * unrotated in English, half-turned in Arabic.
+   */
+  protected chevronRotation(open: boolean): string {
+    if (open) return 'rotate-90';
+    return this.i18n.dir() === 'rtl' ? 'rotate-180' : '';
+  }
+
+  protected badgeClasses(route: string): string {
+    const base = 'ms-auto shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ';
+    return base + (this.isRouteActive(route)
+      ? 'bg-primary-200 text-primary-900 '
+      : 'bg-surface-200 text-surface-700 ');
+  }
+
+  // --- identity -------------------------------------------------------------
+  //
+  // Initials from a user-authored name, which may be Arabic or Latin. The first
+  // character of each of the first two words works for both and assumes no
+  // particular alphabet. Spread rather than charAt, so a character outside the
+  // basic plane is not cut in half.
+  protected initials(name: string | null | undefined): string {
+    if (!name) return '؟';
+    const parts = name.trim().split(/\s+/).slice(0, 2);
+    return parts.map(p => [...p][0] ?? '').join('').toUpperCase();
+  }
+
+  /** The brand mark: the first character of the product's own name, per language. */
+  protected readonly brandInitial = computed(() =>
+    [...this.i18n.translate('app.name', this.i18n.lang()).trim()][0] ?? 'A');
+
+  protected signOut(): void { this.auth.signOut(); }
 
   /** Escape closes the drawer — an overlay that traps a keyboard user is a defect. */
   @HostListener('document:keydown.escape')
