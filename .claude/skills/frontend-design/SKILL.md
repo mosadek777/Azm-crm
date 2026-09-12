@@ -51,6 +51,21 @@ The direction is derived from the language and written onto `<html>` by
    the sidebar came out 155px wide. Compute the whole class string in one
    `computed()` instead of splitting it across two attributes. See
    `layouts/sidebar/sidebar.ts`.
+
+   **`routerLinkActive` is the same trap wearing a different hat**, and it cost
+   a third occurrence in that one component. It *adds* classes to an element
+   that already carries the resting ones, so `text-primary-700` (active) and
+   `text-surface-600` (resting) end up together at equal specificity — and
+   because `primary` is declared before `surface` in the `@theme` block, the
+   **resting** colour wins and the active one is silently ignored. Nothing
+   errors; the state simply never appears. Decide in the component from a `url`
+   signal, emit one class per decision, and set `aria-current` from the same
+   answer so what is drawn and what is announced cannot disagree.
+
+   **Prefer absent over overridden.** An inactive `before:` bar that is present
+   at `opacity-0` needs the cascade to choose between it and `opacity-100`;
+   omitting the `before:` utilities entirely when inactive leaves nothing to
+   arbitrate. Same reasoning as `max-lg:` below.
 5. **`max-lg:` removes a utility above the breakpoint**, rather than letting a
    later rule override it. That is what fixed the sidebar sitting outside the
    viewport at desktop RTL, where `lg:translate-x-0` lost to

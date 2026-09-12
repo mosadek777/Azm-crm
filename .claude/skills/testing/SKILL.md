@@ -53,6 +53,19 @@ Corollary: after asserting a refusal, assert the **state did not change**. "The
 branch was not deactivated behind those refusals" is the check that would catch
 a 403 returned after the write.
 
+## In the browser, assert what is VISIBLE, not what is in the DOM
+
+`document.querySelector('[aria-current]')` finds an element that is hidden. The
+sidebar's collapsed state showed no current item at all for weeks while that
+check passed, because the element carrying the attribute was inside a hidden
+group. Filter by `offsetParent !== null`, then assert the filtered set is not
+empty — a visibility filter is also a way to accidentally assert nothing.
+
+Same shape: assert the *computed style* that matters, not a proxy for it. The
+active nav item was checked for weight, background and a bar, and its text
+colour was losing a specificity fight the whole time. If a state is meant to
+change four things, check four things.
+
 ## Nothing passes on empty data unless emptiness is the assertion
 
 A query returning zero rows satisfies `every()`, `some()`-negations, "no
