@@ -176,6 +176,43 @@ export const DICTIONARY: Translations = {
     en: 'Reads everything, changes nothing. Deliberately read-everything, change-nothing.'
   },
 
+  // --- audit action keys, rendered as words -------------------------------
+  //
+  // The raw key stays reachable next to the label: an auditor needs the exact
+  // event, and a paraphrase is not the event. These are the human reading.
+  'action.ticket.created': { ar: 'أُنشئت التذكرة', en: 'Ticket created' },
+  'action.ticket.assigned': { ar: 'تم تعيين مسؤول', en: 'Assigned' },
+  'action.ticket.status_changed': { ar: 'تغيّرت الحالة', en: 'Status changed' },
+  'action.message.added': { ar: 'أُضيفت رسالة', en: 'Message added' },
+  'action.customer.created': { ar: 'أُنشئ العميل', en: 'Customer created' },
+  'action.contact_point.added': { ar: 'أُضيفت وسيلة اتصال', en: 'Contact point added' },
+  'action.user.created': { ar: 'أُنشئ المستخدم', en: 'User created' },
+  'action.user.deactivated': { ar: 'أُوقف المستخدم', en: 'User deactivated' },
+  'action.user.reactivated': { ar: 'أُعيد تنشيط المستخدم', en: 'User reactivated' },
+  'action.role_assignment.granted': { ar: 'مُنح دور', en: 'Role granted' },
+  'action.role_assignment.revoked': { ar: 'سُحب دور', en: 'Role revoked' },
+  'action.branch.created': { ar: 'أُنشئ الفرع', en: 'Branch created' },
+  'action.branch.active_changed': { ar: 'تغيّرت حالة الفرع', en: 'Branch state changed' },
+  'action.department.created': { ar: 'أُنشئ القسم', en: 'Department created' },
+  'action.department.active_changed': { ar: 'تغيّرت حالة القسم', en: 'Department state changed' },
+  'action.portal_identity.created': { ar: 'أُنشئ حساب البوابة', en: 'Portal account created' },
+  'action.permission.refused': { ar: 'رُفض إجراء', en: 'Action refused' },
+  'action.auth.signin_succeeded': { ar: 'تم تسجيل الدخول', en: 'Signed in' },
+  'action.auth.signin_failed': { ar: 'فشل تسجيل الدخول', en: 'Sign-in failed' },
+  'action.auth.locked_out': { ar: 'أُقفل الحساب', en: 'Account locked' },
+  'action.session.opened': { ar: 'فُتحت جلسة', en: 'Session opened' },
+  'action.session.revoked': { ar: 'أُنهيت جلسة', en: 'Session ended' },
+
+  // --- who did it ----------------------------------------------------------
+  //
+  // The audit trail outlives the account. These cover every case where a name
+  // cannot simply be looked up and hoped for.
+  'actor.system': { ar: 'النظام', en: 'System' },
+  'actor.unknown': { ar: 'فاعل غير معروف', en: 'Unknown actor' },
+  'actor.deactivated': { ar: 'حساب موقوف', en: 'deactivated account' },
+  'actor.customer': { ar: 'العميل', en: 'Customer' },
+  'history.rawKey': { ar: 'مفتاح الحدث', en: 'Event key' },
+
   'common.loading': { ar: 'جارٍ التحميل…', en: 'Loading…' },
   'lang.arabic': { ar: 'العربية', en: 'Arabic' },
   'lang.english': { ar: 'الإنجليزية', en: 'English' },

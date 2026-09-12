@@ -13,12 +13,13 @@ import { ApiService } from '../../../core/services/api.service';
 import { LanguageService } from '../../../core/i18n/language.service';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { StatusTonePipe } from '../../../shared/pipes/status-tone.pipe';
+import { Tag } from '../../../shared/components/tag/tag';
 import { Ticket, TicketMeta } from '../../../core/models/domain.model';
 import { LocalizedText } from '../../../core/models/user.model';
 
 @Component({
   selector: 'app-ticket-list',
-  imports: [FormsModule, TranslatePipe, StatusTonePipe],
+  imports: [FormsModule, TranslatePipe, StatusTonePipe, Tag],
   templateUrl: './ticket-list.html'
 })
 export class TicketList {

@@ -37,9 +37,9 @@
             </td>
             <td class="px-4 py-3 text-surface-900">{{ t.subject }}</td>
             <td class="px-4 py-3">
-              <span class="inline-block rounded-full px-2.5 py-0.5 text-xs" [class]="t.status | statusTone">
+              <app-tag [tone]="t.status | statusTone" [raw]="t.status">
                 {{ t.statusLabel ?? t.status }}
-              </span>
+              </app-tag>
             </td>
             <td class="px-4 py-3 text-surface-600">{{ t.createdAt | date: 'mediumDate' }}</td>
           </tr>

@@ -27,12 +27,13 @@ import { LanguageService } from '../../../core/i18n/language.service';
 import { ApiRefusal, LocalizedText } from '../../../core/models/user.model';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { StatusTonePipe } from '../../../shared/pipes/status-tone.pipe';
+import { Tag } from '../../../shared/components/tag/tag';
 import { ToastService } from '../../../core/notifications/toast.service';
 import { MessageBubble } from '../../../shared/components/message-bubble/message-bubble';
 
 @Component({
   selector: 'app-portal-ticket-detail',
-  imports: [FormsModule, RouterLink, DatePipe, TranslatePipe, StatusTonePipe, MessageBubble],
+  imports: [FormsModule, RouterLink, DatePipe, TranslatePipe, StatusTonePipe, MessageBubble, Tag],
   templateUrl: './portal-ticket-detail.html'
 })
 export class PortalTicketDetail {

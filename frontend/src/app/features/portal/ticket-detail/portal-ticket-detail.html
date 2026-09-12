@@ -12,9 +12,9 @@
   <div class="mt-4 bg-white border border-surface-200 rounded-xl p-5">
     <div class="flex flex-wrap items-center gap-3 mb-2">
       <span dir="ltr" class="text-sm text-surface-500 font-medium">{{ t.reference }}</span>
-      <span class="inline-block rounded-full px-2.5 py-0.5 text-xs" [class]="t.status | statusTone">
+      <app-tag [tone]="t.status | statusTone" [raw]="t.status">
         {{ t.statusLabel ?? t.status }}
-      </span>
+      </app-tag>
     </div>
     <h1 class="text-xl font-semibold text-surface-900">{{ t.subject }}</h1>
     <p class="mt-1 text-sm text-surface-500">

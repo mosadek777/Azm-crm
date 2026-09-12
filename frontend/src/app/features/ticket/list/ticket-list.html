@@ -89,9 +89,9 @@
               <td class="px-4 py-2.5 text-surface-800">{{ t.subject }}</td>
               <td class="px-4 py-2.5 text-surface-600">{{ t.customerName || '—' }}</td>
               <td class="px-4 py-2.5">
-                <span class="rounded-full px-2 py-0.5 text-xs font-medium" [class]="t.status | statusTone">
+                <app-tag [tone]="t.status | statusTone" [raw]="t.status">
                   {{ t.status }}
-                </span>
+                </app-tag>
                 @if (t.pausesSla) {
                   <span class="ms-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
                     {{ 'ticket.paused' | translate: i18n.lang() }}

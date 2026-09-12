@@ -17,9 +17,9 @@
         {{ t.reference }}
       </span>
       <h1 class="m-0 text-xl font-semibold tracking-tight text-surface-900">{{ t.subject }}</h1>
-      <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" [class]="t.status | statusTone">
+      <app-tag [tone]="t.status | statusTone" [raw]="t.status">
         {{ t.status }}
-      </span>
+      </app-tag>
       @if (t.pausesSla) {
         <span class="rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
           {{ 'ticket.paused' | translate: i18n.lang() }}
@@ -230,7 +230,17 @@
             @for (h of history(); track $index) {
               <tr class="border-b border-surface-100 last:border-0">
                 <td class="px-3 py-2"><span class="ltr text-surface-600">{{ h.occurredAt }}</span></td>
-                <td class="px-3 py-2 text-surface-800">{{ h.action }}</td>
+                <!-- The action as a word, with the RAW KEY kept alongside.
+                     An auditor needs the exact event, not a paraphrase — and
+                     the key is rendered visibly rather than only on the tag's
+                     title, because a hover does not exist on a touch screen. -->
+                <td class="px-3 py-2">
+                  <app-tag [tone]="h.action | actionTone" [raw]="h.action">
+                    {{ ('action.' + h.action) | translate: i18n.lang() }}
+                  </app-tag>
+                  <span class="ltr mt-0.5 block text-xs text-surface-400"
+                        [attr.aria-label]="'history.rawKey' | translate: i18n.lang()">{{ h.action }}</span>
+                </td>
                 <td class="px-3 py-2"><span class="ltr text-surface-600">{{ h.actorRef }}</span></td>
               </tr>
             }

@@ -15,10 +15,11 @@ import { PortalApiService, PortalTicket } from '../../../core/services/portal-ap
 import { LanguageService } from '../../../core/i18n/language.service';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { StatusTonePipe } from '../../../shared/pipes/status-tone.pipe';
+import { Tag } from '../../../shared/components/tag/tag';
 
 @Component({
   selector: 'app-portal-tickets',
-  imports: [RouterLink, DatePipe, TranslatePipe, StatusTonePipe],
+  imports: [RouterLink, DatePipe, TranslatePipe, StatusTonePipe, Tag],
   templateUrl: './portal-tickets.html'
 })
 export class PortalTickets {
