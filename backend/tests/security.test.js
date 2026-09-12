@@ -14,7 +14,7 @@
 // the same thing and could not live in a test suite.
 
 import mongoose from 'mongoose'
-import { BASE_URL, BREAKGLASS_EMAIL, BREAKGLASS_PASSWORD } from './env.js'
+import { BASE_URL, BREAKGLASS_EMAIL, BREAKGLASS_PASSWORD, FIXTURE_PASSWORD } from './env.js'
 import { createChecker } from './check.js'
 import { connectMongoose } from '../src/DB/connection.db.js'
 import { Session } from '../src/DB/models/session.model.js'
@@ -139,6 +139,61 @@ await login()
 check('opening a session writes a session.opened entry',
   await AuditEntry.countDocuments({ action: 'session.opened' }), before + 1)
 check('one live session exists for it', await Session.countDocuments({ revokedAt: null }), 1)
+
+console.log('\n--- GET /auth/me is a RENDERING HINT, not a permission check ---')
+await reset()
+// The endpoint exists so the interface does not offer a menu section whose
+// every action returns 403. The danger is that somebody later treats it as
+// authorisation, so the claim is made falsifiable here rather than asserted in
+// a comment: an agent is told administration is not for them, and the SERVER
+// refuses them whether or not the client believes that.
+const bg = await login()
+const bgMe = await call('GET', '/auth/me', { token: bg.body.token })
+check('the break-glass administrator is told to show administration', bgMe.body?.show?.administration, true)
+check('and it carries no scope detail at all — nothing to authorise with',
+  JSON.stringify(Object.keys(bgMe.body?.show ?? {})), '["administration"]')
+check('nor any role list', bgMe.body?.roles === undefined, true)
+
+// An ordinary agent, created for this check.
+const brRes = await call('POST', '/platform/branches', {
+  token: bg.body.token,
+  body: { name: { ar: 'فرع الفحص', en: 'Hint probe branch' }, timezone: 'Africa/Cairo', defaultLocale: 'ar' }
+})
+const dpRes = await call('POST', '/platform/departments', {
+  token: bg.body.token, body: { name: { ar: 'قسم الفحص', en: 'Hint probe dept' } }
+})
+const agentEmail = `hint.agent.${Date.now()}@azmsquad.com`
+await call('POST', '/user', {
+  token: bg.body.token,
+  body: {
+    displayName: 'Hint Probe Agent', email: agentEmail, password: FIXTURE_PASSWORD,
+    defaultLanguage: 'en', roles: ['AGT'],
+    scope: { branchIds: [brRes.body.branch._id], departmentIds: [dpRes.body.department._id] }
+  }
+})
+const agentTok = (await call('POST', '/auth/login', { body: { email: agentEmail, password: FIXTURE_PASSWORD } })).body.token
+const agentMe = await call('GET', '/auth/me', { token: agentTok })
+check('an agent is told NOT to show administration', agentMe.body?.show?.administration, false)
+
+// THE POINT. The hint lives in the caller's own browser, where they can edit it
+// freely. Believing it says otherwise changes nothing, because the server never
+// reads it back — it re-reads the roles per request (E-04).
+check('and the server refuses them a branch create regardless of what they believe',
+  (await call('POST', '/platform/branches', {
+    token: agentTok,
+    body: { name: { ar: 'ممنوع', en: 'Forbidden' }, timezone: 'Africa/Cairo', defaultLocale: 'ar' }
+  })).status, 403)
+check('...and a deactivation',
+  (await call('PATCH', `/platform/branches/${brRes.body.branch._id}/active`,
+    { token: agentTok, body: { active: false } })).status, 403)
+check('...and creating a user', (await call('POST', '/user', {
+  token: agentTok,
+  body: { displayName: 'x', email: `x.${Date.now()}@azmsquad.com`, password: FIXTURE_PASSWORD, defaultLanguage: 'en', roles: ['AGT'] }
+})).status, 403)
+check('the branch was not deactivated behind those refusals',
+  (await call('GET', `/platform/branches/${brRes.body.branch._id}`, { token: bg.body.token })).body?.branch?.active, true)
+
+check('the endpoint itself requires a session', (await call('GET', '/auth/me')).status, 401)
 
 await reset()
 await mongoose.disconnect()

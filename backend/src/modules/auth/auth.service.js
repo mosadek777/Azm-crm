@@ -155,3 +155,64 @@ export const login = async (req, res, next) => {
     return next(err)
   }
 }
+
+// ---------------------------------------------------------------------------
+// GET /auth/me — who am I, and what should the interface bother rendering.
+//
+// ⚠ THIS IS A RENDERING HINT. IT IS NOT, AND CANNOT BE, A PERMISSION CHECK.
+//
+// The question was put directly: could this response ever be mistaken for
+// authorisation? Yes — any client-side capability signal can be, and saying
+// otherwise would be the dangerous answer. So here is what actually stops it,
+// in order of how much it would survive somebody forgetting this comment:
+//
+// 1. IT IS TOO COARSE TO AUTHORISE ANYTHING. `administration` says the caller
+//    holds an administrator role SOMEWHERE. It does not say over which branch,
+//    which department, or which record, so it cannot answer the only question
+//    authorisation ever asks: may this person do this thing to THAT record.
+//    A guard written on it would be obviously wrong rather than subtly wrong.
+//
+// 2. EVERY ROUTE STILL RE-READS PERMISSIONS PER REQUEST. E-04 requires that a
+//    withdrawn role takes effect on the caller's next request, not at their
+//    next sign-in, so `authenticate` loads assignments from the database every
+//    time and `authorize` / `authorizeOnTarget` decide from those. Nothing in
+//    that path consults this response, and nothing can: it is never sent back.
+//
+// 3. A STALE OR FORGED COPY GAINS NOTHING. The client holds this in memory and
+//    in local storage, where the person using the browser can edit it freely.
+//    Setting `administration: true` reveals a menu entry whose every action the
+//    server refuses. That is proven by test rather than asserted here — see
+//    tests/security.test.js, "a forged rendering hint grants nothing".
+//
+// 4. THE BRANCH PICKER DELIBERATELY DOES NOT USE IT. The obvious place to lean
+//    on this would be deciding which branches an administrator may grant, and
+//    that would be a permission decision made in the client. It is not needed:
+//    `GET /platform/branches` is already filtered by `selfScopedFilter`, which
+//    reads the same `reachableScope` that bounds `resolveGrantedScope`. The
+//    list an administrator can SEE is, by construction, the list they can
+//    GRANT. The picker asks the server and the server answers correctly.
+//
+// What this endpoint exists for is one thing only: not showing somebody a menu
+// section whose every action returns 403.
+
+export const me = async (req, res, next) => {
+  try {
+    const roles = new Set((req.assignments ?? []).map(a => a.role))
+
+    return res.json({
+      user: {
+        id: req.user._id,
+        displayName: req.user.displayName,
+        email: req.user.email,
+        defaultLanguage: req.user.defaultLanguage
+      },
+      // Named `show`, not `can` or `permissions`, so the one legitimate use is
+      // the one the name describes.
+      show: {
+        administration: roles.has('ADM')
+      }
+    })
+  } catch (err) {
+    return next(err)
+  }
+}
