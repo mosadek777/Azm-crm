@@ -1341,3 +1341,84 @@ the administrator configuration work, which is now tracked as `admin-configurati
 on the board and additionally carries `010 FR-011`, itself an unblocked **MUST**.
 Recorded so that the defect is attributable to the spec rather than looking like an
 implementation shortcut.
+
+---
+
+## 15. Spec gap — role assignment revocation is named twice and required nowhere
+
+**Found while building the administration screens, 2026-09-12. Reported, not
+fixed.** The same category as `Team` in §7, shared contact points in §11 and
+`004 FR-009` in §13: the spec names the event, no requirement asks for it, and
+no endpoint does it — so the `[NEEDS CLARIFICATION]` gate could never have
+raised it, because nobody wrote a marker for something they did not notice was
+missing.
+
+### Where the spec names it
+
+| Source | Statement |
+|---|---|
+| `010 §10`, audit events | `Role assignment granted / **revoked**` — actor, subject, role, scope granted, timestamp |
+| `010 §11`, permission matrix | `grant / **revoke** role assignment` — admin; scope granted ⊆ granter's scope (`FR-021`) |
+
+Both list revocation as a first-class action with an audit shape and an
+authorisation rule already decided for it.
+
+### Where the spec requires it
+
+Nowhere. `FR-001` covers creating, deactivating and reactivating **users**.
+`FR-002` fixes permissions to roles. `FR-005` allows one person several
+assignments. `FR-021` bounds what may be granted. **Not one of them says an
+assignment may be withdrawn**, and no `AS-*` exercises it.
+
+### What is built
+
+`POST /user` creates a user and their assignments in one transaction. There is
+no `PATCH /user/:id/roles`, no grant endpoint and no revoke endpoint. So a role
+is granted once, at creation, and cannot be changed afterwards by any means the
+product offers. The administration screens say so on the page
+(`admin.rolesAtCreationNote`) rather than offering a control that would fail.
+
+**This is a real operational hole, not a tidiness complaint.** Somebody promoted
+from agent to team lead needs a second account today. Somebody who should no
+longer hold `ADM` keeps it until their whole account is deactivated — which is
+the blunt instrument `FR-001` does offer, and it takes their agent work away
+with it. `E-04` guarantees a withdrawn role takes effect on the next request;
+nothing provides the withdrawal.
+
+### What blocks it — and it is one decision, not an implementation question
+
+**What happens to a user left holding zero roles?**
+
+The question is unavoidable because revoking is only interesting when it can
+revoke the last one. Three shapes, none of them derivable from what is written:
+
+1. **Refuse the last revocation**, as `E-01` refuses deactivating the last
+   administrator. Consistent with existing precedent, but leaves no way to
+   remove somebody's access short of deactivating the account.
+2. **Permit it.** The user then authenticates successfully and can reach
+   nothing — every scope predicate fails against every record. That is a
+   coherent state and it is indistinguishable, from the person's side, from
+   the system being broken.
+3. **Make it deactivation.** Revoking the last role deactivates the account,
+   collapsing two concepts into one. Tidy, and it silently does something the
+   administrator did not ask for.
+
+`010 §3` does not say whether a user may exist without an assignment; the
+`RoleAssignment` model has no opinion either, since it constrains the assignment
+and not the absence of one.
+
+**A second question rides along:** revocation interacts with `E-02`
+("Administrator removes their own administration permission — refused") and
+`E-01` (last active administrator). Both are written about deactivation. Whether
+they extend to revocation is a reading, and this register does not fill unstated
+cases from inference.
+
+**No decision is requested from the developer here.** The behaviour is the
+client's to choose — it is about how their organisation removes access, not
+about how the code is written. Once chosen, the build is small: a grant and a
+revoke endpoint, both `authorize('ADM')`, both bounded by `resolveGrantedScope`
+exactly as creation already is, both writing the `role_assignment.granted` /
+`role_assignment.revoked` entries `§10` already specifies, in the same
+transaction as the assignment they describe.
+
+Tracked on the board as `role-revocation`.

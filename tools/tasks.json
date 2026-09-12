@@ -1387,6 +1387,16 @@
       "description": "A guard against the defect above happening again — and more importantly, against the *class* of defect it belongs to.\n\nThe sideways-scrolling bug survived because there was no way for it to be noticed. It broke nothing that raised an error, no test covered it, and on the desktop screens the team works on every day it was invisible. It was found by accident, months in.\n\nThe check itself is mechanical: load each screen at a phone-sized window in both languages and confirm the content is no wider than the window. It already exists as a one-off script written during the investigation; what is missing is running it automatically rather than when somebody happens to think of it.\n\nThis is worth more than the one bug it would have caught. Anything that only shows up at a narrow width — a table, a long unbroken reference number, a row of buttons, an untranslated string that runs longer in one language than the other — is currently invisible to every check the project has.",
       "blocker": "Nothing blocks this. It is unscheduled rather than gated. The measurement approach is proven and the script exists; it needs to be made permanent and run with the other automated checks.",
       "clickupId": "86cbfqvkh"
+    },
+    {
+      "key": "role-revocation",
+      "name": "A role can be granted but never withdrawn",
+      "tags": [
+        "backend",
+        "blocked"
+      ],
+      "status": "not started",
+      "description": "Roles are granted once, when the user is created, and there is no way to change them afterwards. No grant endpoint, no revoke endpoint, no screen — the administration screens say so on the page rather than offering a control that would fail.\n\nThis is an operational hole rather than a tidiness complaint. Somebody promoted from agent to team lead needs a second account. Somebody who should no longer be an administrator keeps it until their whole account is deactivated, which takes their ordinary work away with it.\n\nSpec 010 names the action twice — the audit event list in section 10 has \"Role assignment granted / revoked\" with its full shape, and the permission matrix in section 11 has \"grant / revoke role assignment\" with its authorisation rule already decided. No requirement asks for it. Same category as the Team entity and the shared-contact-point defect: the spec assumes the behaviour without ever requiring it, so the clarification gate could not see it.\n\nBLOCKED ON ONE CLIENT DECISION: what happens to a user left holding zero roles. Refuse the last revocation the way E-01 refuses deactivating the last administrator; permit it and leave an account that authenticates but can reach nothing; or treat it as deactivation and collapse two concepts into one. Nothing in the spec decides this, and it cannot be inferred — see docs/decisions-pending.md section 15.\n\nSmall once decided: two endpoints, both admin-only, both bounded by resolveGrantedScope exactly as user creation already is, both writing the audit entries section 10 already specifies in the same transaction as the assignment."
     }
   ],
   "retiredIds": []

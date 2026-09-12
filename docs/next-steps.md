@@ -75,6 +75,7 @@ someone to write them.
 | `010 FR-006` — SAML/OIDC | Not attempted this pass; local auth was built instead on the strength of `FR-007` | 3–5 days for a single IdP integration, once `010 [CLARIFY-2]` names one |
 | `002 FR-029` / `AS-13` — resolution-code enforcement | The two admin-authored bilingual lists (root cause, resolution code) don't exist | 1–2 days: two small CRUD entities plus the enforcement check in `changeStatus` |
 | `002` `E-12` — return a deactivated agent's tickets to their team queue | No `Team` to return them to | Blocked on the `Team` entity (see section 4) |
+| Withdrawing a role assignment — `010 §10` and `§11` both name "grant / **revoke**", and no `FR-*` requires it | Not an unbuilt MUST: no requirement asks for it at all. Same category as `Team` (§7) and shared contact points (§11) — the spec assumes the behaviour without ever requiring it. Blocked on one client decision: what happens to a user left holding zero roles. See `decisions-pending.md` §15, board card `role-revocation` | Small once decided — two admin-only endpoints bounded by `resolveGrantedScope`, writing the audit entries `§10` already specifies |
 | `010 FR-009` audit search/export | Not attempted — the audit log is written and indexed, but has no read endpoint | 1 day for a basic filtered search; export adds another day for the format and the "export is itself audited" requirement |
 
 ---
