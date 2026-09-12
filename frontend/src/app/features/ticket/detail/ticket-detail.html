@@ -214,9 +214,20 @@
 
     <!-- History: the append-only audit log, read not rebuilt (constitution II) -->
     <section class="rounded-xl border border-surface-200 bg-surface-0 p-4">
-      <h2 class="m-0 mb-3 text-sm font-semibold text-surface-900">
-        {{ 'ticket.history' | translate: i18n.lang() }}
-      </h2>
+      <div class="mb-3 flex flex-wrap items-center gap-3">
+        <h2 class="m-0 text-sm font-semibold text-surface-900">
+          {{ 'ticket.history' | translate: i18n.lang() }}
+        </h2>
+        <span class="flex-1"></span>
+        <!-- The raw event keys, for a reader who deliberately asks. Off by
+             default: they are evidence, not reading matter. The keys are also
+             on each tag's title, so nothing depends on finding this. -->
+        <label class="flex cursor-pointer items-center gap-2 text-xs text-surface-500">
+          <input type="checkbox" class="accent-primary-600"
+            [checked]="showEventKeys()" (change)="showEventKeys.set(!showEventKeys())" />
+          {{ 'history.showKeys' | translate: i18n.lang() }}
+        </label>
+      </div>
       <div class="overflow-x-auto">
         <table class="w-full border-collapse text-sm">
           <thead>
@@ -233,16 +244,21 @@
                      Formatted, not computed: rendering an absolute instant is not
                      a duration, and constitution III forbids only the latter. -->
                 <td class="px-3 py-2 whitespace-nowrap"><span class="ltr text-surface-600">{{ h.occurredAt | date: 'short' }}</span></td>
-                <!-- The action as a word, with the RAW KEY kept alongside.
-                     An auditor needs the exact event, not a paraphrase — and
-                     the key is rendered visibly rather than only on the tag's
-                     title, because a hover does not exist on a touch screen. -->
+                <!-- The action as a word. The RAW KEY is REACHABLE, not
+                     printed: it sits on the tag's title, and the "show event
+                     keys" control above reveals it for a reader who wants it.
+                     Rendering it on every row put ticket.created beside أنشئت
+                     التذكرة on a screen somebody reads all day — noise, not
+                     evidence. The tag is what they read; the key is what an
+                     auditor asks for. -->
                 <td class="px-3 py-2">
                   <app-tag [tone]="h.action | actionTone" [raw]="h.action">
                     {{ ('action.' + h.action) | translate: i18n.lang() }}
                   </app-tag>
-                  <span class="ltr ms-2 text-xs text-surface-400"
-                        [attr.aria-label]="'history.rawKey' | translate: i18n.lang()">{{ h.action }}</span>
+                  @if (showEventKeys()) {
+                    <span class="ltr ms-2 text-xs text-surface-400"
+                          [attr.aria-label]="'history.rawKey' | translate: i18n.lang()">{{ h.action }}</span>
+                  }
                 </td>
                 <!-- WHO. A name where there is one, an explicit label where
                      there is not — never a bare id dressed up as an actor.

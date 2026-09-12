@@ -211,6 +211,7 @@ export const DICTIONARY: Translations = {
   'actor.unknown': { ar: 'فاعل غير معروف', en: 'Unknown actor' },
   'actor.deactivated': { ar: 'حساب موقوف', en: 'deactivated account' },
   'actor.customer': { ar: 'العميل', en: 'Customer' },
+  'history.showKeys': { ar: 'إظهار مفاتيح الأحداث', en: 'Show event keys' },
   'history.rawKey': { ar: 'مفتاح الحدث', en: 'Event key' },
 
   // Quiet section headings in the sidebar — the reference's "Navigation" and
@@ -219,6 +220,11 @@ export const DICTIONARY: Translations = {
   'nav.section.navigation': { ar: 'التنقل', en: 'Navigation' },
   'nav.section.administration': { ar: 'الإدارة', en: 'Administration' },
   // Read only by a screen reader, after the number on the badge.
+  // Two groups under the Administration heading, because they are two
+  // different things: branches and departments are the platform's own
+  // structure (spec 012), users and roles are who may reach it (spec 010).
+  'nav.group.organisation': { ar: 'الهيكل', en: 'Organisation' },
+  'nav.group.access': { ar: 'الصلاحيات', en: 'Access' },
   'nav.unassigned': { ar: 'تذاكر غير مسندة', en: 'unassigned tickets' },
 
   'common.loading': { ar: 'جارٍ التحميل…', en: 'Loading…' },

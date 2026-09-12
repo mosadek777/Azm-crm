@@ -48,6 +48,10 @@ export class TicketDetail {
   protected readonly sla = signal<Sla | null>(null);
   protected readonly notFound = signal(false);
   protected readonly refusal = signal<LocalizedText | null>(null);
+  // Off by default. The raw audit keys are evidence for an auditor, not
+  // reading matter for somebody working tickets all day — and every tag
+  // carries its key on the title regardless, so nothing depends on this.
+  protected readonly showEventKeys = signal(false);
   protected readonly busy = signal(false);
 
   // Straight from the server. Never derived, never cached, never guessed.

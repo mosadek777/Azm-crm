@@ -105,9 +105,22 @@ came to scroll sideways at 390px.
 
 ## Verification — the part that keeps being skipped
 
+- **Verify against a screen with enough content to SCROLL, never an empty one.**
+  This is the rule that keeps being relearned. An empty list, a ticket with two
+  messages, a fresh install — all of them look fine, and none of them exercises
+  the layout. Two faults shipped past clean screenshots for exactly this reason:
+  the staff pages scrolling sideways at 390px, and the sidebar stretching to the
+  document height so its user block sat hundreds of pixels below the fold on a
+  long ticket. Seed the thread, fill the table, then look. If the document is
+  not taller than the viewport, the check proved nothing — assert that first.
 - **Verify at a real viewport with a screenshot, not a number.** A passing
   measurement told us the sidebar was present; the screenshot showed it off the
   side of the screen. Drive the browser over CDP and capture the PNG.
+- **Chrome that should stay put must be pinned to the VIEWPORT, not the page.**
+  A `position: static` flex child stretches to its container's content height.
+  Navigation, toolbars and anything with a pinned foot want
+  `sticky top-0 h-screen self-start` plus an internal `overflow-y-auto` on the
+  part that may overflow.
 - **Check 390px as well as desktop, in both languages.** Assert
   `document.documentElement.scrollWidth === clientWidth` on every route you
   touched. Sideways scroll is the single most common regression here.

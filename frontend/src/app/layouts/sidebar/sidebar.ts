@@ -79,9 +79,26 @@ export class Sidebar {
 
   // See the header note: one class per decision, never split between a static
   // and a bound attribute.
+  // ⚠ THE PANEL IS PINNED TO THE VIEWPORT, NOT TO THE PAGE.
+  //
+  // `lg:static` made it an ordinary flex item, so on a long ticket it stretched
+  // to the height of the CONTENT and took the user block and the collapse
+  // control hundreds of pixels below the fold with it. The navigation is not
+  // part of the document being read; it has to stay where the reader is.
+  //
+  // `lg:sticky lg:top-0 lg:h-screen` fixes the box to one viewport height and
+  // holds it there while the page scrolls past. `lg:self-start` stops the flex
+  // container stretching it back out — without it, `align-items: stretch` wins
+  // and `h-screen` is only a minimum.
+  //
+  // Below `lg` it is already `fixed inset-y-0`, which is viewport height by
+  // construction. The internal `overflow-y-auto` on <nav> is what lets a long
+  // list scroll inside the panel rather than pushing the foot off the bottom,
+  // and it matters in both presentations.
   protected readonly asideClasses = computed(() => {
     const base = 'fixed inset-y-0 start-0 z-40 flex w-72 flex-col border-e border-surface-200 '
-      + 'bg-surface-0 motion-safe:transition-transform lg:static lg:z-auto '
+      + 'bg-surface-0 motion-safe:transition-transform '
+      + 'lg:sticky lg:top-0 lg:h-screen lg:self-start lg:z-auto '
       + 'lg:motion-safe:transition-[width] ';
     const width = this.state.collapsed() ? 'lg:w-[4.5rem] ' : 'lg:w-64 ';
     const offCanvas = this.state.drawerOpen()
@@ -101,14 +118,23 @@ export class Sidebar {
     {
       labelKey: 'nav.section.administration',
       items: [
-        // A GROUP: a parent with a chevron and children indented beneath it,
-        // and no destination of its own.
+        // TWO GROUPS, not one. They are genuinely different things:
+        // branches and departments are the platform's own structure
+        // (spec 012 FR-007, FR-008); users and roles are who may reach it
+        // (spec 010 FR-001, FR-002). A single 'Administration' group under
+        // an 'Administration' heading also said the word twice.
         {
-          labelKey: 'nav.administration',
-          icon: 'administration',
+          labelKey: 'nav.group.organisation',
+          icon: 'organisation',
           children: [
             { labelKey: 'admin.branches', route: '/admin/branches' },
-            { labelKey: 'admin.departments', route: '/admin/departments' },
+            { labelKey: 'admin.departments', route: '/admin/departments' }
+          ]
+        },
+        {
+          labelKey: 'nav.group.access',
+          icon: 'access',
+          children: [
             { labelKey: 'admin.users', route: '/admin/users' },
             { labelKey: 'admin.roles', route: '/admin/roles' }
           ]

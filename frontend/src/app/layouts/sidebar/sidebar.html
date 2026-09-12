@@ -131,15 +131,29 @@
                   [attr.title]="state.collapsed() ? (item.labelKey | translate: i18n.lang()) : null"
                   (click)="toggleGroup(item.labelKey)">
                   <span class="shrink-0" aria-hidden="true">
-                    <!-- Sliders: legible at 20px where a toothed gear is not,
-                         and it does not read as the sun the old icon did. -->
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                         stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M4 7h9M19 7h1M4 12h3M13 12h7M4 17h9M19 17h1" />
-                      <circle cx="16" cy="7" r="2.2" />
-                      <circle cx="10" cy="12" r="2.2" />
-                      <circle cx="16" cy="17" r="2.2" />
-                    </svg>
+                    @switch (item.icon) {
+                      @case ('organisation') {
+                        <!-- A building: branches and departments are the
+                             platform's own structure, not its settings. -->
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M3.5 20.5h17" />
+                          <path d="M5.5 20.5V5.2a1.7 1.7 0 011.7-1.7h5.6a1.7 1.7 0 011.7 1.7v15.3" />
+                          <path d="M14.5 20.5V10h3.3a1.7 1.7 0 011.7 1.7v8.8" />
+                          <path d="M8.5 7h3M8.5 10.5h3M8.5 14h3" />
+                        </svg>
+                      }
+                      @case ('access') {
+                        <!-- A key: users and roles are who may reach it. -->
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="8" cy="8" r="4.2" />
+                          <path d="M10.9 11.1L20 20.2" />
+                          <path d="M17.2 17.5l2-2" />
+                          <path d="M14.4 14.7l2-2" />
+                        </svg>
+                      }
+                    }
                   </span>
                   <span [class.lg:hidden]="state.collapsed()" class="flex-1 truncate text-start">
                     {{ item.labelKey | translate: i18n.lang() }}
