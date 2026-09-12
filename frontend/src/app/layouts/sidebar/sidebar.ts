@@ -18,8 +18,8 @@
 //
 // State lives in SidebarState, shared with the trigger in the top bar.
 
-import { Component, computed, inject, HostListener } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, computed, inject, signal, HostListener } from '@angular/core';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { LanguageService } from '../../core/i18n/language.service';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { SidebarState } from './sidebar-state';
@@ -36,12 +36,13 @@ export interface NavItem {
 
 @Component({
   selector: 'app-sidebar',
-  imports: [RouterLink, RouterLinkActive, TranslatePipe],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './sidebar.html'
 })
 export class Sidebar {
   protected readonly i18n = inject(LanguageService);
   protected readonly state = inject(SidebarState);
+  private readonly router = inject(Router);
 
   /** Groups start open, so nothing is hidden from somebody who has not used it. */
   private readonly closedGroups = new Set<string>();
@@ -96,6 +97,87 @@ export class Sidebar {
     this.items.filter(i => i.route || (i.children?.length ?? 0) > 0));
 
   protected isGroupOpen(key: string): boolean { return !this.closedGroups.has(key); }
+
+  /**
+   * The current path, as a signal.
+   *
+   * `routerLinkActive` is deliberately NOT used for styling any more. It works
+   * by ADDING classes to an element that already carries the resting ones, so
+   * `text-surface-600` and `text-primary-700` end up on the same element with
+   * equal specificity and Tailwind's emission order picks the winner — and
+   * since `primary` is declared before `surface` in the @theme block, the
+   * RESTING colour wins and the active one is silently ignored. That is the
+   * third time this shape of fault has appeared in this one component.
+   *
+   * Deciding here and emitting exactly one class per decision removes the
+   * competition entirely. `aria-current` is set from the same answer, so what
+   * is announced and what is drawn cannot disagree.
+   */
+  private readonly url = signal(this.router.url.split('?')[0]);
+
+  constructor() {
+    // The signal is the single source for both the class list and aria-current.
+    this.router.events.subscribe(e => {
+      if (e instanceof NavigationEnd) this.url.set(e.urlAfterRedirects.split('?')[0]);
+    });
+  }
+
+  protected isRouteActive(route: string): boolean {
+    const u = this.url();
+    return u === route || u.startsWith(route + '/');
+  }
+
+  /** Whether the current screen lives inside this group — see groupClasses. */
+  protected isGroupActive(item: NavItem): boolean {
+    return (item.children ?? []).some(c => this.isRouteActive(c.route));
+  }
+
+  protected linkClasses(route: string, child = false): string {
+    const base = child
+      ? 'relative block rounded-lg px-3 py-2 text-sm no-underline motion-safe:transition-colors '
+        + 'hover:bg-surface-100 hover:text-surface-900 '
+        + 'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 '
+      : 'relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm no-underline '
+        + 'motion-safe:transition-colors hover:bg-surface-100 hover:text-surface-900 '
+        + 'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ';
+    const centred = !child && this.state.collapsed() ? 'lg:justify-center ' : '';
+    // The bar is ABSENT when inactive rather than transparent, so there is no
+    // opacity pair for the cascade to arbitrate. A child's bar sits exactly on
+    // the group's rail, so the rail itself lights up.
+    const bar = child
+      ? 'before:absolute before:inset-y-1.5 before:-start-[0.35rem] before:w-0.5 '
+        + 'before:rounded-full before:bg-primary-600 '
+      : 'before:absolute before:inset-y-1.5 before:start-0 before:w-1 '
+        + 'before:rounded-full before:bg-primary-600 ';
+    return base + centred + (this.isRouteActive(route)
+      ? 'bg-primary-50 text-primary-700 font-semibold ' + bar
+      : 'text-surface-600 ');
+  }
+
+  // THE WHOLE CLASS LIST, in one place, for the same reason the panel's own is:
+  // a static `class` and a bound `[class]` have EQUAL specificity, so a pair
+  // like `before:opacity-0` and `before:opacity-100` is decided by whatever
+  // order Tailwind happened to emit them in. This is the fault that made the
+  // panel 155px wide and the fault that put it outside the viewport under RTL.
+  //
+  // The bar is therefore not toggled by opacity at all: when the group is not
+  // active the `before:` utilities are simply ABSENT, so there is no competing
+  // pair to resolve. Same trick as `max-lg:` — make it not exist rather than
+  // make it lose.
+  protected groupClasses(item: NavItem): string {
+    const base = 'relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm '
+      + 'motion-safe:transition-colors hover:bg-surface-100 hover:text-surface-900 '
+      + 'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ';
+    const centred = this.state.collapsed() ? 'lg:justify-center ' : '';
+    // Only when collapsed: expanded, the active CHILD shows it, and marking
+    // both would say the same thing twice.
+    const active = this.state.collapsed() && this.isGroupActive(item)
+      ? 'bg-primary-50 text-primary-700 '
+        + 'before:absolute before:inset-y-1.5 before:start-0 before:w-1 '
+        + 'before:rounded-full before:bg-primary-600 '
+      : 'text-surface-600 ';
+    return base + centred + active;
+  }
 
   protected toggleGroup(key: string): void {
     this.closedGroups.has(key) ? this.closedGroups.delete(key) : this.closedGroups.add(key);
