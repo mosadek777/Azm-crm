@@ -119,7 +119,13 @@
         @if (entitlement()?.status === 'unavailable') {
           <p class="m-0 text-sm text-surface-500">
             {{ 'common.unavailable' | translate: i18n.lang() }}
-            <span class="block text-xs opacity-70">{{ entitlement()?.reason }}</span>
+            <!-- The machine reason (erp-entitlement-out-of-scope) was being
+                 printed at the reader. This is the same reason in words —
+                 and it is NOT the SLA sentence: that one waits on the
+                 working calendar, this one waits on the ERP (spec 011). -->
+            <span class="mt-1 block text-xs text-surface-500">
+              {{ 'entitlement.unavailableWhy' | translate: i18n.lang() }}
+            </span>
           </p>
         } @else {
           <p class="m-0 text-sm text-surface-800"><span class="ltr">{{ entitlement()?.minutes }}</span></p>
@@ -169,7 +175,7 @@
           class="mt-4 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white
                  hover:bg-primary-700 disabled:opacity-60 transition-colors"
           (click)="save()">
-          {{ 'action.save' | translate: i18n.lang() }}
+          {{ 'customer.saveChanges' | translate: i18n.lang() }}
         </button>
       </section>
     }

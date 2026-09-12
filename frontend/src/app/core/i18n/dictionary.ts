@@ -239,6 +239,35 @@ export const DICTIONARY: Translations = {
     ar: 'لديك صلاحية الاطلاع فقط. تغيير الحالة والإسناد والرد تتطلب دورًا يسمح بالكتابة.',
     en: 'You have read-only access. Changing status, assigning and replying require a role that may write.'
   },
+
+  // --- BUTTONS NAME THEIR ACTION ------------------------------------------
+  //
+  // "تطبيق" / "Apply" says nothing about what it applies, and the same button
+  // label appeared on a status change and on a filter bar. A label is read in
+  // isolation by anyone using a screen reader, and out of context by everyone
+  // scanning the page.
+  'ticket.applyStatus': { ar: 'تغيير الحالة', en: 'Change status' },
+  'ticket.applyFilters': { ar: 'تطبيق عوامل التصفية', en: 'Apply filters' },
+  'ticket.sendMessage': { ar: 'إرسال الرسالة', en: 'Send message' },
+  'admin.createBranch': { ar: 'إنشاء الفرع', en: 'Create branch' },
+  'admin.createDepartment': { ar: 'إنشاء القسم', en: 'Create department' },
+  'admin.createUser': { ar: 'إنشاء المستخدم', en: 'Create user' },
+  'customer.saveChanges': { ar: 'حفظ بيانات العميل', en: 'Save customer' },
+
+  // --- WHY A VALUE IS UNAVAILABLE ------------------------------------------
+  //
+  // A bare "unavailable" reads as broken. These say it is deliberate, and they
+  // are DIFFERENT lines because the two causes are different — the timing one
+  // waits on the working calendar, the entitlement one waits on the ERP.
+  // Using one line for both would state something untrue on one of the screens.
+  'sla.unavailableWhy': {
+    ar: 'يحتاج احتساب الوقت إلى تقويم العمل — ساعات الدوام والعطلات لكل فرع — ولم يُحدَّد بعد. لا يُحسب فرق زمني تقريبي بديلاً عنه.',
+    en: 'Timing needs the working calendar — business hours and holidays per branch — which is not yet defined. No approximate difference is computed in its place.'
+  },
+  'entitlement.unavailableWhy': {
+    ar: 'تأتي بيانات الاستحقاق من نظام تخطيط الموارد، وهو خارج نطاق هذه المرحلة.',
+    en: 'Entitlement comes from the ERP, which is out of scope for this phase.'
+  },
   'common.loading': { ar: 'جارٍ التحميل…', en: 'Loading…' },
   'lang.arabic': { ar: 'العربية', en: 'Arabic' },
   'lang.english': { ar: 'الإنجليزية', en: 'English' },
@@ -246,9 +275,9 @@ export const DICTIONARY: Translations = {
   'common.yes': { ar: 'نعم', en: 'Yes' },
   'common.no': { ar: 'لا', en: 'No' },
   'action.search': { ar: 'بحث', en: 'Search' },
-  'action.save': { ar: 'حفظ', en: 'Save' },
-  'action.apply': { ar: 'تطبيق', en: 'Apply' },
-  'action.send': { ar: 'إرسال', en: 'Send' },
+  // action.save / action.apply / action.send are gone: every button now names
+  // what it does. A generic verb is read out of context by anyone using a
+  // screen reader, and scanned out of context by everyone else.
   'customer.search': { ar: 'بحث العملاء', en: 'Customer search' },
   'customer.searchHint': { ar: 'الاسم أو الهاتف أو البريد أو الرقم القومي', en: 'Name, phone, email or national ID' },
   'customer.minChars': { ar: 'اكتب ٣ أحرف على الأقل', en: 'Type at least 3 characters' },

@@ -57,7 +57,7 @@
       class="rounded-lg border border-surface-300 bg-surface-0 px-4 py-2 text-sm font-medium
              text-surface-700 hover:bg-surface-100 disabled:opacity-60 transition-colors"
       (click)="load()">
-      {{ 'action.apply' | translate: i18n.lang() }}
+      {{ 'ticket.applyFilters' | translate: i18n.lang() }}
     </button>
   </div>
 
@@ -120,5 +120,13 @@
         </tbody>
       </table>
     </div>
+  <!-- Said ONCE, under the table. The cells keep the bare word: repeating
+       a sentence on every row would be noise, and saying nothing at all
+       makes "unavailable" read as broken. -->
+  @if (rows().length && rows()[0].sla?.status === 'unavailable') {
+    <p class="m-0 text-xs text-surface-500">
+      {{ 'sla.unavailableWhy' | translate: i18n.lang() }}
+    </p>
+  }
   }
 </div>
