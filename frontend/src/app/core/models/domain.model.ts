@@ -74,9 +74,22 @@ export interface TicketMessage {
   sentAt: string;
 }
 
+// The audit trail outlives the records it points at, so an actor is described
+// rather than merely named. `kind` always has a value; `displayName` may not —
+// a system action has no person behind it, and an erased customer has no name
+// left. The screen renders a label for those cases; it never prints the id.
+// See backend/src/utils/actor.js for how each kind is recognised.
+export interface HistoryActor {
+  kind: 'user' | 'customer' | 'system' | 'unknown';
+  displayName: string | null;
+  state: 'active' | 'deactivated' | null;
+}
+
 export interface HistoryEntry {
   action: string;
+  /** Exactly as the entry holds it. An auditor traces by this, not by the name. */
   actorRef: string;
+  actor: HistoryActor;
   occurredAt: string;
   before: unknown;
   after: unknown;

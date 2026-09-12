@@ -229,7 +229,10 @@
           <tbody>
             @for (h of history(); track $index) {
               <tr class="border-b border-surface-100 last:border-0">
-                <td class="px-3 py-2"><span class="ltr text-surface-600">{{ h.occurredAt }}</span></td>
+                <!-- A timestamp is a direction-neutral value, so it is pinned LTR.
+                     Formatted, not computed: rendering an absolute instant is not
+                     a duration, and constitution III forbids only the latter. -->
+                <td class="px-3 py-2 whitespace-nowrap"><span class="ltr text-surface-600">{{ h.occurredAt | date: 'short' }}</span></td>
                 <!-- The action as a word, with the RAW KEY kept alongside.
                      An auditor needs the exact event, not a paraphrase — and
                      the key is rendered visibly rather than only on the tag's
@@ -238,10 +241,44 @@
                   <app-tag [tone]="h.action | actionTone" [raw]="h.action">
                     {{ ('action.' + h.action) | translate: i18n.lang() }}
                   </app-tag>
-                  <span class="ltr mt-0.5 block text-xs text-surface-400"
+                  <span class="ltr ms-2 text-xs text-surface-400"
                         [attr.aria-label]="'history.rawKey' | translate: i18n.lang()">{{ h.action }}</span>
                 </td>
-                <td class="px-3 py-2"><span class="ltr text-surface-600">{{ h.actorRef }}</span></td>
+                <!-- WHO. A name where there is one, an explicit label where
+                     there is not — never a bare id dressed up as an actor.
+                     Staff see this in full: 002 §9 gives every staff role a
+                     plain tick on "Read history"; it is the CUSTOMER's row
+                     that is redacted, which is what decision 29 implements on
+                     the portal. -->
+                <td class="px-3 py-2">
+                  @if (h.actor.displayName) {
+                    <!-- A person's name: user-authored, single language, no
+                         forced direction. -->
+                    <span class="text-surface-800">{{ h.actor.displayName }}</span>
+                    @if (h.actor.state === 'deactivated') {
+                      <!-- Said rather than left as a puzzle: the account is
+                           gone from the lists, the history entry is not. -->
+                      <span class="ms-1 text-xs text-surface-500">
+                        ({{ 'actor.deactivated' | translate: i18n.lang() }})
+                      </span>
+                    }
+                    @if (h.actor.kind === 'customer') {
+                      <span class="ms-1 text-xs text-surface-500">
+                        ({{ 'actor.customer' | translate: i18n.lang() }})
+                      </span>
+                    }
+                  } @else {
+                    <span class="text-surface-600">
+                      {{ ('actor.' + (h.actor.kind === 'system' ? 'system' : 'unknown')) | translate: i18n.lang() }}
+                    </span>
+                    @if (h.actor.kind !== 'system') {
+                      <!-- The raw ref is kept for an unresolved actor: the
+                           trail must stay followable by the value the entry
+                           actually holds. -->
+                      <span class="ltr ms-2 text-xs text-surface-400">{{ h.actorRef }}</span>
+                    }
+                  }
+                </td>
               </tr>
             }
           </tbody>

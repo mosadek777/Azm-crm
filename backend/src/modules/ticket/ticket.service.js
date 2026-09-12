@@ -17,6 +17,7 @@ import { Customer } from '../../DB/models/customer.model.js'
 import { User } from '../../DB/models/user.model.js'
 import { RoleAssignment } from '../../DB/models/role-assignment.model.js'
 import { AuditEntry } from '../../DB/models/audit-entry.model.js'
+import { withActors } from '../../utils/actor.js'
 import { nextTicketReference } from '../../DB/models/counter.model.js'
 import { recordAudit, redact } from '../../utils/audit.js'
 import { scopeFilter, rolesForTarget, assignmentCovers } from '../../utils/scope.js'
@@ -247,14 +248,21 @@ export const getTicket = async (req, res, next) => {
       $or: [{ entityId: ticket._id }, { 'after.ticketId': ticket._id }]
     }).sort({ occurredAt: 1 }).limit(500)
 
+    const historyWithActors = await withActors(history)
+
     return res.json({
       ticket: redact(ticket),
       customer: customer ? redact(customer) : null,
       assignedAgent: agent ? { id: agent._id, displayName: agent.displayName } : null,
       messages: messages.map(m => redact(m)),
-      history: history.map(h => ({
-        action: h.action, actorRef: h.actorRef, occurredAt: h.occurredAt,
-        before: h.before, after: h.after
+      // Each entry carries a readable `actor` alongside the raw `actorRef`,
+      // which stays exactly as written. The trail must remain followable by
+      // the value the entry actually holds, not only by a name resolved for
+      // display — see utils/actor.js for the four kinds and why a
+      // deactivated or system actor still renders as something.
+      history: historyWithActors.map(h => ({
+        action: h.action, actorRef: h.actorRef, actor: h.actor,
+        occurredAt: h.occurredAt, before: h.before, after: h.after
       })),
       statusMeta: STATUSES[ticket.status] ?? null,
       reachableStatuses: reachableFrom(ticket.status),
