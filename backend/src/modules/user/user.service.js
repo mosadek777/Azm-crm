@@ -318,9 +318,35 @@ export const listUsers = async (req, res, next) => {
 
     const users = await User.find(userIds ? { _id: { $in: userIds } } : {})
 
+    // ROLE CODES, and deliberately NOTHING ELSE from the assignment.
+    //
+    // A user carries no role of their own, so a list without this is a list
+    // of names with no way to tell an agent from an administrator — which is
+    // the whole question the administration screen exists to answer.
+    //
+    // The assignment's branchIds and departmentIds are NOT returned. The
+    // scope filter above admits a user on an OVERLAP — at least one shared
+    // branch and one shared department — so a listed user may hold
+    // assignments in branches the caller cannot see. Returning their full
+    // scope would disclose exactly those ids: the AS-01 indistinguishability
+    // rule leaking through a field instead of through a row. A role code
+    // says what someone is, never where.
+    const assignments = await RA.find({ userId: { $in: users.map(u => u._id) } })
+    const rolesByUser = new Map()
+    for (const a of assignments) {
+      const key = String(a.userId)
+      if (!rolesByUser.has(key)) rolesByUser.set(key, new Set())
+      rolesByUser.get(key).add(a.role)
+    }
+
     // Out-of-scope users are absent from the list, not marked as hidden —
     // AS-01: "none appears in any list, search, count or aggregate".
-    return res.json({ users: users.map(u => redact(u)) })
+    return res.json({
+      users: users.map(u => ({
+        ...redact(u),
+        roles: [...(rolesByUser.get(String(u._id)) ?? [])]
+      }))
+    })
   } catch (err) {
     return next(err)
   }

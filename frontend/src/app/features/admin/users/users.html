@@ -1,0 +1,261 @@
+<!-- Administration — staff users. See users.ts for the four rules built in here
+     rather than added after: server-side scope on the list, a grant picker
+     populated from the already-scoped endpoint, deactivate-never-delete, and a
+     password pinned LTR. -->
+<div class="flex flex-col gap-6">
+
+  <div class="flex flex-wrap items-center gap-3">
+    <h1 class="m-0 text-2xl font-semibold text-surface-900">
+      {{ 'admin.users' | translate: i18n.lang() }}
+    </h1>
+    @if (!loading()) {
+      <span class="rounded-full bg-surface-100 px-2.5 py-0.5 text-sm text-surface-600">
+        {{ activeCount() }} / {{ rows().length }}
+      </span>
+    }
+    <span class="flex-1"></span>
+    <button type="button"
+      class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white
+             hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+      [attr.aria-expanded]="creating()"
+      (click)="creating.set(!creating())">
+      {{ (creating() ? 'action.cancel' : 'admin.newUser') | translate: i18n.lang() }}
+    </button>
+  </div>
+
+  <!-- The list arrives already filtered by the server; nothing here narrows or
+       widens it. AS-01: an out-of-scope user is absent, not marked hidden. -->
+  <p class="m-0 text-sm text-surface-500">
+    {{ 'admin.scopeNote' | translate: i18n.lang() }}
+  </p>
+
+  @if (creating()) {
+    <form class="flex flex-col gap-4 rounded-xl border border-surface-200 bg-surface-0 p-4"
+          (ngSubmit)="submit()">
+      <h2 class="m-0 text-sm font-semibold text-surface-900">
+        {{ 'admin.newUser' | translate: i18n.lang() }}
+      </h2>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-medium text-surface-700">
+            {{ 'admin.displayName' | translate: i18n.lang() }}
+          </span>
+          <!-- A person's name is user-authored and single-language: no dir is
+               forced on it, so the browser detects direction per value. -->
+          <input name="displayName" required
+            [ngModel]="displayName()" (ngModelChange)="displayName.set($event)"
+            class="w-full rounded-lg border border-surface-300 px-3 py-2 text-start
+                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25" />
+        </label>
+
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-medium text-surface-700">
+            {{ 'admin.email' | translate: i18n.lang() }}
+          </span>
+          <!-- An email address is a direction-neutral value (012 FR-002). -->
+          <input name="email" type="email" dir="ltr" autocomplete="off" required
+            [ngModel]="email()" (ngModelChange)="email.set($event)"
+            class="w-full rounded-lg border border-surface-300 px-3 py-2 text-start
+                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25" />
+        </label>
+
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-medium text-surface-700">
+            {{ 'admin.password' | translate: i18n.lang() }}
+          </span>
+          <!-- dir="ltr" per decision 38: a password must never be visually
+               reordered, or what was typed and what is seen disagree. The
+               policy itself is the server's — no length check lives here. -->
+          <input name="password" type="password" dir="ltr" autocomplete="new-password" required
+            [ngModel]="password()" (ngModelChange)="password.set($event)"
+            class="w-full rounded-lg border border-surface-300 px-3 py-2 text-start
+                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25" />
+        </label>
+
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-medium text-surface-700">
+            {{ 'admin.defaultLanguage' | translate: i18n.lang() }}
+          </span>
+          <select name="defaultLanguage"
+            [ngModel]="defaultLanguage()" (ngModelChange)="defaultLanguage.set($event)"
+            class="w-full rounded-lg border border-surface-300 bg-surface-0 px-3 py-2
+                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25">
+            <option value="ar">{{ 'lang.arabic' | translate: i18n.lang() }}</option>
+            <option value="en">{{ 'lang.english' | translate: i18n.lang() }}</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- ROLES. A fixed set of five code constants — 010 FR-002 allows no
+           per-user overrides, so these checkboxes are the whole permission
+           model. Checkboxes, not a multi-select: FR-005 lets one person hold
+           several assignments. -->
+      <fieldset class="m-0 flex flex-col gap-2 border-0 p-0">
+        <legend class="mb-1 p-0 text-sm font-medium text-surface-700">
+          {{ 'admin.rolesHeld' | translate: i18n.lang() }}
+        </legend>
+        <div class="flex flex-wrap gap-2">
+          @for (r of allRoles; track r) {
+            <label class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-1.5 text-sm
+                          focus-within:ring-2 focus-within:ring-primary-500"
+              [class]="roles().includes(r)
+                ? 'border-primary-400 bg-primary-50 text-primary-900'
+                : 'border-surface-300 bg-surface-0 text-surface-700'">
+              <input type="checkbox" class="accent-primary-600"
+                [checked]="roles().includes(r)" (change)="toggleRole(r)" />
+              <!-- The role is named in words, never signalled by the highlight
+                   alone, and the code is kept alongside because that is what
+                   the API and the audit trail use. -->
+              <span>{{ ('role.' + r) | translate: i18n.lang() }}</span>
+              <span class="ltr text-xs text-surface-500">{{ r }}</span>
+            </label>
+          }
+        </div>
+        @if (!roles().length) {
+          <p class="m-0 text-xs text-surface-500">
+            {{ 'admin.selectAtLeastOneRole' | translate: i18n.lang() }}
+          </p>
+        }
+      </fieldset>
+
+      <!-- THE GRANT. Populated from the already-scoped endpoints, so it offers
+           exactly what this administrator may grant. FR-021 is still enforced
+           server-side; this agrees with it rather than pre-empting it. -->
+      <p class="m-0 rounded-lg border-s-4 border-primary-400 bg-primary-50 px-3 py-2 text-sm text-primary-900">
+        {{ 'admin.grantNote' | translate: i18n.lang() }}
+      </p>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <fieldset class="m-0 flex flex-col gap-2 border-0 p-0">
+          <legend class="mb-1 p-0 text-sm font-medium text-surface-700">
+            {{ 'admin.branchesGranted' | translate: i18n.lang() }}
+          </legend>
+          <div class="flex flex-col gap-1.5 rounded-lg border border-surface-200 p-3">
+            @for (b of branches(); track b._id) {
+              <label class="flex cursor-pointer items-center gap-2 text-sm text-surface-800">
+                <input type="checkbox" name="branch-{{ b._id }}" class="accent-primary-600"
+                  [checked]="branchIds().includes(b._id)" (change)="toggleBranch(b._id)" />
+                <span>{{ label(b.name) }}</span>
+              </label>
+            } @empty {
+              <p class="m-0 text-sm text-surface-500">
+                {{ 'admin.noBranches' | translate: i18n.lang() }}
+              </p>
+            }
+          </div>
+        </fieldset>
+
+        <fieldset class="m-0 flex flex-col gap-2 border-0 p-0">
+          <legend class="mb-1 p-0 text-sm font-medium text-surface-700">
+            {{ 'admin.departmentsGranted' | translate: i18n.lang() }}
+          </legend>
+          <div class="flex flex-col gap-1.5 rounded-lg border border-surface-200 p-3">
+            @for (d of departments(); track d._id) {
+              <label class="flex cursor-pointer items-center gap-2 text-sm text-surface-800">
+                <input type="checkbox" name="dept-{{ d._id }}" class="accent-primary-600"
+                  [checked]="departmentIds().includes(d._id)" (change)="toggleDepartment(d._id)" />
+                <span>{{ label(d.name) }}</span>
+              </label>
+            } @empty {
+              <p class="m-0 text-sm text-surface-500">
+                {{ 'admin.noDepartments' | translate: i18n.lang() }}
+              </p>
+            }
+          </div>
+        </fieldset>
+      </div>
+
+      @if (!branchIds().length || !departmentIds().length) {
+        <p class="m-0 text-xs text-surface-500">
+          {{ 'admin.selectScope' | translate: i18n.lang() }}
+        </p>
+      }
+
+      <!-- The server's own refusal, rendered as sent — including the FR-021
+           refusal of a grant wider than the granter's own scope. -->
+      @if (refusal(); as message) {
+        <p class="m-0 rounded-lg border-s-4 border-red-600 bg-red-50 px-3 py-2 text-sm text-red-800"
+           role="alert">{{ message[i18n.lang()] }}</p>
+      }
+
+      <div>
+        <button type="submit" [disabled]="!canSubmit() || busy() === 'create'"
+          class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white
+                 hover:bg-primary-700 disabled:opacity-50
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
+          {{ 'action.save' | translate: i18n.lang() }}
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (loading()) {
+    <p class="m-0 text-sm text-surface-500">{{ 'common.loading' | translate: i18n.lang() }}</p>
+  } @else if (!rows().length) {
+    <p class="m-0 rounded-xl border border-surface-200 bg-surface-0 p-6 text-center text-sm text-surface-500">
+      {{ 'admin.noUsers' | translate: i18n.lang() }}
+    </p>
+  } @else {
+    <!-- The table scrolls inside its own frame; the page never scrolls
+         sideways, on any width. -->
+    <div class="overflow-x-auto rounded-xl border border-surface-200 bg-surface-0">
+      <table class="w-full border-collapse text-sm">
+        <thead>
+          <tr class="border-b border-surface-200 bg-surface-50">
+            <th class="px-4 py-2.5 text-start font-semibold text-surface-700">{{ 'admin.displayName' | translate: i18n.lang() }}</th>
+            <th class="px-4 py-2.5 text-start font-semibold text-surface-700">{{ 'admin.email' | translate: i18n.lang() }}</th>
+            <th class="px-4 py-2.5 text-start font-semibold text-surface-700">{{ 'admin.rolesHeld' | translate: i18n.lang() }}</th>
+            <th class="px-4 py-2.5 text-start font-semibold text-surface-700">{{ 'admin.state' | translate: i18n.lang() }}</th>
+            <th class="px-4 py-2.5 text-end font-semibold text-surface-700">{{ 'admin.action' | translate: i18n.lang() }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of rows(); track u._id) {
+            <tr class="border-b border-surface-100 last:border-0" [class.opacity-60]="u.state !== 'active'">
+              <td class="px-4 py-2.5 text-surface-900">{{ u.displayName }}</td>
+              <td class="px-4 py-2.5"><span class="ltr text-surface-600">{{ u.email }}</span></td>
+              <td class="px-4 py-2.5">
+                <span class="flex flex-wrap gap-1">
+                  @for (r of u.roles; track r) {
+                    <span class="rounded-full bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-800">
+                      {{ ('role.' + r) | translate: i18n.lang() }}
+                    </span>
+                  } @empty {
+                    <span class="text-xs text-surface-500">—</span>
+                  }
+                </span>
+              </td>
+              <td class="px-4 py-2.5">
+                <!-- State is a word, not only a colour. -->
+                <span class="rounded-full px-2 py-0.5 text-xs font-medium"
+                  [class]="u.state === 'active' ? 'bg-emerald-100 text-emerald-900' : 'bg-surface-200 text-surface-700'">
+                  {{ (u.state === 'active' ? 'admin.active' : 'admin.inactive') | translate: i18n.lang() }}
+                </span>
+              </td>
+              <td class="px-4 py-2.5 text-end">
+                <!-- DEACTIVATE, NEVER DELETE. FR-001 forbids offering deletion,
+                     so there is none here. E-01 and E-02 are refused by the
+                     server and the refusal is shown as sent. -->
+                <button type="button" [disabled]="busy() === u._id"
+                  class="rounded-md border border-surface-300 px-2.5 py-1.5 text-sm
+                         text-surface-700 hover:bg-surface-100 disabled:opacity-50
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                  (click)="toggleActive(u)">
+                  {{ (u.state === 'active' ? 'admin.deactivate' : 'admin.reactivate') | translate: i18n.lang() }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p class="m-0 text-xs text-surface-500">
+      {{ 'admin.noUserDeleteNote' | translate: i18n.lang() }}
+    </p>
+    <p class="m-0 text-xs text-surface-500">
+      {{ 'admin.rolesAtCreationNote' | translate: i18n.lang() }}
+    </p>
+  }
+</div>

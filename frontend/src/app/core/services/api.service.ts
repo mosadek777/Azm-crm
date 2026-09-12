@@ -7,7 +7,7 @@ import {
   Customer, ContactPoint, Ticket, TicketMessage, HistoryEntry, TicketMeta, Sla,
   Branch, Department
 } from '../models/domain.model';
-import { LocalizedText } from '../models/user.model';
+import { CreateUserRequest, LocalizedText, StaffUser } from '../models/user.model';
 
 const API = 'http://localhost:3000';
 
@@ -116,4 +116,33 @@ export class ApiService {
     return this.http.patch<{ department: Department; changed: boolean }>(
       `${API}/platform/departments/${id}/active`, { active });
   }
+
+  // --- administration: staff users (spec 010 FR-001, FR-002, FR-021) ---
+  //
+  // SCOPE-FILTERED BY THE SERVER, like the branch and department lists. A user
+  // out of the caller's scope is absent from the response, not flagged — AS-01.
+  // The response carries role CODES and no scope detail; see listUsers.
+  listUsers() {
+    return this.http.get<{ users: StaffUser[] }>(`${API}/user`);
+  }
+
+  // The branch and department ids come from listBranches()/listDepartments(),
+  // which are bounded by the same reachable scope that bounds a grant. So the
+  // picker offers what can be granted WITHOUT the client deciding anything:
+  // FR-021 is still enforced server-side and an excessive grant is refused 403.
+  createUser(body: CreateUserRequest) {
+    return this.http.post<{ user: StaffUser }>(`${API}/user`, body);
+  }
+
+  // There is NO delete, by design (FR-001 forbids offering one): a user's name
+  // is attached to tickets and to every audit entry they caused. Deactivation
+  // is reversible and is the only disposal the API offers.
+  //
+  // Two refusals come back as 409 and are rendered as the server sent them:
+  // the last active administrator (E-01) and deactivating yourself (E-02).
+  setUserActive(id: string, active: boolean) {
+    return this.http.patch<{ user: StaffUser }>(
+      `${API}/user/${id}/${active ? 'reactivate' : 'deactivate'}`, {});
+  }
 }
+

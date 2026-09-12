@@ -108,6 +108,14 @@ export const routes: Routes = [
       {
         path: 'admin/departments',
         loadComponent: () => import('./features/admin/departments/departments').then(m => m.AdminDepartments)
+      },
+      {
+        path: 'admin/users',
+        loadComponent: () => import('./features/admin/users/users').then(m => m.AdminUsers)
+      },
+      {
+        path: 'admin/roles',
+        loadComponent: () => import('./features/admin/roles/roles').then(m => m.AdminRoles)
       }
     ]
   },

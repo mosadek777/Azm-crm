@@ -84,7 +84,9 @@ export class Sidebar {
       icon: 'administration',
       children: [
         { labelKey: 'admin.branches', route: '/admin/branches' },
-        { labelKey: 'admin.departments', route: '/admin/departments' }
+        { labelKey: 'admin.departments', route: '/admin/departments' },
+        { labelKey: 'admin.users', route: '/admin/users' },
+        { labelKey: 'admin.roles', route: '/admin/roles' }
       ]
     }
   ];

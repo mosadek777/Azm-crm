@@ -1,0 +1,74 @@
+<!-- Administration — roles. A reference, not an editor. See roles.ts: roles are
+     five code constants and FR-002 is the reason they stay that way. -->
+<div class="flex flex-col gap-6">
+
+  <div class="flex flex-wrap items-center gap-3">
+    <h1 class="m-0 text-2xl font-semibold text-surface-900">
+      {{ 'admin.roles' | translate: i18n.lang() }}
+    </h1>
+  </div>
+
+  <!-- Said where somebody would otherwise look for an "add role" button. -->
+  <p class="m-0 rounded-lg border-s-4 border-primary-400 bg-primary-50 px-3 py-2 text-sm text-primary-900">
+    {{ 'admin.rolesFixedNote' | translate: i18n.lang() }}
+  </p>
+
+  <!-- The holder lists below are scope-filtered like every other list. -->
+  <p class="m-0 text-sm text-surface-500">
+    {{ 'admin.scopeNote' | translate: i18n.lang() }}
+  </p>
+
+  @if (loading()) {
+    <p class="m-0 text-sm text-surface-500">{{ 'common.loading' | translate: i18n.lang() }}</p>
+  } @else {
+    <!-- Cards rather than a table: the "what it is for" column is a sentence,
+         and a sentence in a table cell at 390px is a column two words wide. -->
+    <div class="grid gap-4 sm:grid-cols-2">
+      @for (r of rows(); track r.code) {
+        <section class="flex flex-col gap-3 rounded-xl border border-surface-200 bg-surface-0 p-4">
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="m-0 text-base font-semibold text-surface-900">
+              {{ ('role.' + r.code) | translate: i18n.lang() }}
+            </h2>
+            <!-- The code, pinned LTR: it is an identifier, and it is what the
+                 API and the audit trail actually record. -->
+            <span class="ltr rounded-full bg-surface-100 px-2 py-0.5 text-xs font-medium text-surface-600">
+              {{ r.code }}
+            </span>
+            <span class="flex-1"></span>
+            <span class="rounded-full bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-800">
+              {{ r.holders.length }}
+            </span>
+          </div>
+
+          <p class="m-0 text-sm text-surface-600">
+            {{ ('role.' + r.code + '.what') | translate: i18n.lang() }}
+          </p>
+
+          <div class="flex flex-col gap-1.5 border-t border-surface-100 pt-3">
+            <span class="text-xs font-medium text-surface-700">
+              {{ 'admin.holders' | translate: i18n.lang() }}
+            </span>
+            @if (r.holders.length) {
+              <ul class="m-0 flex list-none flex-wrap gap-1.5 p-0">
+                @for (u of r.holders; track u._id) {
+                  <li class="rounded-full bg-surface-100 px-2.5 py-0.5 text-xs text-surface-700">
+                    {{ u.displayName }}
+                  </li>
+                }
+              </ul>
+            } @else {
+              <span class="text-xs text-surface-500">
+                {{ 'admin.noHolders' | translate: i18n.lang() }}
+              </span>
+            }
+          </div>
+        </section>
+      }
+    </div>
+
+    <p class="m-0 text-xs text-surface-500">
+      {{ 'admin.rolesAtCreationNote' | translate: i18n.lang() }}
+    </p>
+  }
+</div>

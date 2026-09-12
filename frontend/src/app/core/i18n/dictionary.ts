@@ -108,6 +108,74 @@ export const DICTIONARY: Translations = {
     en: 'Deletion is not offered: existing records reference these. Deactivation is the alternative, and it is reversible.'
   },
 
+  // --- users and roles (spec 010 FR-001, FR-002, FR-021) -------------------
+  'admin.users': { ar: 'المستخدمون', en: 'Users' },
+  'admin.roles': { ar: 'الأدوار', en: 'Roles' },
+  'admin.newUser': { ar: 'مستخدم جديد', en: 'New user' },
+  'admin.displayName': { ar: 'الاسم', en: 'Name' },
+  'admin.email': { ar: 'البريد الإلكتروني', en: 'Email address' },
+  'admin.password': { ar: 'كلمة المرور', en: 'Password' },
+  'admin.defaultLanguage': { ar: 'لغة الواجهة', en: 'Interface language' },
+  'admin.rolesHeld': { ar: 'الأدوار', en: 'Roles' },
+  'admin.branchesGranted': { ar: 'الفروع الممنوحة', en: 'Branches granted' },
+  'admin.departmentsGranted': { ar: 'الأقسام الممنوحة', en: 'Departments granted' },
+  'admin.userCreated': { ar: 'تم إنشاء المستخدم', en: 'User created' },
+  'admin.noUsers': { ar: 'لا يوجد مستخدمون ضمن نطاقك.', en: 'There are no users within your scope.' },
+  'admin.holders': { ar: 'من يحملونه', en: 'Held by' },
+  'admin.noHolders': { ar: 'لا أحد ضمن نطاقك', en: 'nobody within your scope' },
+  'admin.selectAtLeastOneRole': { ar: 'اختر دورًا واحدًا على الأقل.', en: 'Choose at least one role.' },
+  'admin.selectScope': { ar: 'اختر فرعًا وقسمًا واحدًا على الأقل.', en: 'Choose at least one branch and one department.' },
+
+  // The picker offers what the SERVER already said this administrator can see,
+  // which is by construction what they can grant. Said on the screen so an
+  // administrator who expects a branch and cannot find it knows why.
+  'admin.grantNote': {
+    ar: 'تعرض القوائم أدناه ما يمكنك منحه فقط — وهو نطاقك أنت. الخادم يرفض أي منح يتجاوزه.',
+    en: 'The lists below offer only what you can grant — your own scope. The server refuses any grant beyond it.'
+  },
+  // Why a user is deactivated and never deleted, where somebody would look.
+  'admin.noUserDeleteNote': {
+    ar: 'لا يمكن حذف المستخدمين: أسماؤهم مرتبطة بالتذاكر وسجل التدقيق. الإيقاف هو البديل، وهو قابل للتراجع.',
+    en: 'Users cannot be deleted: their name is attached to tickets and to the audit trail. Deactivation is the alternative, and it is reversible.'
+  },
+  // The roles screen is a reference, not an editor, and says so rather than
+  // leaving somebody hunting for an "add role" button that cannot exist.
+  'admin.rolesFixedNote': {
+    ar: 'الأدوار ثابتة في الشيفرة ولا تُنشأ أو تُعدَّل من الواجهة. الصلاحيات تُمنح عبر الأدوار فقط — لا توجد استثناءات لمستخدم بعينه (010 FR-002).',
+    en: 'Roles are fixed in code and are not created or edited from the interface. Permissions are granted through roles only — there are no per-user overrides (010 FR-002).'
+  },
+  // Stated plainly: role assignment happens at creation and nowhere else yet.
+  'admin.rolesAtCreationNote': {
+    ar: 'تُمنح الأدوار عند إنشاء المستخدم. لا يوجد حتى الآن إجراء في الواجهة البرمجية لتغيير أدوار مستخدم قائم.',
+    en: 'Roles are granted when the user is created. There is not yet an API action to change the roles of an existing user.'
+  },
+
+  'role.AGT': { ar: 'وكيل', en: 'Agent' },
+  'role.LEAD': { ar: 'قائد فريق', en: 'Team lead' },
+  'role.MGR': { ar: 'مدير', en: 'Manager' },
+  'role.ADM': { ar: 'مدير نظام', en: 'Administrator' },
+  'role.AUD': { ar: 'مدقق', en: 'Auditor' },
+  'role.AGT.what': {
+    ar: 'يعمل على التذاكر ضمن نطاقه: يرد على العملاء، ويكتب ملاحظات داخلية، ويغيّر الحالة.',
+    en: 'Works tickets within their scope: replies to customers, writes internal notes, changes status.'
+  },
+  'role.LEAD.what': {
+    ar: 'كل ما يفعله الوكيل، بالإضافة إلى الاطلاع على المستخدمين ضمن نطاقه وتوزيع العمل.',
+    en: 'Everything an agent does, plus viewing the users in their scope and distributing work.'
+  },
+  'role.MGR.what': {
+    ar: 'إشراف على مستوى الفرع أو القسم، والاطلاع على المستخدمين ضمن نطاقه.',
+    en: 'Branch or department oversight, and viewing the users within their scope.'
+  },
+  'role.ADM.what': {
+    ar: 'ينشئ المستخدمين والفروع والأقسام ويوقفها، ويمنح الأدوار ضمن نطاقه هو — لا أوسع منه (FR-021).',
+    en: 'Creates and deactivates users, branches and departments, and grants roles within their own scope — never wider (FR-021).'
+  },
+  'role.AUD.what': {
+    ar: 'قراءة كل شيء، وتغيير لا شيء. دور مقصود به التدقيق وحده.',
+    en: 'Reads everything, changes nothing. Deliberately read-everything, change-nothing.'
+  },
+
   'common.loading': { ar: 'جارٍ التحميل…', en: 'Loading…' },
   'lang.arabic': { ar: 'العربية', en: 'Arabic' },
   'lang.english': { ar: 'الإنجليزية', en: 'English' },
