@@ -64,7 +64,13 @@ export const routes: Routes = [
     component: MainLayout,
     canActivate: [authGuard],
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'tickets' },
+      // AD-01: the workspace is where an agent lands, not the whole
+      // ticket list. "So I never decide what to work on next."
+      { path: '', pathMatch: 'full', redirectTo: 'workspace' },
+      {
+        path: 'workspace',
+        loadComponent: () => import('./features/workspace/workspace').then(m => m.Workspace)
+      },
       {
         path: 'customers',
         loadComponent: () => import('./features/customer/list/customer-list').then(m => m.CustomerList)

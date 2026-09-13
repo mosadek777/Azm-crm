@@ -1,0 +1,154 @@
+<!-- The agent workspace. See workspace.ts for why the SLA engine being blocked
+     does not block this screen: E-05 already wrote the degraded mode, and the
+     fallback path IS the requirement while the clock is unavailable. -->
+<div class="flex flex-col gap-6">
+
+  <div class="flex flex-wrap items-center gap-3">
+    <h1 class="m-0 text-2xl font-semibold text-surface-900">
+      {{ 'workspace.title' | translate: i18n.lang() }}
+    </h1>
+  </div>
+
+  <!-- ── COUNTERS ─────────────────────────────────────────────────────────
+       FR-002: each is openable as its own list and agrees exactly with it,
+       because the card and the list run the same server query. -->
+  <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    @for (c of counters(); track c.key) {
+      @if (c.params) {
+        <button type="button"
+          class="flex flex-col items-start gap-1 rounded-xl border border-surface-200
+                 bg-surface-0 p-4 text-start motion-safe:transition-colors
+                 hover:border-primary-300 hover:bg-primary-50
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+          (click)="openCounter(c)">
+          <span class="text-xs font-medium uppercase tracking-wide text-surface-500">
+            {{ c.labelKey | translate: i18n.lang() }}
+          </span>
+          <!-- A count is a direction-neutral value. `—` while it is still
+               unknown: a number that has not arrived must not read as zero. -->
+          <span class="ltr text-2xl font-semibold text-surface-900">
+            {{ c.value === null ? '—' : c.value }}
+          </span>
+          <span class="text-xs text-primary-700">
+            {{ 'workspace.openAsList' | translate: i18n.lang() }}
+          </span>
+        </button>
+      } @else {
+        <!-- NOT A BUTTON: there is no list to open, because there is no answer.
+             Rendering 0 here would assert that nothing is overdue. -->
+        <div class="flex flex-col items-start gap-1 rounded-xl border border-dashed
+                    border-surface-300 bg-surface-50 p-4">
+          <span class="text-xs font-medium uppercase tracking-wide text-surface-500">
+            {{ c.labelKey | translate: i18n.lang() }}
+          </span>
+          <span class="text-2xl font-semibold text-surface-400">
+            {{ 'common.unavailable' | translate: i18n.lang() }}
+          </span>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- WHY "overdue" has no number. Said once, under the counters. -->
+  <p class="m-0 text-xs text-surface-500">
+    {{ 'sla.unavailableWhy' | translate: i18n.lang() }}
+  </p>
+
+  <!-- ── THE QUEUE ────────────────────────────────────────────────────────
+       AD-01: opens on my assigned tickets, in an order I did not choose. -->
+  <section class="rounded-xl border border-surface-200 bg-surface-0">
+    <div class="flex flex-wrap items-center gap-3 border-b border-surface-200 p-4">
+      <h2 class="m-0 text-sm font-semibold text-surface-900">
+        {{ 'workspace.myQueue' | translate: i18n.lang() }}
+      </h2>
+      @if (!loading()) {
+        <span class="ltr rounded-full bg-surface-100 px-2.5 py-0.5 text-xs text-surface-600">
+          {{ queue().length }}
+        </span>
+      }
+    </div>
+
+    <!-- E-05's second clause, and the reason `ordering` is read from the
+         server rather than assumed: the queue must STATE that it fell back.
+         The wording is chosen by what the server said it applied, so the
+         screen cannot claim an urgency order that was never used. -->
+    @if (ordering() === 'priority_then_age') {
+      <p class="m-0 border-b border-surface-100 px-4 py-2.5 text-xs text-surface-500">
+        {{ 'workspace.orderFallback' | translate: i18n.lang() }}
+      </p>
+    } @else if (ordering() === 'newest_first') {
+      <p class="m-0 border-b border-surface-100 px-4 py-2.5 text-xs text-surface-500">
+        {{ 'workspace.orderNewest' | translate: i18n.lang() }}
+      </p>
+    }
+
+    @if (loading()) {
+      <p class="m-0 p-4 text-sm text-surface-500">{{ 'common.loading' | translate: i18n.lang() }}</p>
+    } @else if (queueEmpty()) {
+      <!-- E-01: "Empty state offering the team queue and the next-ticket
+           action. Not an error, not a blank screen." The team queue (AD-16)
+           and the next-ticket action (AD-17) are not built, so this offers the
+           one thing that does exist and answers the same question: what is
+           waiting for somebody. -->
+      <div class="flex flex-col items-start gap-3 p-6">
+        <p class="m-0 text-sm text-surface-600">
+          {{ 'workspace.queueEmpty' | translate: i18n.lang() }}
+        </p>
+        <a routerLink="/tickets" [queryParams]="{ unassigned: 'true' }"
+           class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white
+                  no-underline hover:bg-primary-700 motion-safe:transition-colors
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
+          {{ 'workspace.seeUnassigned' | translate: i18n.lang() }}
+        </a>
+      </div>
+    } @else {
+      <!-- The table scrolls inside its own frame; the page never scrolls
+           sideways, on any width. -->
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse text-sm">
+          <thead>
+            <tr class="border-b border-surface-200 bg-surface-50">
+              <th class="px-4 py-2.5 text-start font-semibold text-surface-700">{{ 'ticket.reference' | translate: i18n.lang() }}</th>
+              <th class="px-4 py-2.5 text-start font-semibold text-surface-700">{{ 'ticket.subject' | translate: i18n.lang() }}</th>
+              <th class="px-4 py-2.5 text-start font-semibold text-surface-700">{{ 'ticket.priority' | translate: i18n.lang() }}</th>
+              <th class="px-4 py-2.5 text-start font-semibold text-surface-700">{{ 'ticket.status' | translate: i18n.lang() }}</th>
+              <th class="px-4 py-2.5 text-start font-semibold text-surface-700">{{ 'ticket.sla' | translate: i18n.lang() }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of queue(); track t._id) {
+              <tr class="cursor-pointer border-b border-surface-100 last:border-0 hover:bg-primary-50
+                         motion-safe:transition-colors"
+                  (click)="openTicket(t)">
+                <td class="px-4 py-2.5"><span class="ltr font-mono text-surface-700">{{ t.reference }}</span></td>
+                <td class="px-4 py-2.5 text-surface-900">{{ t.subject }}</td>
+                <td class="px-4 py-2.5 text-surface-700">{{ t.priority }}</td>
+                <td class="px-4 py-2.5">
+                  <app-tag [tone]="t.status | statusTone" [raw]="t.status">{{ t.status }}</app-tag>
+                </td>
+                <td class="px-4 py-2.5">
+                  <!-- FR-019 / constitution III: whatever the engine returned,
+                       rendered as itself. No date is subtracted here. -->
+                  @if (t.sla?.status === 'unavailable') {
+                    <span class="text-surface-400">{{ 'common.unavailable' | translate: i18n.lang() }}</span>
+                  } @else {
+                    <span class="ltr text-surface-800">{{ t.sla?.minutes }}</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <!-- 009 E-19: a period spanning several branches states which timezone it
+       used. Shown only when a period was actually evaluated. -->
+  @if (timezones().length) {
+    <p class="m-0 text-xs text-surface-500">
+      {{ 'workspace.timezoneNote' | translate: i18n.lang() }}
+      <span class="ltr">{{ timezones().join(', ') }}</span>
+    </p>
+  }
+</div>

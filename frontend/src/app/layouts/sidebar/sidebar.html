@@ -73,6 +73,17 @@
 
                   <span class="shrink-0" aria-hidden="true">
                     @switch (item.icon) {
+                      @case ('workspace') {
+                        <!-- A layout grid: the place the day is laid out,
+                             as distinct from the queue of work itself. -->
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="3.2" y="3.2" width="7.2" height="7.2" rx="1.6" />
+                          <rect x="13.6" y="3.2" width="7.2" height="7.2" rx="1.6" />
+                          <rect x="3.2" y="13.6" width="7.2" height="7.2" rx="1.6" />
+                          <rect x="13.6" y="13.6" width="7.2" height="7.2" rx="1.6" />
+                        </svg>
+                      }
                       @case ('tickets') {
                         <!-- An inbox: a queue of work arriving, which is what
                              the screen is. -->

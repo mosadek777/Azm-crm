@@ -18,6 +18,9 @@ import { User } from '../../DB/models/user.model.js'
 import { RoleAssignment } from '../../DB/models/role-assignment.model.js'
 import { AuditEntry } from '../../DB/models/audit-entry.model.js'
 import { withActors } from '../../utils/actor.js'
+import { startOfDayIn } from '../../utils/day-boundary.js'
+import { Branch } from '../../DB/models/branch.model.js'
+import { AuditEntry as Audit } from '../../DB/models/audit-entry.model.js'
 import { nextTicketReference } from '../../DB/models/counter.model.js'
 import { recordAudit, redact } from '../../utils/audit.js'
 import { scopeFilter, rolesForTarget, assignmentCovers } from '../../utils/scope.js'
@@ -167,7 +170,8 @@ export const createTicket = async (req, res, next) => {
 // ---------------------------------------------------------------------------
 export const listTickets = async (req, res, next) => {
   try {
-    const { status, priority, assignedAgentId, customerId, category, tag, q, unassigned } = req.query ?? {}
+    const { status, priority, assignedAgentId, customerId, category, tag, q, unassigned,
+            resolvedToday, sort } = req.query ?? {}
 
     // The scope predicate is the base of the query, not an extra condition —
     // AS-01: an out-of-scope ticket appears in "no list, search, count or
@@ -195,10 +199,100 @@ export const listTickets = async (req, res, next) => {
     const page = Math.max(1, Number(req.query.page) || 1)
     const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 25))
 
-    const [tickets, total] = await Promise.all([
-      Ticket.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),
-      Ticket.countDocuments(filter)
-    ])
+    // --- "resolved today" (004 FR-002) ------------------------------------
+    //
+    // There is no `resolvedAt` on a ticket, and adding one would be inventing
+    // a field no spec asks for. "Resolved today" is a question about an EVENT,
+    // and the append-only audit log is where events live — the same source the
+    // history table reads (FR-013: "history is the audit log, read not
+    // rebuilt"). So: tickets whose CURRENT status is resolved, whose most
+    // recent transition INTO resolved happened today. A ticket resolved this
+    // morning and reopened this afternoon drops out on the first condition,
+    // which is the reading an agent means by "how many did I finish today".
+    //
+    // "TODAY" IS PER BRANCH, not per server. 009 E-19: "periods are evaluated
+    // in the branch's own timezone"; 012 §3 gives every branch a required
+    // timezone that exists to "drive period boundaries in spec 009 E-19". The
+    // zones actually used are returned, which is E-19's second clause.
+    let timezonesUsed = null
+    if (String(resolvedToday) === 'true') {
+      filter.status = 'resolved'
+
+      const candidates = await Ticket.find(filter).select('_id branchId')
+      const branches = await Branch.find({ _id: { $in: candidates.map(t => t.branchId) } })
+        .select('_id timezone')
+      const tzById = new Map(branches.map(b => [String(b._id), b.timezone]))
+
+      // One day-start per distinct timezone, not per ticket.
+      const startByTz = new Map()
+      for (const tz of new Set(tzById.values())) startByTz.set(tz, startOfDayIn(tz))
+      timezonesUsed = [...startByTz.keys()].sort()
+
+      const entries = await Audit.find({
+        action: 'ticket.status_changed',
+        entityId: { $in: candidates.map(t => t._id) },
+        'after.status': 'resolved'
+      }).select('entityId occurredAt').sort({ occurredAt: 1 })
+
+      // Keep the LATEST transition into resolved for each ticket, then compare
+      // it against that ticket's own branch day-start.
+      const latest = new Map()
+      for (const e of entries) latest.set(String(e.entityId), e.occurredAt)
+
+      const todays = candidates
+        .filter(t => {
+          const when = latest.get(String(t._id))
+          if (!when) return false
+          const start = startByTz.get(tzById.get(String(t.branchId)))
+          return start ? when >= start : false
+        })
+        .map(t => t._id)
+
+      // The COUNTER and the LIST are now the same set by construction, which
+      // is what FR-002's "MUST agree exactly with that list" asks for.
+      filter._id = { $in: todays }
+    }
+
+    // --- ordering ---------------------------------------------------------
+    //
+    // E-05, the SLA fallback, verbatim: "the queue falls back to priority then
+    // age, and states that it has done so." That last clause is the caller's
+    // to render — `ordering` below is what it renders from, so the screen
+    // cannot claim an urgency order the server did not apply.
+    //
+    // Priority order is semantic, not alphabetical, so it needs a rank rather
+    // than a plain sort key. Oldest first within a priority: age, per E-05.
+    const urgency = String(sort) === 'urgency'
+    let tickets
+    if (urgency) {
+      // ⚠ THE FILTER MUST BE CAST BEFORE IT REACHES $match.
+      //
+      // `find()` casts query values against the schema; `aggregate()` does
+      // NOT. `reachableScope` returns branch and department ids as STRINGS
+      // (`.map(String)`), so an uncast `$match` compares strings against
+      // ObjectIds and matches nothing at all — which is what happened: the
+      // queue came back empty while every other check passed, including the
+      // one asserting the server reported a priority ordering. A scope filter
+      // that silently matches nothing is the safe direction to fail, but it is
+      // still wrong, and on an unrestricted caller (whose filter is `{}`) it
+      // would not have shown up at all.
+      const cast = Ticket.find(filter).cast(Ticket)
+      tickets = await Ticket.aggregate([
+        { $match: cast },
+        { $addFields: { _rank: { $switch: { branches: [
+          { case: { $eq: ['$priority', 'urgent'] }, then: 0 },
+          { case: { $eq: ['$priority', 'high'] }, then: 1 },
+          { case: { $eq: ['$priority', 'normal'] }, then: 2 }
+        ], default: 3 } } } },
+        { $sort: { _rank: 1, createdAt: 1 } },
+        { $skip: (page - 1) * limit },
+        { $limit: limit },
+        { $project: { _rank: 0 } }
+      ])
+    } else {
+      tickets = await Ticket.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit)
+    }
+    const total = await Ticket.countDocuments(filter)
 
     // Denormalised for display only — each is re-read through the same scope
     // filter, so a joined name cannot leak an out-of-scope record.
@@ -218,7 +312,16 @@ export const listTickets = async (req, res, next) => {
         // FR-034: read, never computed.
         sla: slaFor(t)
       })),
-      page, limit, total
+      page, limit, total,
+      // What the caller may TRUTHFULLY say about the order on screen. E-05
+      // requires the queue to state that it fell back; this is the statement's
+      // source, so the screen cannot claim an order the server did not apply.
+      ordering: urgency
+        ? { applied: 'priority_then_age', reason: 'sla_unavailable' }
+        : { applied: 'newest_first', reason: null },
+      // 009 E-19: a result spanning several branches states which timezone it
+      // used. Null when no period was evaluated at all.
+      timezonesUsed
     })
   } catch (err) {
     return next(err)

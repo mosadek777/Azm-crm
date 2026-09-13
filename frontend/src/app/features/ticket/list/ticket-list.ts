@@ -46,6 +46,18 @@ export class TicketList {
   protected readonly q = signal('');
   protected readonly unassigned = signal(false);
   private readonly customerId = signal('');
+  // FR-002: a counter "MUST be openable as its own list and MUST agree
+  // exactly with that list". These carry the counter's filter here, and
+  // they are sent to the SERVER — the same query the counter itself ran,
+  // so the two cannot drift. A client-side narrowing would break exactly
+  // the agreement the requirement is about.
+  private readonly urlStatus = signal('');
+  private readonly urlAssignee = signal('');
+  private readonly urlResolvedToday = signal('');
+
+  /** Whether this list was opened from a workspace counter. */
+  protected readonly fromCounter = computed(() =>
+    !!(this.urlStatus() || this.urlAssignee() || this.urlResolvedToday()));
 
   // Assignee options are derived from the loaded rows rather than from
   // GET /user, which spec 010 §9 restricts to LEAD and above — an agent
@@ -69,6 +81,11 @@ export class TicketList {
 
   constructor() {
     this.customerId.set(this.route.snapshot.queryParamMap.get('customerId') ?? '');
+    const qp = this.route.snapshot.queryParamMap;
+    this.urlStatus.set(qp.get('status') ?? '');
+    this.urlAssignee.set(qp.get('assignedAgentId') ?? '');
+    this.urlResolvedToday.set(qp.get('resolvedToday') ?? '');
+    if (this.urlStatus()) this.status.set(this.urlStatus());
     this.api.ticketMeta().subscribe({ next: m => this.meta.set(m) });
     this.load();
   }
@@ -80,6 +97,8 @@ export class TicketList {
       status: this.status(),
       q: this.q(),
       customerId: this.customerId(),
+      assignedAgentId: this.urlAssignee(),
+      resolvedToday: this.urlResolvedToday(),
       unassigned: this.unassigned() ? 'true' : ''
     }).subscribe({
       next: r => { this.rows.set(r.tickets); this.total.set(r.total); this.busy.set(false); },
@@ -89,6 +108,14 @@ export class TicketList {
         this.refusal.set(e.error?.message ?? null);
       }
     });
+  }
+
+  /** Drop the counter filter and show the caller's whole scope again. */
+  protected clearCounterFilter(): void {
+    this.urlStatus.set(''); this.urlAssignee.set(''); this.urlResolvedToday.set('');
+    this.status.set('');
+    this.router.navigate(['/tickets'], { queryParams: {} });
+    this.load();
   }
 
   protected open(t: Ticket): void { this.router.navigate(['/tickets', t._id]); }

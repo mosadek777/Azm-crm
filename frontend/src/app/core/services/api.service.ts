@@ -50,8 +50,16 @@ export class ApiService {
   listTickets(filters: Record<string, string>) {
     let params = new HttpParams();
     for (const [k, v] of Object.entries(filters)) if (v) params = params.set(k, v);
-    return this.http.get<{ tickets: Ticket[]; page: number; limit: number; total: number }>(
-      `${API}/ticket`, { params });
+    return this.http.get<{
+      tickets: Ticket[]; page: number; limit: number; total: number;
+      // E-05: what order the SERVER applied. The screen states the fallback
+      // from this rather than assuming it, so it cannot claim an order that
+      // was not used.
+      ordering: { applied: 'priority_then_age' | 'newest_first'; reason: string | null };
+      // 009 E-19: which branch timezones a period was evaluated in. Null when
+      // no period was evaluated.
+      timezonesUsed: string[] | null;
+    }>(`${API}/ticket`, { params });
   }
 
   getTicket(id: string) {

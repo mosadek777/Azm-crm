@@ -268,6 +268,37 @@ export const DICTIONARY: Translations = {
     ar: 'تأتي بيانات الاستحقاق من نظام تخطيط الموارد، وهو خارج نطاق هذه المرحلة.',
     en: 'Entitlement comes from the ERP, which is out of scope for this phase.'
   },
+  // --- the agent workspace (spec 004) -------------------------------------
+  'nav.workspace': { ar: 'مساحة العمل', en: 'Workspace' },
+  'workspace.title': { ar: 'مساحة العمل', en: 'Workspace' },
+  'workspace.myQueue': { ar: 'تذاكري', en: 'My queue' },
+  'workspace.open': { ar: 'مفتوحة', en: 'Open' },
+  'workspace.overdue': { ar: 'متأخرة', en: 'Overdue' },
+  'workspace.pendingCustomer': { ar: 'بانتظار العميل', en: 'Pending customer' },
+  'workspace.resolvedToday': { ar: 'حُلَّت اليوم', en: 'Resolved today' },
+  'workspace.openAsList': { ar: 'عرض القائمة', en: 'Open as a list' },
+  // E-05, the sentence the queue is required to say when it falls back.
+  'workspace.orderFallback': {
+    ar: 'مرتَّبة حسب الأولوية ثم الأقدم — وهو الترتيب البديل لأن مؤقت مستوى الخدمة غير متاح.',
+    en: 'Ordered by priority, then oldest first — the fallback order, because the SLA clock is unavailable.'
+  },
+  'workspace.orderNewest': { ar: 'مرتَّبة من الأحدث إلى الأقدم.', en: 'Ordered newest first.' },
+  // E-01: an empty queue is not an error and not a blank screen.
+  'workspace.queueEmpty': {
+    ar: 'لا توجد تذاكر مسندة إليك الآن. يمكنك الاطلاع على التذاكر غير المسندة والبدء بواحدة.',
+    en: 'Nothing is assigned to you right now. You can look at the unassigned tickets and pick one up.'
+  },
+  'workspace.seeUnassigned': { ar: 'التذاكر غير المسندة', en: 'See unassigned tickets' },
+  // 009 E-19: state which timezone a period was evaluated in.
+  'workspace.timezoneNote': {
+    ar: 'حُسب "اليوم" بتوقيت الفرع:',
+    en: '"Today" was evaluated in the branch timezone:'
+  },
+  'workspace.counterFiltered': {
+    ar: 'هذه القائمة مفتوحة من عدّاد مساحة العمل، وتعرض ما يعرضه العدّاد بالضبط.',
+    en: 'This list was opened from a workspace counter and shows exactly what the counter counts.'
+  },
+  'workspace.clearFilter': { ar: 'عرض الكل', en: 'Show all' },
   'common.loading': { ar: 'جارٍ التحميل…', en: 'Loading…' },
   'lang.arabic': { ar: 'العربية', en: 'Arabic' },
   'lang.english': { ar: 'الإنجليزية', en: 'English' },

@@ -120,6 +120,7 @@ export class Sidebar {
     {
       labelKey: 'nav.section.navigation',
       items: [
+        { labelKey: 'nav.workspace', route: '/workspace', icon: 'workspace' },
         { labelKey: 'nav.tickets', route: '/tickets', icon: 'tickets', badge: 'unassignedTickets' },
         { labelKey: 'nav.customers', route: '/customers', icon: 'customers' }
       ]
