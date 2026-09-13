@@ -53,6 +53,22 @@ Corollary: after asserting a refusal, assert the **state did not change**. "The
 branch was not deactivated behind those refusals" is the check that would catch
 a 403 returned after the write.
 
+## In the browser, `innerText` is TRANSFORMED text — match case-insensitively
+
+`text-transform: uppercase` is a style, but `innerText` returns what is
+rendered. `/Contact points/` never matches `CONTACT POINTS`, and the check
+reports a clean `false` rather than an error. This has now cost three separate
+debugging rounds in one session: a whole counter card that was never found, an
+"Overdue" lookup that silently matched nothing, and three panel sections
+reported missing while on screen.
+
+Use `/i` on every assertion about rendered text. And when a lookup can return
+nothing, assert it found something first — `counters.find(...)` returning
+`undefined` makes every check after it pass or fail for the wrong reason.
+
+Watch precedence too: `(el.innerText || '').match(/x/g)` needs those brackets,
+or `.match` binds to the empty string and you get the character count back.
+
 ## In the browser, assert what is VISIBLE, not what is in the DOM
 
 `document.querySelector('[aria-current]')` finds an element that is hidden. The

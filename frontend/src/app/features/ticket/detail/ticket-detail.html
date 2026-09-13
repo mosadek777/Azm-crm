@@ -198,6 +198,12 @@
       </section>
     </div>
 
+    <!-- AD-03: the customer beside the conversation, so an answer does not
+         cost a trip to another screen and a half-written reply. -->
+    @if (t.customerId) {
+      <app-customer-context [customerId]="t.customerId" [currentTicketId]="t._id" />
+    }
+
     <!-- Thread -->
     <section class="rounded-xl border border-surface-200 bg-surface-0 p-4">
       <h2 class="m-0 mb-3 text-sm font-semibold text-surface-900">

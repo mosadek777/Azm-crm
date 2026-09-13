@@ -299,6 +299,24 @@ export const DICTIONARY: Translations = {
     en: 'This list was opened from a workspace counter and shows exactly what the counter counts.'
   },
   'workspace.clearFilter': { ar: 'عرض الكل', en: 'Show all' },
+  // --- the customer context panel (004 FR-003) -----------------------------
+  'customer.context': { ar: 'بيانات العميل', en: 'Customer context' },
+  'customer.openRecord': { ar: 'فتح السجل', en: 'Open record' },
+  'customer.noContactPoints': { ar: 'لا توجد وسائل تواصل مسجّلة.', en: 'No contact points on record.' },
+  'customer.segments': { ar: 'الشرائح', en: 'Segments' },
+  'customer.slaTier': { ar: 'فئة مستوى الخدمة', en: 'SLA tier' },
+  'customer.recentTickets': { ar: 'تذاكر سابقة', en: 'Recent tickets' },
+  'customer.noOtherTickets': { ar: 'لا توجد تذاكر أخرى لهذا العميل.', en: 'No other tickets for this customer.' },
+  // Three unavailable values, three DIFFERENT causes. One sentence for all
+  // three would be untrue of two of them.
+  'segments.unavailableWhy': {
+    ar: 'الشرائح معرَّفة في المواصفة 001 ولم تُبنَ بعد.',
+    en: 'Segments are defined in spec 001 and are not built yet.'
+  },
+  'slaTier.unavailableWhy': {
+    ar: 'تعتمد الفئة على أرقام مستوى الخدمة لكل أولوية وكل فئة عميل، وهي سؤال مفتوح لدى العميل.',
+    en: 'The tier depends on the SLA numbers per priority and per customer tier, which is still an open client question.'
+  },
   'common.loading': { ar: 'جارٍ التحميل…', en: 'Loading…' },
   'lang.arabic': { ar: 'العربية', en: 'Arabic' },
   'lang.english': { ar: 'الإنجليزية', en: 'English' },

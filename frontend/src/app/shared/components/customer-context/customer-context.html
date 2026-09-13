@@ -1,0 +1,150 @@
+<!-- The customer context panel. See customer-context.ts for why three of the
+     six things FR-003 names say "unavailable" with three DIFFERENT reasons. -->
+<section class="flex flex-col divide-y divide-surface-200 rounded-xl border border-surface-200
+                bg-surface-0">
+
+  <div class="flex flex-wrap items-center gap-2 p-4">
+    <h2 class="m-0 text-sm font-semibold text-surface-900">
+      {{ 'customer.context' | translate: i18n.lang() }}
+    </h2>
+    <span class="flex-1"></span>
+    @if (customer(); as c) {
+      <button type="button"
+        class="rounded-md border border-surface-300 px-2.5 py-1 text-xs font-medium
+               text-surface-700 hover:bg-surface-100 motion-safe:transition-colors
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+        (click)="openCustomer()">
+        {{ 'customer.openRecord' | translate: i18n.lang() }}
+      </button>
+    }
+  </div>
+
+  @if (loading()) {
+    <p class="m-0 p-4 text-sm text-surface-500">{{ 'common.loading' | translate: i18n.lang() }}</p>
+  } @else if (notFound()) {
+    <!-- Constitution IV: out of scope and genuinely absent are the same answer,
+         on purpose. Neither is a partial record. -->
+    <p class="m-0 p-4 text-sm text-surface-500">
+      {{ 'customer.notFound' | translate: i18n.lang() }}
+    </p>
+  } @else if (customer(); as c) {
+
+    <!-- IDENTITY -->
+    <div class="p-4">
+      <div class="mb-2 flex flex-wrap items-center gap-2">
+        <!-- User-authored, single language, direction detected per value. -->
+        <p class="m-0 text-sm font-medium text-surface-900">{{ c.displayName }}</p>
+        @if (c.sensitiveFlag) {
+          <!-- Never colour alone: the word is the signal. -->
+          <app-tag tone="bg-red-100 text-red-800">
+            {{ 'customer.sensitive' | translate: i18n.lang() }}
+          </app-tag>
+        }
+      </div>
+      <dl class="m-0 flex flex-col gap-1.5 text-sm">
+        <div class="flex justify-between gap-3">
+          <dt class="text-surface-500">{{ 'customer.type' | translate: i18n.lang() }}</dt>
+          <dd class="m-0 text-surface-800">{{ c.type }}</dd>
+        </div>
+        <div class="flex justify-between gap-3">
+          <dt class="text-surface-500">{{ 'customer.accountRef' | translate: i18n.lang() }}</dt>
+          <!-- An account reference is a direction-neutral value (012 FR-002). -->
+          <dd class="m-0"><span class="ltr text-surface-800">{{ c.accountRef || '—' }}</span></dd>
+        </div>
+        <div class="flex justify-between gap-3">
+          <dt class="text-surface-500">{{ 'customer.preferredLanguage' | translate: i18n.lang() }}</dt>
+          <dd class="m-0 text-surface-800">
+            {{ (c.preferredLanguage === 'ar' ? 'lang.arabic' : 'lang.english') | translate: i18n.lang() }}
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+    <!-- CONTACT POINTS -->
+    <div class="p-4">
+      <h3 class="m-0 mb-2 text-xs font-medium uppercase tracking-wide text-surface-500">
+        {{ 'customer.contactPoints' | translate: i18n.lang() }}
+      </h3>
+      @if (contactPoints().length) {
+        <ul class="m-0 flex list-none flex-col gap-1.5 p-0 text-sm">
+          @for (p of contactPoints(); track p._id) {
+            <li class="flex flex-wrap items-center gap-2">
+              <span class="text-surface-500">{{ p.channelType }}</span>
+              <!-- A phone number or an email address never reverses. -->
+              <span class="ltr text-surface-800">{{ p.value }}</span>
+              @if (p.isPrimary) {
+                <app-tag tone="bg-primary-100 text-primary-800">
+                  {{ 'customer.primary' | translate: i18n.lang() }}
+                </app-tag>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="m-0 text-sm text-surface-500">{{ 'customer.noContactPoints' | translate: i18n.lang() }}</p>
+      }
+    </div>
+
+    <!-- THE THREE THAT DO NOT EXIST YET.
+         FR-003: "MUST state explicitly when a value is unavailable." Each is
+         named, each says unavailable, and each gives ITS OWN reason — the
+         causes are genuinely different and one sentence for all three would be
+         untrue of two of them. -->
+    <div class="flex flex-col gap-3 p-4">
+      <div>
+        <h3 class="m-0 text-xs font-medium uppercase tracking-wide text-surface-500">
+          {{ 'customer.segments' | translate: i18n.lang() }}
+        </h3>
+        <p class="m-0 text-sm text-surface-400">{{ 'common.unavailable' | translate: i18n.lang() }}</p>
+        <p class="m-0 text-xs text-surface-500">{{ 'segments.unavailableWhy' | translate: i18n.lang() }}</p>
+      </div>
+
+      <div>
+        <h3 class="m-0 text-xs font-medium uppercase tracking-wide text-surface-500">
+          {{ 'customer.entitlement' | translate: i18n.lang() }}
+        </h3>
+        @if (entitlement()?.status === 'unavailable') {
+          <p class="m-0 text-sm text-surface-400">{{ 'common.unavailable' | translate: i18n.lang() }}</p>
+          <p class="m-0 text-xs text-surface-500">{{ 'entitlement.unavailableWhy' | translate: i18n.lang() }}</p>
+        } @else {
+          <p class="m-0 text-sm text-surface-800">{{ entitlement()?.status }}</p>
+        }
+      </div>
+
+      <div>
+        <h3 class="m-0 text-xs font-medium uppercase tracking-wide text-surface-500">
+          {{ 'customer.slaTier' | translate: i18n.lang() }}
+        </h3>
+        <p class="m-0 text-sm text-surface-400">{{ 'common.unavailable' | translate: i18n.lang() }}</p>
+        <p class="m-0 text-xs text-surface-500">{{ 'slaTier.unavailableWhy' | translate: i18n.lang() }}</p>
+      </div>
+    </div>
+
+    <!-- RECENT TICKETS. The same scope-filtered query as every other list, so
+         a ticket this caller may not see is absent here too. -->
+    <div class="p-4">
+      <h3 class="m-0 mb-2 text-xs font-medium uppercase tracking-wide text-surface-500">
+        {{ 'customer.recentTickets' | translate: i18n.lang() }}
+      </h3>
+      @if (otherTickets().length) {
+        <ul class="m-0 flex list-none flex-col gap-1.5 p-0">
+          @for (t of otherTickets(); track t._id) {
+            <li>
+              <button type="button"
+                class="flex w-full flex-wrap items-center gap-2 rounded-md px-2 py-1.5 text-start
+                       text-sm hover:bg-surface-100 motion-safe:transition-colors
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                (click)="openTicket(t)">
+                <span class="ltr font-mono text-xs text-surface-500">{{ t.reference }}</span>
+                <span class="min-w-0 flex-1 truncate text-surface-800">{{ t.subject }}</span>
+                <app-tag [tone]="t.status | statusTone" [raw]="t.status">{{ t.status }}</app-tag>
+              </button>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="m-0 text-sm text-surface-500">{{ 'customer.noOtherTickets' | translate: i18n.lang() }}</p>
+      }
+    </div>
+  }
+</section>

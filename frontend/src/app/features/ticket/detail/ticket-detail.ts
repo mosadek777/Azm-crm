@@ -20,6 +20,7 @@ import { LanguageService } from '../../../core/i18n/language.service';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { StatusTonePipe } from '../../../shared/pipes/status-tone.pipe';
 import { Tag } from '../../../shared/components/tag/tag';
+import { CustomerContext } from '../../../shared/components/customer-context/customer-context';
 import { ActionTonePipe } from '../../../shared/pipes/action-tone.pipe';
 import { LocalizedText } from '../../../core/models/user.model';
 import {
@@ -30,7 +31,7 @@ import { MessageBubble } from '../../../shared/components/message-bubble/message
 
 @Component({
   selector: 'app-ticket-detail',
-  imports: [FormsModule, TranslatePipe, StatusTonePipe, ActionTonePipe, MessageBubble, Tag, DatePipe],
+  imports: [FormsModule, TranslatePipe, StatusTonePipe, ActionTonePipe, MessageBubble, Tag, DatePipe, CustomerContext],
   templateUrl: './ticket-detail.html'
 })
 export class TicketDetail {
