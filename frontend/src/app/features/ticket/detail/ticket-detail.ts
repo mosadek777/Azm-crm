@@ -9,7 +9,7 @@
 // offering moves the API refuses, and AS-03's correct refusal would look like
 // a bug to the agent.
 
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -35,7 +35,7 @@ import { MessageBubble } from '../../../shared/components/message-bubble/message
   imports: [FormsModule, TranslatePipe, StatusTonePipe, ActionTonePipe, MessageBubble, Tag, DatePipe, CustomerContext],
   templateUrl: './ticket-detail.html'
 })
-export class TicketDetail {
+export class TicketDetail implements OnDestroy {
   private readonly toast = inject(ToastService);
   private readonly api = inject(ApiService);
   private readonly route = inject(ActivatedRoute);
@@ -94,11 +94,34 @@ export class TicketDetail {
   protected readonly followUpAt = signal('');
   protected readonly assignReason = signal('');
   protected readonly reply = signal('');
+
+  // --- draft preservation (004 FR-015, E-02, E-12, AS-09; NFR-004) -------
+  //
+  // The draft is the SERVER's, keyed to `user = caller` (004 §11). This
+  // holds only what the screen needs to say about it.
+  protected readonly draftStale = signal(false);
+  protected readonly draftExpired = signal(false);
+  protected readonly draftRetentionDays = signal<number | null>(null);
+  /** E-02: who owns the ticket now, when it moved while this was open. */
+  protected readonly draftReassignedTo = signal<string | null>(null);
+  protected readonly draftSaving = signal(false);
+
+  // NFR-004: "≤ 10s of typing, and on blur." The interval comes from the
+  // server with the draft, so the number lives in one place.
+  private autosaveSeconds = 8;
+  private autosaveTimer: ReturnType<typeof setTimeout> | null = null;
+  /** What was last persisted, so an unchanged draft is not re-saved. */
+  private lastSavedBody = '';
   // No default: FR-014 has no safe default for visibility — a defaulted value
   // is how an internal note becomes a customer reply by accident.
   protected readonly visibility = signal<Visibility | ''>('');
 
   constructor() {
+    this.loadDraft();
+
+    // On blur is the other half of NFR-004, and the important half: a tab
+    // closing is exactly the case FR-015 exists for.
+    window.addEventListener('blur', this.flushDraft);
     // Only offered where a reply can be written at all.
     this.api.listQuickReplies().subscribe({
       next: r => this.quickReplies.set(r.quickReplies),
@@ -174,7 +197,18 @@ export class TicketDetail {
     this.busy.set(true);
     this.api.addMessage(this.id, { body: this.reply(), visibility: this.visibility() })
       .subscribe({
-        next: () => { this.busy.set(false); this.reply.set(''); this.visibility.set(''); this.toast.success('toast.messageSent'); this.load(); },
+        next: () => {
+          this.busy.set(false);
+          this.reply.set('');
+          this.visibility.set('');
+          this.lastSavedBody = '';
+          // §10: the discard event carries its cause. The reply went out,
+          // so the draft was not abandoned — it was sent.
+          this.api.discardDraft(this.id, 'sent').subscribe({ error: () => {} });
+          this.draftStale.set(false);
+          this.toast.success('toast.messageSent');
+          this.load();
+        },
         error: this.fail
       });
   }
@@ -224,6 +258,82 @@ export class TicketDetail {
         this.toast.fromHttpError(e, { ar: 'تعذر إدراج الرد السريع', en: 'Could not insert the quick reply' });
       }
     });
+  }
+
+  /**
+   * Restore whatever this agent left here.
+   *
+   * Everything the screen says about the draft is the SERVER's answer:
+   * whether it expired (E-12), whether the thread moved under it (AS-09),
+   * and who owns the ticket now (E-02). None of it is worked out here.
+   */
+  private loadDraft(): void {
+    this.api.getDraft(this.id).subscribe({
+      next: r => {
+        this.autosaveSeconds = r.autosaveSeconds ?? 8;
+        this.draftStale.set(r.stale);
+        this.draftExpired.set(r.expired);
+        this.draftRetentionDays.set(r.retentionDays ?? null);
+        this.draftReassignedTo.set(r.reassignedTo ?? null);
+        if (r.draft) {
+          // Never clobber something already typed in this session.
+          if (!this.reply().trim()) {
+            this.reply.set(r.draft.body);
+            // The server stores the visibility as a free string; the signal is
+            // the narrow union, so anything unrecognised falls back to the
+            // blank default FR-014 requires rather than being trusted.
+            const v = r.draft.visibility;
+            this.visibility.set(v === 'customer' || v === 'internal' ? v : '');
+            this.lastSavedBody = r.draft.body;
+          }
+        }
+      },
+      // A draft that cannot be fetched is not worth interrupting anybody
+      // over — the reply box still works and the screen behind it will say
+      // if the ticket itself is unreachable.
+      error: () => { /* silent */ }
+    });
+  }
+
+  /** Called on every keystroke; debounced to NFR-004's interval. */
+  protected onReplyInput(value: string): void {
+    this.reply.set(value);
+    // A restored draft that has not been touched is already saved.
+    if (value === this.lastSavedBody) return;
+    if (this.autosaveTimer) clearTimeout(this.autosaveTimer);
+    this.autosaveTimer = setTimeout(() => this.flushDraft(), this.autosaveSeconds * 1000);
+  }
+
+  /** Save now. An arrow so it can be used as an event listener and removed. */
+  protected flushDraft = (): void => {
+    if (this.autosaveTimer) { clearTimeout(this.autosaveTimer); this.autosaveTimer = null; }
+    const body = this.reply();
+    if (body === this.lastSavedBody) return;
+    this.draftSaving.set(true);
+    this.api.saveDraft(this.id, body, this.visibility()).subscribe({
+      next: () => { this.lastSavedBody = body; this.draftSaving.set(false); },
+      error: () => this.draftSaving.set(false)
+    });
+  };
+
+  /** Throw the draft away deliberately. §10 records the cause. */
+  protected discardDraft(): void {
+    if (this.autosaveTimer) { clearTimeout(this.autosaveTimer); this.autosaveTimer = null; }
+    this.api.discardDraft(this.id, 'abandoned').subscribe({
+      next: () => {
+        this.reply.set('');
+        this.visibility.set('');
+        this.lastSavedBody = '';
+        this.draftStale.set(false);
+        this.draftReassignedTo.set(null);
+      },
+      error: () => { /* the box is already clear to the agent */ }
+    });
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('blur', this.flushDraft);
+    if (this.autosaveTimer) clearTimeout(this.autosaveTimer);
   }
 
 }

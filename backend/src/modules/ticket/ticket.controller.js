@@ -14,8 +14,14 @@ import * as ticketservice from './ticket.service.js'
 import { authenticate } from '../../middlewares/auth.middleware.js'
 import { authorize } from '../../middlewares/permission.middleware.js'
 import { Router } from 'express'
+import draftcontroller from '../draft/draft.controller.js'
 
 const router = Router()
+
+// spec 004 FR-015. Nested under the ticket because a draft has no meaning
+// apart from it, and the ticket is what the scope predicate is evaluated
+// against (004 section 11).
+router.use('/:ticketId/draft', draftcontroller)
 const STAFF = ['AGT', 'LEAD', 'MGR', 'ADM', 'AUD']
 const WRITERS = ['AGT', 'LEAD', 'MGR', 'ADM']
 

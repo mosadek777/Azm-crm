@@ -353,6 +353,26 @@ export const DICTIONARY: Translations = {
     ar: 'أُدرج النص بلغة العميل المفضلة.',
     en: 'Inserted in the customer’s preferred language.'
   },
+  // --- draft preservation (spec 004 FR-015, E-02, E-12, AS-09) -------------
+  'draft.saved': { ar: 'المسودة محفوظة', en: 'Draft saved' },
+  'draft.saving': { ar: 'جارٍ حفظ المسودة…', en: 'Saving draft…' },
+  'draft.discard': { ar: 'حذف المسودة', en: 'Discard draft' },
+  // E-12: the agent is TOLD rather than shown stale text. The number of days
+  // comes from the server so the sentence can explain itself.
+  'draft.expired': {
+    ar: 'حُذفت مسودتك السابقة بعد انقضاء مدة الحفظ (بالأيام):',
+    en: 'Your earlier draft was discarded after the retention period (days):'
+  },
+  // AS-09: restored AND flagged. The agent decides, not the system.
+  'draft.stale': {
+    ar: 'أُضيفت رسالة إلى المحادثة بعد كتابة هذه المسودة — راجعها قبل الإرسال.',
+    en: 'A message was added to the thread after this draft was written — check it still fits before sending.'
+  },
+  // E-02: the draft is preserved and the agent is told who owns the ticket now.
+  'draft.reassigned': {
+    ar: 'لم تعد هذه التذكرة مسندة إليك. مسودتك محفوظة، والمسؤول الآن:',
+    en: 'This ticket is no longer assigned to you. Your draft is kept; it now belongs to:'
+  },
   'common.loading': { ar: 'جارٍ التحميل…', en: 'Loading…' },
   'lang.arabic': { ar: 'العربية', en: 'Arabic' },
   'lang.english': { ar: 'الإنجليزية', en: 'English' },

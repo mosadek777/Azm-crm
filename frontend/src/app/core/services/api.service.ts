@@ -187,6 +187,37 @@ export class ApiService {
     return this.http.post<{ body: string; language: 'ar' | 'en'; languageFrom: string }>(
       `${API}/quick-reply/${id}/render`, { ticketId });
   }
+  // --- drafts (spec 004 FR-015, E-02, E-12, AS-09; §11) ---
+  //
+  // §11's predicate is `user = caller AND ticket scope`, and BOTH halves are the
+  // server's. There is no parameter here that could ask for somebody else's
+  // draft, which is why a draft stays with its author when a ticket moves.
+  //
+  // `autosaveSeconds` comes back with the answer rather than being a constant
+  // here: NFR-004 sets the cadence and a second copy of the number would drift.
+  getDraft(ticketId: string) {
+    return this.http.get<{
+      draft: { body: string; visibility: string } | null;
+      stale: boolean;
+      expired: boolean;
+      retentionDays?: number;
+      reassignedTo?: string | null;
+      autosaveSeconds: number;
+    }>(`${API}/ticket/${ticketId}/draft`);
+  }
+
+  /** Autosave. An empty body deletes the draft rather than storing emptiness. */
+  saveDraft(ticketId: string, body: string, visibility: string) {
+    return this.http.put<{ draft: unknown | null; discarded?: boolean }>(
+      `${API}/ticket/${ticketId}/draft`, { body, visibility });
+  }
+
+  /** §10 records the cause: 'sent' when a reply went out, 'abandoned' otherwise. */
+  discardDraft(ticketId: string, cause: 'sent' | 'abandoned') {
+    return this.http.request<{ discarded: boolean; cause?: string }>(
+      'DELETE', `${API}/ticket/${ticketId}/draft`, { body: { cause } });
+  }
 }
+
 
 

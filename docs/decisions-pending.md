@@ -131,6 +131,7 @@ reindex. No application code reads the filter.
 |---|---|---|---|---|
 | 40 | **The five `010 FR-007` values are set: password minimum 12 with no composition rule; idle timeout 30 minutes; absolute session lifetime 12 hours; lockout after 10 failed attempts for 15 minutes, self-releasing; 3 concurrent sessions, oldest evicted** | **The project owner's.** Explicitly **not** a reading — all thirteen specs were searched and **none states any figure** | No marker. `FR-007` requires the values be *configurable* and supplies none | **`010 FR-007` (MUST):** *"The system MUST enforce a **configurable** password policy, session timeout, absolute session lifetime, failed-attempt lockout and concurrent-session limit."* The only related text anywhere is **`008 §3`**, which gives a portal identity a `locked` state and points back at `FR-007` for what causes it, and **`010 §9`**, which marks the sign-in endpoints *"rate-limited; lockout per `FR-007`"*. Both establish that lockout must exist. Neither supplies a number, and no other spec does |
 
+| 42 | **The draft retention period is 7 days** | **The project owner's**, provisional, on the same footing as decision 40's security values | No marker. `FR-015` requires the period be *configurable* and supplies no figure | **`004 FR-015` (SHOULD):** *"Unsent reply text MUST be preserved server-side within a **configured retention period** and restored on return."* All thirteen specs searched — no figure anywhere. `E-12` specifies what happens at expiry, not when it falls due |
 | 41 | **The quick-reply placeholder vocabulary and syntax are fixed: six tokens — `customer.name`, `ticket.reference`, `ticket.subject`, `agent.name`, `branch.name`, `department.name` — written `{{dotted.path}}`, with a fixed set for phase one** | **The developer's**, provisionally, on the same footing as decisions 26–30. Explicitly **not** a reading: spec `004` names no token anywhere | No marker. `[CLARIFY-5]` covers who authors the library and in which language, not what a placeholder may say | **`004 FR-006` (MUST):** *"Quick replies MUST support **named placeholders** and MUST store an Arabic and an English body; insertion MUST select by the customer's preferred language and MUST **refuse rather than insert an unresolved placeholder**."* The refusal rule is precise and buildable as written. The vocabulary is named nowhere — not in `§3`, not in the FR table, not in any `AS-*` |
 
 **Ratified by the project owner 2026-09-09**, on a proposal from the developer.
@@ -1492,3 +1493,85 @@ both cosmetic to the engine — `resolvePlaceholders` reads the same table — b
 any change invalidates quick replies already authored, so it is cheap now and
 expensive after go-live. That is the reason to put this in front of the client
 early rather than at review.
+
+---
+
+## 17. Decision 42 — the draft retention period (project owner, provisional)
+
+**Seven days.** Recorded as the project owner's and provisional, the same
+treatment as the five `010 FR-007` values in decision 40.
+
+### The reasoning, in the owner's words
+
+> Long enough that a draft survives a weekend or a day off, short enough that a
+> thread has usually moved on by the time it expires — and `E-12` already
+> handles the stale case, so the number only decides how long we store text
+> nobody came back for.
+
+That last clause is what makes the figure low-risk. `E-12` ("draft retained
+longer than the retention period → discarded; the agent is told on return
+rather than shown stale text") means expiry is never silent, and `AS-09`'s
+staleness flag means a draft that DID survive is still marked when the thread
+moved under it. So seven days is not load-bearing for correctness: it is a
+storage-and-privacy choice about how long unsent text lives, and unsent text is
+exactly the material somebody may have thought better of.
+
+### Where it lives
+
+`backend/src/config/draft-policy.js`, in the same shape as
+`security-policy.js`: overridable from `.env` without a code change, carrying
+its own `ratified` and `source` flags, and surfaced rather than buried. If a
+number could only be changed by editing the file, the file would be the
+decision.
+
+### What this does NOT decide
+
+**Who may see a draft** — that is specified, not chosen. See §18.
+
+---
+
+## 18. Who may see a draft — SPECIFIED, not decided
+
+**No decision was needed here, and one was nearly taken.** The question put was
+whether a draft follows the ticket on reassignment or stays with its author, on
+the assumption the spec might be silent. It is not.
+
+### What `004 §11` says
+
+| Action | Purpose | Predicate |
+|---|---|---|
+| `save / fetch draft` | Loss prevention | **`user = caller` AND ticket scope** |
+
+`user = caller` is the whole answer. A draft is fetched by the person who wrote
+it and by nobody else — so on reassignment it **stays with the author**, and the
+new assignee never sees it. Not because that is the kinder design, though it is:
+a half-written reply in somebody else's voice is worse than no draft. Because
+the predicate says so.
+
+`E-02` agrees and adds the rest of the behaviour: *"the draft is preserved and
+**the agent** is told they no longer own it; sending is refused with the new
+owner named."* The draft survives, its author keeps it, and the refusal to send
+names who owns the ticket now.
+
+### The visibility rule, and why it holds BY CONSTRUCTION
+
+The concern raised was right: draft text is what an agent was about to say and
+thought better of, so it must follow the same rule as an internal note — staff
+only, never reachable from the portal, never in a customer-facing export. Three
+independent things enforce that, none of which is "the portal happens not to
+ask":
+
+1. **`user = caller`.** The query is keyed on the caller's own id. There is no
+   parameter that widens it, so no staff member reaches another's draft either.
+2. **The session audience.** Staff `authenticate` calls
+   `touchSession(sid, sub, 'staff')`, and a portal session carries
+   `audience: 'portal'` — it fails `audience_mismatch` and answers 401 before
+   any handler runs. A portal token cannot reach a staff route at all.
+3. **The subject lookup.** `authenticate` resolves `payload.sub` against
+   `User`. A portal identity's id is not a `User`, so even a forged staff-audience
+   token with a portal subject resolves to nothing and answers 401.
+
+A draft is also **not a message**. It lives in its own collection and is never
+written to `Message`, which is what the portal reads — so there is no query on
+the portal side that could return one even if authentication were bypassed.
+`backend/tests/draft.test.js` asserts each of these rather than trusting them.

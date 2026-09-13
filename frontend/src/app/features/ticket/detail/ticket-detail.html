@@ -235,10 +235,61 @@
 
       @if (!t.terminal && canWrite()) {
         <div class="mt-4 flex flex-col gap-3 border-t border-surface-200 pt-4">
-          <textarea rows="3" [ngModel]="reply()" (ngModelChange)="reply.set($event)"
+          <!-- ── DRAFT PRESERVATION (004 FR-015). Everything said here is the
+               SERVER's answer: it decided whether the draft expired, whether
+               the thread moved under it, and who owns the ticket now. ── -->
+
+          @if (draftExpired()) {
+            <!-- E-12: "discarded; the agent is TOLD on return rather than shown
+                 stale text." The telling is the half that matters. -->
+            <p class="m-0 rounded-lg border-s-4 border-surface-400 bg-surface-100 px-3 py-2 text-sm text-surface-700"
+               role="status">
+              {{ 'draft.expired' | translate: i18n.lang() }}
+              @if (draftRetentionDays(); as days) {
+                <span class="ltr">({{ days }})</span>
+              }
+            </p>
+          }
+
+          @if (draftReassignedTo(); as owner) {
+            <!-- E-02: the draft is preserved and the agent is told they no
+                 longer own the ticket, with the new owner named. -->
+            <p class="m-0 rounded-lg border-s-4 border-amber-500 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+               role="status">
+              {{ 'draft.reassigned' | translate: i18n.lang() }}
+              <span class="font-medium">{{ owner }}</span>
+            </p>
+          }
+
+          @if (draftStale()) {
+            <!-- AS-09: restored AND flagged. The draft is still shown — the
+                 agent decides whether their words still fit, not the system. -->
+            <p class="m-0 rounded-lg border-s-4 border-amber-500 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+               role="status">
+              {{ 'draft.stale' | translate: i18n.lang() }}
+            </p>
+          }
+
+          <!-- NFR-004: saved every ≤10s of typing AND on blur. The interval is
+               the server's, delivered with the draft. -->
+          <textarea rows="3" [ngModel]="reply()" (ngModelChange)="onReplyInput($event)"
+            (blur)="flushDraft()"
             [placeholder]="'ticket.reply' | translate: i18n.lang()"
             class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm text-start
                    focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25"></textarea>
+
+          @if (reply().trim()) {
+            <div class="flex flex-wrap items-center gap-3 text-xs text-surface-500">
+              <span>{{ (draftSaving() ? 'draft.saving' : 'draft.saved') | translate: i18n.lang() }}</span>
+              <button type="button"
+                class="rounded-md px-2 py-0.5 text-xs text-surface-600 underline
+                       hover:bg-surface-100 motion-safe:transition-colors
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                (click)="discardDraft()">
+                {{ 'draft.discard' | translate: i18n.lang() }}
+              </button>
+            </div>
+          }
           <!-- QUICK REPLIES (004 FR-006, AD-06). The SERVER substitutes: it
                chooses the body by the CUSTOMER's preferred language and refuses
                rather than inserting an unresolved placeholder. Nothing is
