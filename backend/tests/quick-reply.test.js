@@ -46,11 +46,13 @@ const dept = (await mk('/platform/departments', { name: { ar: 'قسم الدعم
 const scope = { branchIds: [branch._id], departmentIds: [dept._id] }
 await mk('/user', { displayName: 'Sara Ahmed', email: 'qr.sara@azmsquad.com', password: FIXTURE_PASSWORD, defaultLanguage: 'ar', roles: ['AGT'], scope })
 await mk('/user', { displayName: 'Omar Lead', email: 'qr.omar@azmsquad.com', password: FIXTURE_PASSWORD, defaultLanguage: 'en', roles: ['LEAD'], scope })
+await mk('/user', { displayName: 'Mona Manager', email: 'qr.mona@azmsquad.com', password: FIXTURE_PASSWORD, defaultLanguage: 'en', roles: ['MGR'], scope })
 await mk('/user', { displayName: 'Hana Agent', email: 'qr.hana@azmsquad.com', password: FIXTURE_PASSWORD, defaultLanguage: 'en', roles: ['AGT'], scope })
 await mk('/user', { displayName: 'Nour Elsewhere', email: 'qr.nour@azmsquad.com', password: FIXTURE_PASSWORD, defaultLanguage: 'en', roles: ['AGT'], scope: { branchIds: [otherBranch._id], departmentIds: [dept._id] } })
 
 const sara = await login('qr.sara@azmsquad.com', FIXTURE_PASSWORD)
 const omar = await login('qr.omar@azmsquad.com', FIXTURE_PASSWORD)
+const mona = await login('qr.mona@azmsquad.com', FIXTURE_PASSWORD)
 const hana = await login('qr.hana@azmsquad.com', FIXTURE_PASSWORD)
 const nour = await login('qr.nour@azmsquad.com', FIXTURE_PASSWORD)
 
@@ -190,17 +192,35 @@ const fine = resolvePlaceholders('Hello {{customer.name}}', { customer: { displa
 chk('the same resolver DOES resolve when the value is there', fine.ok, true)
 chk('  substituting it', fine.body, 'Hello Layla')
 
-console.log('\n--- FR-007: a global reply is a lead\'s to make ---')
+console.log('\n--- 004 §9: a GLOBAL reply is a MANAGER\'s to make, not a lead\'s ---')
+// §9 splits what FR-007 lumps together: "Manage team quick replies" is LEAD and
+// above; "Manage global quick replies" is MGR and above. The one shared scope
+// built here is visible to EVERY member of staff, so it is §9's GLOBAL row, not
+// its team row. Where a requirement and the matrix differ in precision the
+// matrix is the more specific statement, and a permission takes the narrower
+// reading. decisions-pending §19.
 const agentGlobal = await call('POST', '/quick-reply', {
   token: sara,
   body: { name: { ar: 'عام', en: 'Global' }, body: { ar: 'نص', en: 'text' }, scope: 'global' }
 })
 chk('an AGENT is refused a global quick reply', agentGlobal.status, 403)
+chk('a LEAD is refused one too — §9, not FR-007\'s floor',
+  (await call('POST', '/quick-reply', {
+    token: omar,
+    body: { name: { ar: 'عام من قائد', en: 'Lead global' }, body: { ar: 'نص', en: 'text' }, scope: 'global' }
+  })).status, 403)
+// PAIRED, so this is not a blanket deny on the lead — they keep what §9 does
+// give them.
+chk('  while the same LEAD may still create a PERSONAL one',
+  (await call('POST', '/quick-reply', {
+    token: omar,
+    body: { name: { ar: 'شخصي لقائد', en: 'Lead personal' }, body: { ar: 'نص', en: 'text' }, scope: 'personal' }
+  })).status, 201)
 const leadGlobal = await call('POST', '/quick-reply', {
-  token: omar,
+  token: mona,
   body: { name: { ar: 'رد عام', en: 'Shared reply' }, body: { ar: 'نص عام', en: 'shared text' }, scope: 'global' }
 })
-chk('a LEAD is allowed one', leadGlobal.status, 201)
+chk('a MANAGER is allowed one', leadGlobal.status, 201)
 chk('  and it has no owner', leadGlobal.body.quickReply.ownerId, null)
 chk('  and is audited at high severity, because everyone sees it',
   await AuditEntry.countDocuments({ action: 'quick_reply.created', severity: 'high' }) > 0, true)

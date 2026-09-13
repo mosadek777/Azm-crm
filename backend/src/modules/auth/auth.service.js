@@ -237,11 +237,17 @@ export const me = async (req, res, next) => {
         // voice. Offering them the customer-visible option guarantees a 403.
         customerReply: ['AGT', 'LEAD', 'MGR'].some(r => roles.has(r)),
 
-        // 004 FR-007: a team or global quick reply "MUST be manageable by a
-        // lead or above and MUST NOT be editable by an individual agent".
-        // Without this the scope picker would offer "global" to an agent
-        // and the save would be refused every time.
-        sharedQuickReplies: ['LEAD', 'MGR', 'ADM'].some(r => roles.has(r))
+        // 004 §9, "Manage global quick replies": MGR and ADM only.
+        //
+        // ⚠ NARROWER THAN FR-007, DELIBERATELY. FR-007 says team and global
+        // "MUST be manageable by a lead or above", which is the floor for the
+        // pair; §9 then splits them — team to LEAD and above, global to MGR and
+        // above. The one shared scope built here is visible to EVERY member of
+        // staff, which is §9's "global" and not its "team", so it takes the
+        // global row. Where a requirement and the matrix differ in precision
+        // the matrix is the more specific statement, and for a permission the
+        // narrower reading is the safer default. decisions-pending §19.
+        sharedQuickReplies: ['MGR', 'ADM'].some(r => roles.has(r))
       }
     })
   } catch (err) {

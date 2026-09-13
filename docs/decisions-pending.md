@@ -1575,3 +1575,60 @@ A draft is also **not a message**. It lives in its own collection and is never
 written to `Message`, which is what the portal reads — so there is no query on
 the portal side that could return one even if authentication were bypassed.
 `backend/tests/draft.test.js` asserts each of these rather than trusting them.
+
+---
+
+## 19. `004 FR-007` and `004 §9` disagree on who manages a shared quick reply
+
+**Found on a re-read, after the feature had already shipped with the wrong
+answer.** Recorded because the correction is a tightening of a permission, which
+is the direction worth leaving a trail for.
+
+### The two statements
+
+`FR-007` (SHOULD): *"Quick replies MUST exist at personal, team and global
+scope; **team and global MUST be manageable by a lead or above** and MUST NOT be
+editable by an individual agent."*
+
+`§9`, the permission matrix, splits the same ground three ways:
+
+| Action | AGT | LEAD | MGR | ADM | AUD |
+|---|---|---|---|---|---|
+| Manage personal quick replies | ✓ | ✓ | ✓ | ✓ | — |
+| Manage **team** quick replies | — | ✓ | ✓ | ✓ | — |
+| Manage **global** quick replies | — | — | ✓ | ✓ | — |
+
+They are not contradictory so much as differently precise. `FR-007` gives a
+floor for the PAIR — "a lead or above" is true of team, and true of global if
+you read the pair as one set. `§9` then says which of the two a lead actually
+gets, and it is team, not global.
+
+### Why it mattered here
+
+`Team` does not exist (decision 20), so this build has ONE shared scope, and it
+is visible to **every member of staff**. That is `§9`'s *global*, not its *team*.
+It first shipped gated on `['LEAD', 'MGR', 'ADM']`, reading `FR-007` alone.
+
+### The resolution
+
+**Narrowed to `['MGR', 'ADM']`**, on two grounds, neither of which is a
+preference:
+
+1. **The matrix is the more specific statement.** Where a requirement gives a
+   floor for a group and the matrix gives a row per member, the row is what
+   describes the individual case.
+2. **A permission takes the narrower reading.** Being wrong in the restrictive
+   direction produces a refusal somebody can ask about; being wrong in the
+   permissive direction produces wording nobody approved appearing in front of
+   every customer, and nobody asks about that until it has happened.
+
+Changed in `auth.service.js` (the `sharedQuickReplies` hint), in
+`quick-reply.service.js` (both server-side checks, which are the control), and
+in the on-screen note, which now cites `§9` rather than `FR-007`.
+`tests/quick-reply.test.js` asserts a LEAD is refused a global reply, that a
+MANAGER is allowed one, and — paired, so this is not a blanket deny — that the
+same LEAD may still create a personal one.
+
+**No decision is requested.** If the client wants leads to own the shared
+library, that is a change to `§9` and it should be made there rather than by
+loosening the code back.

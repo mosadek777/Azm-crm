@@ -106,12 +106,15 @@ export const createQuickReply = async (req, res, next) => {
     // NOT be editable by an individual agent."
     if (scope === 'global') {
       const roles = new Set((req.assignments ?? []).map(a => a.role))
-      const mayManageGlobal = ['LEAD', 'MGR', 'ADM'].some(r => roles.has(r))
+      // 004 §9 "Manage global quick replies": MGR and ADM. See the note on
+      // the sharedQuickReplies hint — §9 is narrower than FR-007's floor and
+      // the narrower reading is the one a permission takes.
+      const mayManageGlobal = ['MGR', 'ADM'].some(r => roles.has(r))
       if (!mayManageGlobal) {
         return res.status(403).json({
           message: bilingual(
-            'مرفوض: الردود العامة يديرها قائد فريق أو أعلى',
-            'Refused: a global quick reply is managed by a team lead or above')
+            'مرفوض: الردود العامة يديرها مدير أو أعلى',
+            'Refused: a global quick reply is managed by a manager or above')
         })
       }
     }
@@ -193,11 +196,11 @@ export const setQuickReplyActive = async (req, res, next) => {
 
     if (reply.scope === 'global') {
       const roles = new Set((req.assignments ?? []).map(a => a.role))
-      if (!['LEAD', 'MGR', 'ADM'].some(r => roles.has(r))) {
+      if (!['MGR', 'ADM'].some(r => roles.has(r))) {
         return res.status(403).json({
           message: bilingual(
-            'مرفوض: الردود العامة يديرها قائد فريق أو أعلى',
-            'Refused: a global quick reply is managed by a team lead or above')
+            'مرفوض: الردود العامة يديرها مدير أو أعلى',
+            'Refused: a global quick reply is managed by a manager or above')
         })
       }
     }

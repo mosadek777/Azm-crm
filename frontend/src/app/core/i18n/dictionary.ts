@@ -352,8 +352,8 @@ export const DICTIONARY: Translations = {
     en: 'Click a placeholder to add it to whichever body you last edited. The list comes from the server, so it is the same one the substitution uses.'
   },
   'quickReply.sharedNote': {
-    ar: 'الردود العامة يديرها قائد فريق أو أعلى (FR-007).',
-    en: 'Shared quick replies are managed by a team lead or above (FR-007).'
+    ar: 'الردود العامة يديرها مدير أو أعلى (004 §9).',
+    en: 'Shared quick replies are managed by a manager or above (004 §9).'
   },
   'quickReply.noDeleteNote': {
     ar: 'لا يمكن الحذف: قد تكون صياغة الرد مقتبسة في تذاكر أُرسلت بالفعل. الإيقاف هو البديل.',
