@@ -235,7 +235,13 @@ export const me = async (req, res, next) => {
         // 002 §9 splits authorship BY VISIBILITY: an administrator may write an
         // internal note and may NOT speak to the customer in the organisation's
         // voice. Offering them the customer-visible option guarantees a 403.
-        customerReply: ['AGT', 'LEAD', 'MGR'].some(r => roles.has(r))
+        customerReply: ['AGT', 'LEAD', 'MGR'].some(r => roles.has(r)),
+
+        // 004 FR-007: a team or global quick reply "MUST be manageable by a
+        // lead or above and MUST NOT be editable by an individual agent".
+        // Without this the scope picker would offer "global" to an agent
+        // and the save would be refused every time.
+        sharedQuickReplies: ['LEAD', 'MGR', 'ADM'].some(r => roles.has(r))
       }
     })
   } catch (err) {

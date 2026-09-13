@@ -1,0 +1,210 @@
+<!-- Quick replies. See quick-replies.ts: the vocabulary is fetched rather than
+     copied, the scope picker is a rendering hint, and both languages are the
+     server's rule rendered here rather than a second copy of it. -->
+<div class="flex flex-col gap-6">
+
+  <div class="flex flex-wrap items-center gap-3">
+    <h1 class="m-0 text-2xl font-semibold text-surface-900">
+      {{ 'quickReply.title' | translate: i18n.lang() }}
+    </h1>
+    @if (!loading()) {
+      <span class="ltr rounded-full bg-surface-100 px-2.5 py-0.5 text-sm text-surface-600">
+        {{ rows().length }}
+      </span>
+    }
+    <span class="flex-1"></span>
+    <button type="button"
+      class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white
+             hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+      [attr.aria-expanded]="creating()"
+      (click)="creating.set(!creating())">
+      {{ (creating() ? 'action.cancel' : 'quickReply.new') | translate: i18n.lang() }}
+    </button>
+  </div>
+
+  <p class="m-0 text-sm text-surface-500">
+    {{ 'quickReply.intro' | translate: i18n.lang() }}
+  </p>
+
+  @if (creating()) {
+    <form class="flex flex-col gap-4 rounded-xl border border-surface-200 bg-surface-0 p-4"
+          (ngSubmit)="submit()">
+      <h2 class="m-0 text-sm font-semibold text-surface-900">
+        {{ 'quickReply.new' | translate: i18n.lang() }}
+      </h2>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-medium text-surface-700">{{ 'admin.nameAr' | translate: i18n.lang() }}</span>
+          <input name="nameAr" dir="rtl" required
+            [ngModel]="nameAr()" (ngModelChange)="nameAr.set($event)"
+            class="w-full rounded-lg border border-surface-300 px-3 py-2 text-start
+                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25" />
+        </label>
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-medium text-surface-700">{{ 'admin.nameEn' | translate: i18n.lang() }}</span>
+          <input name="nameEn" dir="ltr" required
+            [ngModel]="nameEn()" (ngModelChange)="nameEn.set($event)"
+            class="w-full rounded-lg border border-surface-300 px-3 py-2 text-start
+                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25" />
+        </label>
+      </div>
+
+      <!-- THE PLACEHOLDER HELPER. Rendered from the server's own list, so a
+           token added or removed there appears or disappears here with no
+           second edit — decision 41's "one place, exported". -->
+      @if (placeholders().length) {
+        <div class="rounded-lg border border-surface-200 bg-surface-50 p-3">
+          <p class="m-0 mb-2 text-xs text-surface-600">
+            {{ 'quickReply.placeholderHelp' | translate: i18n.lang() }}
+          </p>
+          <div class="flex flex-wrap gap-1.5">
+            @for (p of placeholders(); track p.token) {
+              <button type="button"
+                class="rounded-md border border-surface-300 bg-surface-0 px-2 py-1 text-xs
+                       text-surface-700 hover:bg-primary-50 hover:border-primary-300
+                       motion-safe:transition-colors
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                [attr.title]="label(p.label)"
+                (click)="insertToken(p.token)">
+                <!-- A token is a direction-neutral identifier. -->
+                <span class="ltr">{{ tokenText(p.token) }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- BOTH BODIES. FR-006 requires an Arabic body and an English body; the
+           server refuses a save with one missing and the form asks for both. -->
+      <div class="grid gap-4 sm:grid-cols-2">
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-medium text-surface-700">{{ 'quickReply.bodyAr' | translate: i18n.lang() }}</span>
+          <textarea name="bodyAr" rows="4" dir="rtl" required
+            [ngModel]="bodyAr()" (ngModelChange)="bodyAr.set($event)"
+            (focus)="lastFocused.set('ar')"
+            class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm text-start
+                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25"></textarea>
+        </label>
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-medium text-surface-700">{{ 'quickReply.bodyEn' | translate: i18n.lang() }}</span>
+          <textarea name="bodyEn" rows="4" dir="ltr" required
+            [ngModel]="bodyEn()" (ngModelChange)="bodyEn.set($event)"
+            (focus)="lastFocused.set('en')"
+            class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm text-start
+                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25"></textarea>
+        </label>
+      </div>
+
+      <!-- SCOPE. `global` is offered only where the server would accept it —
+           FR-007 keeps shared wording with a lead or above. The server refuses
+           regardless of what this shows. -->
+      <fieldset class="m-0 flex flex-col gap-2 border-0 p-0">
+        <legend class="mb-1 p-0 text-sm font-medium text-surface-700">
+          {{ 'quickReply.scope' | translate: i18n.lang() }}
+        </legend>
+        <div class="flex flex-wrap gap-2">
+          <label class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-1.5 text-sm
+                        focus-within:ring-2 focus-within:ring-primary-500"
+            [class]="scope() === 'personal'
+              ? 'border-primary-400 bg-primary-50 text-primary-900'
+              : 'border-surface-300 bg-surface-0 text-surface-700'">
+            <input type="radio" name="scope" class="accent-primary-600"
+              [checked]="scope() === 'personal'" (change)="scope.set('personal')" />
+            {{ 'quickReply.personal' | translate: i18n.lang() }}
+          </label>
+          @if (canShare()) {
+            <label class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-1.5 text-sm
+                          focus-within:ring-2 focus-within:ring-primary-500"
+              [class]="scope() === 'global'
+                ? 'border-primary-400 bg-primary-50 text-primary-900'
+                : 'border-surface-300 bg-surface-0 text-surface-700'">
+              <input type="radio" name="scope" class="accent-primary-600"
+                [checked]="scope() === 'global'" (change)="scope.set('global')" />
+              {{ 'quickReply.global' | translate: i18n.lang() }}
+            </label>
+          }
+        </div>
+        @if (!canShare()) {
+          <p class="m-0 text-xs text-surface-500">{{ 'quickReply.sharedNote' | translate: i18n.lang() }}</p>
+        }
+      </fieldset>
+
+      <!-- The server's refusal, rendered as sent — including the one that NAMES
+           each unknown token, which is what an author needs in order to fix it. -->
+      @if (refusal(); as message) {
+        <div class="rounded-lg border-s-4 border-red-600 bg-red-50 px-3 py-2 text-sm text-red-800"
+             role="alert">
+          <p class="m-0">{{ message[i18n.lang()] }}</p>
+          @if (badTokens().length) {
+            <ul class="m-0 mt-1 flex list-none flex-wrap gap-1.5 p-0">
+              @for (t of badTokens(); track t) {
+                <li class="ltr rounded bg-red-100 px-1.5 py-0.5 font-mono text-xs">
+                  {{ tokenText(t) }}
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      }
+
+      <div>
+        <button type="submit" [disabled]="!canSubmit() || busy() === 'create'"
+          class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white
+                 hover:bg-primary-700 disabled:opacity-50
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
+          {{ 'quickReply.save' | translate: i18n.lang() }}
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (loading()) {
+    <p class="m-0 text-sm text-surface-500">{{ 'common.loading' | translate: i18n.lang() }}</p>
+  } @else if (!rows().length) {
+    <p class="m-0 rounded-xl border border-surface-200 bg-surface-0 p-6 text-center text-sm text-surface-500">
+      {{ 'quickReply.none' | translate: i18n.lang() }}
+    </p>
+  } @else {
+    @for (group of [{ key: 'mine', rows: mine() }, { key: 'shared', rows: shared() }]; track group.key) {
+      @if (group.rows.length) {
+        <section class="rounded-xl border border-surface-200 bg-surface-0">
+          <h2 class="m-0 border-b border-surface-200 p-4 text-sm font-semibold text-surface-900">
+            {{ (group.key === 'mine' ? 'quickReply.mine' : 'quickReply.sharedHeading') | translate: i18n.lang() }}
+          </h2>
+          <ul class="m-0 flex list-none flex-col divide-y divide-surface-100 p-0">
+            @for (r of group.rows; track r._id) {
+              <li class="flex flex-wrap items-start gap-3 p-4">
+                <div class="min-w-0 flex-1">
+                  <div class="mb-1 flex flex-wrap items-center gap-2">
+                    <p class="m-0 text-sm font-medium text-surface-900">{{ label(r.name) }}</p>
+                    <app-tag [tone]="r.scope === 'global'
+                      ? 'bg-primary-100 text-primary-800'
+                      : 'bg-surface-200 text-surface-700'">
+                      {{ (r.scope === 'global' ? 'quickReply.global' : 'quickReply.personal') | translate: i18n.lang() }}
+                    </app-tag>
+                  </div>
+                  <!-- The reader's own language, for a glance. Insertion picks
+                       by the CUSTOMER's language, which is a different question
+                       and the server's to answer. -->
+                  <p class="m-0 whitespace-pre-wrap text-sm text-surface-600">{{ label(r.body) }}</p>
+                </div>
+                <button type="button" [disabled]="busy() === r._id"
+                  class="rounded-md border border-surface-300 px-2.5 py-1.5 text-sm
+                         text-surface-700 hover:bg-surface-100 disabled:opacity-50
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                  (click)="toggleActive(r)">
+                  {{ 'admin.deactivate' | translate: i18n.lang() }}
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    }
+
+    <p class="m-0 text-xs text-surface-500">
+      {{ 'quickReply.noDeleteNote' | translate: i18n.lang() }}
+    </p>
+  }
+</div>

@@ -1397,6 +1397,16 @@
       ],
       "status": "not started",
       "description": "Roles are granted once, when the user is created, and there is no way to change them afterwards. No grant endpoint, no revoke endpoint, no screen — the administration screens say so on the page rather than offering a control that would fail.\n\nThis is an operational hole rather than a tidiness complaint. Somebody promoted from agent to team lead needs a second account. Somebody who should no longer be an administrator keeps it until their whole account is deactivated, which takes their ordinary work away with it.\n\nSpec 010 names the action twice — the audit event list in section 10 has \"Role assignment granted / revoked\" with its full shape, and the permission matrix in section 11 has \"grant / revoke role assignment\" with its authorisation rule already decided. No requirement asks for it. Same category as the Team entity and the shared-contact-point defect: the spec assumes the behaviour without ever requiring it, so the clarification gate could not see it.\n\nBLOCKED ON ONE CLIENT DECISION: what happens to a user left holding zero roles. Refuse the last revocation the way E-01 refuses deactivating the last administrator; permit it and leave an account that authenticates but can reach nothing; or treat it as deactivation and collapse two concepts into one. Nothing in the spec decides this, and it cannot be inferred — see docs/decisions-pending.md section 15.\n\nSmall once decided: two endpoints, both admin-only, both bounded by resolveGrantedScope exactly as user creation already is, both writing the audit entries section 10 already specifies in the same transaction as the assignment."
+    },
+    {
+      "key": "quick-reply-custom-fields",
+      "name": "A quick reply cannot reference a custom field, and E-06 is about what happens when it does",
+      "tags": [
+        "backend",
+        "blocked"
+      ],
+      "status": "not started",
+      "description": "Spec 004 E-06: \"Quick reply references a retired custom field -> Insertion refused naming the field; the reply is flagged for its owner to fix.\"\n\nIt cannot be built. Custom fields do not exist, so there is nothing to retire and nothing to reference. The placeholder vocabulary is a fixed set of six tokens (decision 41), all of which resolve from fields present on every ticket, so the state E-06 describes is currently unreachable.\n\nBLOCKED ON: custom fields, which belong to 010 FR-011 (administrator configuration). Designing an extensible vocabulary now would mean guessing at a shape that requirement will decide later, and the guess would be baked into every template authored in the meantime.\n\nWHAT ALREADY EXISTS and carries over: the refusal machinery. resolvePlaceholders is all-or-nothing, never returns a partly-substituted body, and names which token failed and why. An unknown token is refused at AUTHORING time as well, with each bad token named. When custom fields arrive, E-06 is the \"retired\" case joining the \"unknown\" one already handled."
     }
   ],
   "retiredIds": []

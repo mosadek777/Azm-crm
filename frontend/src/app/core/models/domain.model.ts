@@ -117,3 +117,26 @@ export interface Department {
   name: LocalizedText;
   active: boolean;
 }
+
+// spec 004 §3 — a quick reply. FR-006: both bodies, always.
+export interface QuickReply {
+  _id: string;
+  name: LocalizedText;
+  body: LocalizedText;
+  scope: 'personal' | 'global';
+  ownerId: string | null;
+  active: boolean;
+}
+
+// Decision 41. The vocabulary is SERVED, never copied into the client: two
+// lists drift, and the drift surfaces as a refusal nobody can explain.
+export interface Placeholder {
+  token: string;
+  label: LocalizedText;
+}
+
+/** FR-006's refusal, which names WHICH token failed and why. */
+export interface PlaceholderFailure {
+  token: string;
+  reason: 'unknown_placeholder' | 'no_value';
+}

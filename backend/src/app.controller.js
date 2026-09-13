@@ -9,6 +9,7 @@ import usercontroller from "./modules/user/user.controller.js"
 import platformcontroller from "./modules/platform/platform.controller.js"
 import customercontroller from "./modules/customer/customer.controller.js"
 import ticketcontroller from "./modules/ticket/ticket.controller.js"
+import quickreplycontroller from './modules/quick-reply/quick-reply.controller.js'
 import portalcontroller from "./modules/portal/portal.controller.js"
 import { checkDBconnection } from "./DB/connection.db.js"
 
@@ -38,6 +39,7 @@ const bootstrap = async () => {
   app.use('/platform', platformcontroller)
   app.use('/customer', customercontroller)
   app.use('/ticket', ticketcontroller)
+  app.use('/quick-reply', quickreplycontroller)
   // spec 008. Separate from the staff routes because a customer is not a User:
   // no role, no branch, no department. Its own middleware and its own predicate.
   app.use('/portal', portalcontroller)

@@ -239,6 +239,53 @@
             [placeholder]="'ticket.reply' | translate: i18n.lang()"
             class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm text-start
                    focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25"></textarea>
+          <!-- QUICK REPLIES (004 FR-006, AD-06). The SERVER substitutes: it
+               chooses the body by the CUSTOMER's preferred language and refuses
+               rather than inserting an unresolved placeholder. Nothing is
+               substituted here, so there is one place those rules live. -->
+          @if (quickReplies().length) {
+            <div class="flex flex-col gap-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <button type="button"
+                  class="rounded-md border border-surface-300 px-2.5 py-1.5 text-sm text-surface-700
+                         hover:bg-surface-100 motion-safe:transition-colors
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                  [attr.aria-expanded]="pickerOpen()"
+                  (click)="pickerOpen.set(!pickerOpen())">
+                  {{ 'quickReply.insert' | translate: i18n.lang() }}
+                </button>
+                @if (insertedLanguage(); as lang) {
+                  <!-- Said rather than left to puzzle over: an Arabic template
+                       coming out in English is the customer's preference, not a
+                       fault. FR-006 chooses by the customer, not the agent. -->
+                  <span class="text-xs text-surface-500">
+                    {{ 'quickReply.languageNote' | translate: i18n.lang() }}
+                    <span class="ltr">({{ lang }})</span>
+                  </span>
+                }
+              </div>
+
+              @if (pickerOpen()) {
+                <ul class="m-0 flex max-h-56 list-none flex-col gap-1 overflow-y-auto rounded-lg
+                           border border-surface-200 bg-surface-50 p-2">
+                  @for (q of quickReplies(); track q._id) {
+                    <li>
+                      <button type="button" [disabled]="inserting() === q._id"
+                        class="flex w-full flex-col items-start gap-0.5 rounded-md px-2 py-1.5
+                               text-start text-sm hover:bg-surface-0 disabled:opacity-50
+                               motion-safe:transition-colors
+                               focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                        (click)="insertQuickReply(q)">
+                        <span class="font-medium text-surface-900">{{ label(q.name) }}</span>
+                        <span class="line-clamp-2 text-xs text-surface-500">{{ label(q.body) }}</span>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          }
+
           <div class="flex flex-wrap items-center gap-2">
             <!-- Deliberately blank by default — FR-014 has no safe default. -->
             <select [ngModel]="visibility()" (ngModelChange)="visibility.set($event)"

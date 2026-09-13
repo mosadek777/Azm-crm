@@ -21,6 +21,7 @@ import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { StatusTonePipe } from '../../../shared/pipes/status-tone.pipe';
 import { Tag } from '../../../shared/components/tag/tag';
 import { CustomerContext } from '../../../shared/components/customer-context/customer-context';
+import { QuickReply } from '../../../core/models/domain.model';
 import { ActionTonePipe } from '../../../shared/pipes/action-tone.pipe';
 import { LocalizedText } from '../../../core/models/user.model';
 import {
@@ -68,6 +69,17 @@ export class TicketDetail {
   // Off by default. The raw audit keys are evidence for an auditor, not
   // reading matter for somebody working tickets all day — and every tag
   // carries its key on the title regardless, so nothing depends on this.
+  // --- quick replies (004 FR-006, AD-06) ----------------------------------
+  //
+  // The picker lists what the server says this caller has; inserting one
+  // asks the SERVER to substitute, because the language choice and the
+  // refusal rule both belong there. Nothing is substituted in the client.
+  protected readonly quickReplies = signal<QuickReply[]>([]);
+  protected readonly pickerOpen = signal(false);
+  protected readonly inserting = signal<string | null>(null);
+  /** Which language the server chose, so the screen can say so. */
+  protected readonly insertedLanguage = signal<string | null>(null);
+
   protected readonly showEventKeys = signal(false);
   protected readonly busy = signal(false);
 
@@ -87,6 +99,11 @@ export class TicketDetail {
   protected readonly visibility = signal<Visibility | ''>('');
 
   constructor() {
+    // Only offered where a reply can be written at all.
+    this.api.listQuickReplies().subscribe({
+      next: r => this.quickReplies.set(r.quickReplies),
+      error: () => this.quickReplies.set([])
+    });
     this.api.ticketMeta().subscribe({ next: m => this.meta.set(m) });
     this.load();
   }
@@ -171,4 +188,42 @@ export class TicketDetail {
   protected pausesSla(status: string): boolean {
     return this.meta()?.statuses.find(s => s.key === status)?.pausesSla === true;
   }
+  /**
+   * Insert a quick reply into the draft.
+   *
+   * THE SERVER SUBSTITUTES, not this. FR-006 puts two rules there — the body
+   * is chosen by the CUSTOMER's preferred language, and an unresolved
+   * placeholder REFUSES rather than being inserted half-done — and a second
+   * implementation here would be a second place for them to be wrong.
+   *
+   * A 422 carries `failures` naming which token could not be resolved, and
+   * that is what is shown: an agent has to know which token is wrong.
+   */
+  /** A quick reply's name and body are admin-authored labels: render the
+   *  READER's language here. Which body is SENT is a different question, and
+   *  the server answers it from the customer's preference. */
+  protected label(v: LocalizedText): string {
+    return this.i18n.lang() === 'ar' ? v.ar : v.en;
+  }
+
+  protected insertQuickReply(q: QuickReply): void {
+    const t = this.ticket();
+    if (!t) return;
+    this.inserting.set(q._id);
+    this.api.renderQuickReply(q._id, t._id).subscribe({
+      next: r => {
+        this.inserting.set(null);
+        this.pickerOpen.set(false);
+        this.insertedLanguage.set(r.language);
+        // Appended, never replacing: an agent may have already typed.
+        this.reply.update(v => (v ? v.trimEnd() + '\n\n' : '') + r.body);
+      },
+      error: (e: HttpErrorResponse) => {
+        this.inserting.set(null);
+        // Rendered as the server sent it, naming the tokens that failed.
+        this.toast.fromHttpError(e, { ar: 'تعذر إدراج الرد السريع', en: 'Could not insert the quick reply' });
+      }
+    });
+  }
+
 }

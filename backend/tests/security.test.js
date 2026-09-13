@@ -152,7 +152,7 @@ const bgMe = await call('GET', '/auth/me', { token: bg.body.token })
 check('the break-glass administrator is told to show administration', bgMe.body?.show?.administration, true)
 check('and it carries no scope detail at all — nothing to authorise with',
   JSON.stringify(Object.keys(bgMe.body?.show ?? {}).sort()),
-  '["administration","customerReply","staffDirectory","ticketWrite"]')
+  '["administration","customerReply","sharedQuickReplies","staffDirectory","ticketWrite"]')
 // THE PROPERTY THAT MATTERS as flags are added: every one is a bare boolean.
 // A branch id, a department id or a record id here would be the beginning of a
 // client-side scope decision; a boolean cannot be one.
@@ -246,6 +246,21 @@ check('and the server refuses the customer-visible reply on the SAME ticket',
   (await call('POST', `/ticket/${probeTicket._id}/message`, {
     token: bg.body.token, body: { body: 'Refused: 002 §9', visibility: 'customer' }
   })).status, 403)
+
+// The newest flag, held to the same standard as the rest: it hides a control
+// the server refuses anyway, and the server is what actually refuses.
+check('the agent is told not to offer shared quick replies',
+  agentMe.body?.show?.sharedQuickReplies, false)
+check('and the server refuses them a global quick reply regardless',
+  (await call('POST', '/quick-reply', {
+    token: agentTok,
+    body: { name: { ar: 'ع', en: 'g' }, body: { ar: 'ن', en: 't' }, scope: 'global' }
+  })).status, 403)
+check('  while the SAME agent may create a personal one, so this is not a blanket deny',
+  (await call('POST', '/quick-reply', {
+    token: agentTok,
+    body: { name: { ar: 'شخصي', en: 'mine' }, body: { ar: 'نص', en: 'text' }, scope: 'personal' }
+  })).status, 201)
 
 check('the endpoint itself requires a session', (await call('GET', '/auth/me')).status, 401)
 

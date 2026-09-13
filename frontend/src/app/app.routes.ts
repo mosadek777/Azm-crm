@@ -68,6 +68,10 @@ export const routes: Routes = [
       // ticket list. "So I never decide what to work on next."
       { path: '', pathMatch: 'full', redirectTo: 'workspace' },
       {
+        path: 'quick-replies',
+        loadComponent: () => import('./features/quick-replies/quick-replies').then(m => m.QuickReplies)
+      },
+      {
         path: 'workspace',
         loadComponent: () => import('./features/workspace/workspace').then(m => m.Workspace)
       },

@@ -317,6 +317,42 @@ export const DICTIONARY: Translations = {
     ar: 'تعتمد الفئة على أرقام مستوى الخدمة لكل أولوية وكل فئة عميل، وهي سؤال مفتوح لدى العميل.',
     en: 'The tier depends on the SLA numbers per priority and per customer tier, which is still an open client question.'
   },
+  // --- quick replies (spec 004 FR-006, FR-007; decision 41) ----------------
+  'nav.quickReplies': { ar: 'الردود السريعة', en: 'Quick replies' },
+  'quickReply.title': { ar: 'الردود السريعة', en: 'Quick replies' },
+  'quickReply.new': { ar: 'رد سريع جديد', en: 'New quick reply' },
+  'quickReply.save': { ar: 'حفظ الرد السريع', en: 'Save quick reply' },
+  'quickReply.created': { ar: 'تم حفظ الرد السريع', en: 'Quick reply saved' },
+  'quickReply.bodyAr': { ar: 'النص بالعربية', en: 'Body in Arabic' },
+  'quickReply.bodyEn': { ar: 'النص بالإنجليزية', en: 'Body in English' },
+  'quickReply.scope': { ar: 'النطاق', en: 'Scope' },
+  'quickReply.personal': { ar: 'شخصي', en: 'Personal' },
+  'quickReply.global': { ar: 'عام', en: 'Shared' },
+  'quickReply.mine': { ar: 'ردودي', en: 'Mine' },
+  'quickReply.sharedHeading': { ar: 'ردود عامة', en: 'Shared with everyone' },
+  'quickReply.insert': { ar: 'إدراج رد سريع', en: 'Insert a quick reply' },
+  'quickReply.none': { ar: 'لا توجد ردود سريعة بعد.', en: 'No quick replies yet.' },
+
+  'quickReply.intro': {
+    ar: 'نصوص جاهزة تُدرَج في الرد. تُستبدل العناصر النائبة عند الإدراج، وتُختار اللغة حسب تفضيل العميل لا تفضيلك.',
+    en: 'Saved wording you can drop into a reply. Placeholders are substituted on insertion, and the language is chosen by the customer’s preference rather than yours.'
+  },
+  'quickReply.placeholderHelp': {
+    ar: 'اضغط عنصرًا نائبًا لإضافته إلى آخر نص حرّرته. القائمة تأتي من الخادم، فهي نفسها التي يستخدمها الاستبدال.',
+    en: 'Click a placeholder to add it to whichever body you last edited. The list comes from the server, so it is the same one the substitution uses.'
+  },
+  'quickReply.sharedNote': {
+    ar: 'الردود العامة يديرها قائد فريق أو أعلى (FR-007).',
+    en: 'Shared quick replies are managed by a team lead or above (FR-007).'
+  },
+  'quickReply.noDeleteNote': {
+    ar: 'لا يمكن الحذف: قد تكون صياغة الرد مقتبسة في تذاكر أُرسلت بالفعل. الإيقاف هو البديل.',
+    en: 'Deletion is not offered: a retired template’s wording may be quoted in tickets already sent. Deactivation is the alternative.'
+  },
+  'quickReply.languageNote': {
+    ar: 'أُدرج النص بلغة العميل المفضلة.',
+    en: 'Inserted in the customer’s preferred language.'
+  },
   'common.loading': { ar: 'جارٍ التحميل…', en: 'Loading…' },
   'lang.arabic': { ar: 'العربية', en: 'Arabic' },
   'lang.english': { ar: 'الإنجليزية', en: 'English' },

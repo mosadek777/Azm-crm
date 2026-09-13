@@ -3,10 +3,7 @@
 
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import {
-  Customer, ContactPoint, Ticket, TicketMessage, HistoryEntry, TicketMeta, Sla,
-  Branch, Department
-} from '../models/domain.model';
+import { Branch, ContactPoint, Customer, Department, HistoryEntry, Placeholder, QuickReply, Sla, Ticket, TicketMessage, TicketMeta } from '../models/domain.model';
 import { CreateUserRequest, LocalizedText, StaffUser } from '../models/user.model';
 
 const API = 'http://localhost:3000';
@@ -152,5 +149,44 @@ export class ApiService {
     return this.http.patch<{ user: StaffUser }>(
       `${API}/user/${id}/${active ? 'reactivate' : 'deactivate'}`, {});
   }
+  // --- quick replies (spec 004 FR-006, FR-007) ---
+  //
+  // THE VOCABULARY IS FETCHED, NOT DUPLICATED. Decision 41 requires one list,
+  // read by both the editor's helper and the resolver. A copy here would drift
+  // from backend/src/config/placeholders.js and the drift would surface as a
+  // refusal nobody can explain.
+  quickReplyPlaceholders() {
+    return this.http.get<{ placeholders: Placeholder[]; syntax: string }>(
+      `${API}/quick-reply/placeholders`);
+  }
+
+  /** The caller's own, plus every global one. Personal replies of others are absent. */
+  listQuickReplies() {
+    return this.http.get<{ quickReplies: QuickReply[] }>(`${API}/quick-reply`);
+  }
+
+  createQuickReply(body: { name: LocalizedText; body: LocalizedText; scope: 'personal' | 'global' }) {
+    return this.http.post<{ quickReply: QuickReply }>(`${API}/quick-reply`, body);
+  }
+
+  // No delete: a retired template's wording may be quoted in tickets already
+  // sent, which is the same reason branches, departments and users deactivate.
+  setQuickReplyActive(id: string, active: boolean) {
+    return this.http.patch<{ quickReply: QuickReply; changed: boolean }>(
+      `${API}/quick-reply/${id}/active`, { active });
+  }
+
+  /**
+   * Substitute the placeholders against one ticket.
+   *
+   * The SERVER chooses the body's language from the CUSTOMER's preference and
+   * refuses rather than returning a partly-substituted body (FR-006). A 422
+   * carries `failures`, naming which token could not be resolved.
+   */
+  renderQuickReply(id: string, ticketId: string) {
+    return this.http.post<{ body: string; language: 'ar' | 'en'; languageFrom: string }>(
+      `${API}/quick-reply/${id}/render`, { ticketId });
+  }
 }
+
 

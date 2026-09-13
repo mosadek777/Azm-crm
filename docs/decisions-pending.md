@@ -131,6 +131,8 @@ reindex. No application code reads the filter.
 |---|---|---|---|---|
 | 40 | **The five `010 FR-007` values are set: password minimum 12 with no composition rule; idle timeout 30 minutes; absolute session lifetime 12 hours; lockout after 10 failed attempts for 15 minutes, self-releasing; 3 concurrent sessions, oldest evicted** | **The project owner's.** Explicitly **not** a reading — all thirteen specs were searched and **none states any figure** | No marker. `FR-007` requires the values be *configurable* and supplies none | **`010 FR-007` (MUST):** *"The system MUST enforce a **configurable** password policy, session timeout, absolute session lifetime, failed-attempt lockout and concurrent-session limit."* The only related text anywhere is **`008 §3`**, which gives a portal identity a `locked` state and points back at `FR-007` for what causes it, and **`010 §9`**, which marks the sign-in endpoints *"rate-limited; lockout per `FR-007`"*. Both establish that lockout must exist. Neither supplies a number, and no other spec does |
 
+| 41 | **The quick-reply placeholder vocabulary and syntax are fixed: six tokens — `customer.name`, `ticket.reference`, `ticket.subject`, `agent.name`, `branch.name`, `department.name` — written `{{dotted.path}}`, with a fixed set for phase one** | **The developer's**, provisionally, on the same footing as decisions 26–30. Explicitly **not** a reading: spec `004` names no token anywhere | No marker. `[CLARIFY-5]` covers who authors the library and in which language, not what a placeholder may say | **`004 FR-006` (MUST):** *"Quick replies MUST support **named placeholders** and MUST store an Arabic and an English body; insertion MUST select by the customer's preferred language and MUST **refuse rather than insert an unresolved placeholder**."* The refusal rule is precise and buildable as written. The vocabulary is named nowhere — not in `§3`, not in the FR table, not in any `AS-*` |
+
 **Ratified by the project owner 2026-09-09**, on a proposal from the developer.
 The reasoning the owner singled out, recorded because it is the reasoning rather
 than the numbers that will matter when these are revisited:
@@ -1422,3 +1424,71 @@ exactly as creation already is, both writing the `role_assignment.granted` /
 transaction as the assignment they describe.
 
 Tracked on the board as `role-revocation`.
+
+---
+
+## 16. Decision 41 — the quick-reply placeholder vocabulary (developer, provisional)
+
+**Recorded as the developer's and not as a reading of the spec**, on the same
+footing as decisions 26–30. `004 FR-006` requires "named placeholders" and never
+names one; deriving a set from whatever fields happen to exist would be
+inference filling a spec gap, and it is load-bearing — the vocabulary is what
+agents type into every template, and changing it later invalidates every quick
+reply already written.
+
+### The vocabulary
+
+| Token | Resolves to |
+|---|---|
+| `{{customer.name}}` | the customer's display name |
+| `{{ticket.reference}}` | `TKT-YYYY-NNNNN` |
+| `{{ticket.subject}}` | the ticket subject |
+| `{{agent.name}}` | **the signed-in agent, not the assignee** |
+| `{{branch.name}}` | the ticket's branch, in the reader's language |
+| `{{department.name}}` | the ticket's department, in the reader's language |
+
+**`agent.name` is the SENDER, not the assignee.** A template is written in the
+voice of whoever is sending it. Resolving it to the assignee would put one
+person's name under another person's message, which is worse than not having
+the token.
+
+### What is deliberately excluded
+
+**Nothing that can resolve to "unavailable".** No SLA target, no entitlement,
+no segment, no customer tier. Each of those is blocked — on `005 [CLARIFY-1]`,
+on the ERP, or on being unbuilt — and a placeholder that renders "unavailable"
+inside a customer-facing reply is worse than one that refuses: the refusal is
+seen by the agent before sending, the "unavailable" is seen by the customer
+after. Every token above resolves to a value that exists on every ticket, so a
+half-resolved body is not a state this can reach.
+
+### The syntax
+
+`{{customer.name}}` — double braces, dotted path. The most widely recognised
+shape; the dot mirrors the vocabulary's own structure; and single braces collide
+with ordinary punctuation in Arabic prose more often than double ones do.
+
+### Extensibility
+
+**A fixed set for phase one.** `004 E-06` ("quick reply references a retired
+custom field → insertion refused naming the field; the reply is flagged for its
+owner to fix") cannot be built against custom fields that do not exist, and
+designing an extensible vocabulary now means guessing at a shape `010 FR-011`
+will decide later. `E-06` is tracked as blocked on custom fields —
+board card `quick-reply-custom-fields`.
+
+### What this obliges the build to do
+
+1. **A refusal names WHICH placeholder failed and why**, never only that one
+   did. An agent editing a template has to know which token is wrong.
+2. **The vocabulary lives in ONE place and is exported**, so the editor's
+   autocomplete and the resolver read the same list. Two copies drift, and the
+   drift surfaces as a refusal nobody can explain. In this build the list is
+   `backend/src/config/placeholders.js` and the interface reads it from
+   `GET /quick-reply/placeholders` rather than keeping a copy.
+
+**What to reopen if the client disagrees:** the token names and the syntax are
+both cosmetic to the engine — `resolvePlaceholders` reads the same table — but
+any change invalidates quick replies already authored, so it is cheap now and
+expensive after go-live. That is the reason to put this in front of the client
+early rather than at review.

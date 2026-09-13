@@ -77,6 +77,8 @@ export interface CapabilityHints {
   /** Holds AGT/LEAD/MGR: 002 §9 forbids an administrator a customer-visible
    *  reply while permitting them an internal note. */
   customerReply: boolean;
+  /** Holds LEAD or above: 004 FR-007 keeps shared quick replies off an agent. */
+  sharedQuickReplies: boolean;
 }
 
 /** The starting point, and what a failed lookup falls back to: show nothing. */
@@ -84,7 +86,8 @@ export const NO_CAPABILITIES: CapabilityHints = {
   administration: false,
   staffDirectory: false,
   ticketWrite: false,
-  customerReply: false
+  customerReply: false,
+  sharedQuickReplies: false
 };
 
 export interface MeResponse {
