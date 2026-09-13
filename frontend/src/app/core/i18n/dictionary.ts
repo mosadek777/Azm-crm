@@ -337,6 +337,16 @@ export const DICTIONARY: Translations = {
     ar: 'نصوص جاهزة تُدرَج في الرد. تُستبدل العناصر النائبة عند الإدراج، وتُختار اللغة حسب تفضيل العميل لا تفضيلك.',
     en: 'Saved wording you can drop into a reply. Placeholders are substituted on insertion, and the language is chosen by the customer’s preference rather than yours.'
   },
+  // Insertion follows FOCUS and lands at the CARET, so the helper says which
+  // box it is about to write into rather than leaving the author to find out.
+  'quickReply.placeholderInto': {
+    ar: 'سيُدرج عند مؤشر الكتابة في:',
+    en: 'Will be inserted at the cursor in:'
+  },
+  'quickReply.placeholderNoFocus': {
+    ar: 'اضغط داخل أحد النصين أولًا لتحديد مكان الإدراج.',
+    en: 'Click inside one of the bodies first, to say where it should go.'
+  },
   'quickReply.placeholderHelp': {
     ar: 'اضغط عنصرًا نائبًا لإضافته إلى آخر نص حرّرته. القائمة تأتي من الخادم، فهي نفسها التي يستخدمها الاستبدال.',
     en: 'Click a placeholder to add it to whichever body you last edited. The list comes from the server, so it is the same one the substitution uses.'

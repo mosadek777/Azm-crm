@@ -1407,6 +1407,36 @@
       ],
       "status": "not started",
       "description": "Spec 004 E-06: \"Quick reply references a retired custom field -> Insertion refused naming the field; the reply is flagged for its owner to fix.\"\n\nIt cannot be built. Custom fields do not exist, so there is nothing to retire and nothing to reference. The placeholder vocabulary is a fixed set of six tokens (decision 41), all of which resolve from fields present on every ticket, so the state E-06 describes is currently unreachable.\n\nBLOCKED ON: custom fields, which belong to 010 FR-011 (administrator configuration). Designing an extensible vocabulary now would mean guessing at a shape that requirement will decide later, and the guess would be baked into every template authored in the meantime.\n\nWHAT ALREADY EXISTS and carries over: the refusal machinery. resolvePlaceholders is all-or-nothing, never returns a partly-substituted body, and names which token failed and why. An unknown token is refused at AUTHORING time as well, with each bad token named. When custom fields arrive, E-06 is the \"retired\" case joining the \"unknown\" one already handled."
+    },
+    {
+      "key": "reminder-channels-email-push",
+      "name": "Reminders and notifications are in-app only — email and push need spec 003",
+      "tags": [
+        "backend",
+        "blocked"
+      ],
+      "status": "not started",
+      "description": "Spec 004 FR-013 requires notifications \"on the channels the user has enabled\", and names in-app, email and push. Only IN-APP is reachable.\n\nBLOCKED ON: spec 003 (communication channels), which is out of scope. There is no email transport and no push registration in this system — no provider, no template delivery, no token store. FR-013 also depends on 004 [CLARIFY-4], \"may push notifications reach agents outside their working hours\", which is an employment question as much as a technical one and is unanswered.\n\nWHAT IS BUILT INSTEAD, deliberately and visibly: reminders appear in-app only, and the interface SAYS SO. An agent who assumes an email is coming and does not get one is worse off than one who knows to look. The line is on screen rather than in a release note.\n\nWHAT CARRIES OVER when 003 lands: the reminder evaluation and its content are channel-agnostic. Adding a channel is a delivery adapter plus the per-user channel preference FR-013 describes, not a rewrite."
+    },
+    {
+      "key": "reminder-sla-thresholds",
+      "name": "The SLA half of FR-005 cannot be built — there are no thresholds to notify ahead of",
+      "tags": [
+        "backend",
+        "blocked"
+      ],
+      "status": "not started",
+      "description": "Spec 004 FR-005: \"The system MUST notify the agent ahead of a task due date AND ahead of each SLA threshold defined in spec 005 FR-006.\"\n\nTwo halves. The TASK half stands on its own and is buildable. The SLA half has nothing to read: 005 FR-006 defines the thresholds and 005 is blocked on [CLARIFY-1], the actual SLA numbers per priority and per customer tier. elapsedBusinessMinutes returns \"unavailable\" for the same reason.\n\nNOT FAKED. Inventing a threshold would mean inventing the numbers the client has not supplied, and a reminder fired against a made-up target is worse than no reminder: it trains an agent to act on a deadline nobody agreed.\n\nWHAT CARRIES OVER: the reminder surface is one list with a source field. An SLA-threshold reminder is another producer writing into it once 005 can say when a threshold is crossed."
+    },
+    {
+      "key": "reminder-scheduler",
+      "name": "Nothing runs when nobody is looking — reminders are evaluated on request",
+      "tags": [
+        "backend",
+        "blocked"
+      ],
+      "status": "not started",
+      "description": "This system has NO scheduler. No cron, no queue, no worker, no timer: index.js boots an Express app and nothing else, and package.json carries no scheduling dependency.\n\nSo \"notify ahead of a task due date\" (004 FR-005) cannot fire while nobody has the product open. What is built instead is honest about that: reminders are EVALUATED ON REQUEST — when an agent opens the workspace, the server computes which of their tasks are due or overdue and answers with them. An agent who is not logged in is not notified, and the interface does not imply otherwise.\n\nWHY NOT JUST ADD ONE. A scheduler is not a small dependency, and it is not this spec's to design: 005 section 11 already names a \"run scheduled automation (internal) | Scheduler entry | system; idempotent per ticket per occurrence\" — the scheduler belongs to the SLA and automation engine. Adding a second, different one here would pre-empt a design 005 owns and leave two things to reconcile later.\n\nWHAT CARRIES OVER: the evaluation is a pure function of (tasks, now). Whether it is called by a request or by a scheduled job is a caller question, so the engine landing means pointing it at the same function."
     }
   ],
   "retiredIds": []

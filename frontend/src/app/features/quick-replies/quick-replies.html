@@ -50,51 +50,82 @@
         </label>
       </div>
 
-      <!-- THE PLACEHOLDER HELPER. Rendered from the server's own list, so a
-           token added or removed there appears or disappears here with no
-           second edit — decision 41's "one place, exported". -->
+      <!-- BOTH BODIES. FR-006 requires an Arabic body and an English body; the
+           server refuses a save with one missing and the form asks for both.
+
+           THE FOCUSED BODY IS RINGED, so where a placeholder will land is
+           visible before it lands. `focusedField` is the one source for that
+           ring, for the disabled state of the buttons, and for the insertion
+           itself — they cannot disagree. -->
+      <div class="grid gap-4 sm:grid-cols-2">
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-medium text-surface-700">{{ 'quickReply.bodyAr' | translate: i18n.lang() }}</span>
+          <textarea #bodyArBox name="bodyAr" rows="4" dir="rtl" required
+            [ngModel]="bodyAr()" (ngModelChange)="bodyAr.set($event)"
+            (focus)="focusedField.set('ar')" (blur)="focusedField.set(null)"
+            [class]="focusedField() === 'ar'
+              ? 'w-full rounded-lg border-2 border-primary-500 px-3 py-2 text-sm text-start ring-2 ring-primary-500/25 focus:outline-none'
+              : 'w-full rounded-lg border border-surface-300 px-3 py-2 text-sm text-start focus:outline-none'"></textarea>
+        </label>
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-medium text-surface-700">{{ 'quickReply.bodyEn' | translate: i18n.lang() }}</span>
+          <textarea #bodyEnBox name="bodyEn" rows="4" dir="ltr" required
+            [ngModel]="bodyEn()" (ngModelChange)="bodyEn.set($event)"
+            (focus)="focusedField.set('en')" (blur)="focusedField.set(null)"
+            [class]="focusedField() === 'en'
+              ? 'w-full rounded-lg border-2 border-primary-500 px-3 py-2 text-sm text-start ring-2 ring-primary-500/25 focus:outline-none'
+              : 'w-full rounded-lg border border-surface-300 px-3 py-2 text-sm text-start focus:outline-none'"></textarea>
+        </label>
+      </div>
+
+      <!-- THE PLACEHOLDER HELPER, BENEATH the bodies rather than above them:
+           it acts on whichever is focused, so it belongs after them.
+
+           Rendered from the server's own list, so a token added or removed
+           there appears or disappears here with no second edit — decision 41's
+           "one place, exported". -->
       @if (placeholders().length) {
         <div class="rounded-lg border border-surface-200 bg-surface-50 p-3">
           <p class="m-0 mb-2 text-xs text-surface-600">
-            {{ 'quickReply.placeholderHelp' | translate: i18n.lang() }}
+            @if (focusedField(); as field) {
+              {{ 'quickReply.placeholderInto' | translate: i18n.lang() }}
+              <span class="font-medium text-primary-800">
+                {{ (field === 'ar' ? 'quickReply.bodyAr' : 'quickReply.bodyEn') | translate: i18n.lang() }}
+              </span>
+            } @else {
+              <!-- Never a guess about which box was meant. -->
+              {{ 'quickReply.placeholderNoFocus' | translate: i18n.lang() }}
+            }
           </p>
           <div class="flex flex-wrap gap-1.5">
             @for (p of placeholders(); track p.token) {
-              <button type="button"
-                class="rounded-md border border-surface-300 bg-surface-0 px-2 py-1 text-xs
-                       text-surface-700 hover:bg-primary-50 hover:border-primary-300
+              <!-- `mousedown.preventDefault` keeps focus — and therefore the
+                   CARET — in the textarea while the button is clicked. Without
+                   it the field blurs first, the caret is lost, and there is
+                   nowhere to insert. -->
+              <button type="button" [disabled]="!focusedField()"
+                (mousedown)="$event.preventDefault()"
+                class="flex flex-col items-start gap-0.5 rounded-md border border-surface-300
+                       bg-surface-0 px-2 py-1 text-start
+                       hover:bg-primary-50 hover:border-primary-300
+                       disabled:opacity-40 disabled:hover:bg-surface-0 disabled:hover:border-surface-300
                        motion-safe:transition-colors
                        focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                 [attr.title]="label(p.label)"
                 (click)="insertToken(p.token)">
-                <!-- A token is a direction-neutral identifier. -->
-                <span class="ltr">{{ tokenText(p.token) }}</span>
+                <!-- WHAT IT MEANS, in the reader's language, is the label —
+                     an Arabic-reading author cannot tell what
+                     {{ '{{customer.name}}' }} resolves to from the token alone.
+                     The TOKEN is what gets inserted, so it stays beneath, in
+                     English and pinned LTR: it is an identifier, not content
+                     (012 §3). -->
+                <span class="text-xs font-medium text-surface-800">{{ label(p.label) }}</span>
+                <span class="ltr text-[0.6875rem] text-surface-500">{{ tokenText(p.token) }}</span>
               </button>
             }
           </div>
         </div>
       }
-
-      <!-- BOTH BODIES. FR-006 requires an Arabic body and an English body; the
-           server refuses a save with one missing and the form asks for both. -->
-      <div class="grid gap-4 sm:grid-cols-2">
-        <label class="flex flex-col gap-1.5">
-          <span class="text-sm font-medium text-surface-700">{{ 'quickReply.bodyAr' | translate: i18n.lang() }}</span>
-          <textarea name="bodyAr" rows="4" dir="rtl" required
-            [ngModel]="bodyAr()" (ngModelChange)="bodyAr.set($event)"
-            (focus)="lastFocused.set('ar')"
-            class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm text-start
-                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25"></textarea>
-        </label>
-        <label class="flex flex-col gap-1.5">
-          <span class="text-sm font-medium text-surface-700">{{ 'quickReply.bodyEn' | translate: i18n.lang() }}</span>
-          <textarea name="bodyEn" rows="4" dir="ltr" required
-            [ngModel]="bodyEn()" (ngModelChange)="bodyEn.set($event)"
-            (focus)="lastFocused.set('en')"
-            class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm text-start
-                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25"></textarea>
-        </label>
-      </div>
 
       <!-- SCOPE. `global` is offered only where the server would accept it —
            FR-007 keeps shared wording with a lead or above. The server refuses

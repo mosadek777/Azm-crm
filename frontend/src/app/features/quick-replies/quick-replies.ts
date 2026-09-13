@@ -29,7 +29,7 @@
 // its refusal is rendered as sent rather than pre-empted, so there is one place
 // the rule lives.
 
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ApiService } from '../../core/services/api.service';
@@ -67,8 +67,22 @@ export class QuickReplies {
   /** FR-006's refusal names WHICH tokens failed; these are them. */
   protected readonly badTokens = signal<string[]>([]);
 
-  /** Which body field a placeholder click inserts into. */
-  protected readonly lastFocused = signal<'ar' | 'en'>('ar');
+  // ── WHERE A PLACEHOLDER LANDS ───────────────────────────────────────────
+  //
+  // At the CARET, in the field that currently has focus. The first version
+  // appended to "whichever body was last edited", which is a rule an author has
+  // to be told and then remember — and it silently put the token in the wrong
+  // language's box if they had glanced at the other one.
+  //
+  // `null` means neither body is focused, and then the buttons are DISABLED
+  // rather than guessing. Guessing is how a token ends up in the Arabic body
+  // when the author was writing English.
+  protected readonly focusedField = signal<'ar' | 'en' | null>(null);
+
+  // The elements themselves, because a caret position is a property of the
+  // DOM node and there is no signal for it.
+  private readonly bodyArRef = viewChild<ElementRef<HTMLTextAreaElement>>('bodyArBox');
+  private readonly bodyEnRef = viewChild<ElementRef<HTMLTextAreaElement>>('bodyEnBox');
 
   /** A rendering hint — FR-007's rule is the server's and it refuses anyway. */
   protected readonly canShare = computed(() => this.auth.show().sharedQuickReplies);
@@ -105,11 +119,57 @@ export class QuickReplies {
    */
   protected tokenText(token: string): string { return `{{` + token + `}}`; }
 
-  /** Insert a token at the end of whichever body was last edited. */
+  /**
+   * Insert a token AT THE CARET of the focused body.
+   *
+   * Does nothing when neither body is focused — the buttons are disabled in
+   * that state, and this is the second guard rather than the only one.
+   *
+   * The caret is put back after the token, so an author can keep typing where
+   * they were. That has to happen after Angular has written the new value into
+   * the element — see the note on afterNextRender below.
+   */
   protected insertToken(token: string): void {
+    const which = this.focusedField();
+    if (!which) return;
+
+    const el = (which === 'ar' ? this.bodyArRef() : this.bodyEnRef())?.nativeElement;
+    if (!el) return;
+
     const wrapped = `{{${token}}}`;
-    if (this.lastFocused() === 'en') this.bodyEn.update(v => (v ? v + ' ' : '') + wrapped);
-    else this.bodyAr.update(v => (v ? v + ' ' : '') + wrapped);
+    const value = el.value ?? '';
+    const start = el.selectionStart ?? value.length;
+    const end = el.selectionEnd ?? start;
+
+    // Replaces a selection if there is one, which is what every other editor
+    // does and therefore what an author expects.
+    const next = value.slice(0, start) + wrapped + value.slice(end);
+    (which === 'ar' ? this.bodyAr : this.bodyEn).set(next);
+
+    const caret = start + wrapped.length;
+
+    // ⚠ A MACROTASK, and the two tidier options were both tried and MEASURED.
+    //
+    // Setting `el.value` moves the caret to the end, and ngModel writes the new
+    // value during change detection — so the selection has to be restored after
+    // that write, not before it.
+    //
+    //   queueMicrotask   ran before the write. Caret ended at 36, not 23.
+    //   afterNextRender  ran before it too, in this component. Same result.
+    //   setTimeout(0)    runs after the change-detection flush. Caret 23.
+    //
+    // Measured in the browser rather than reasoned about, because the ordering
+    // between Angular's render hooks and the value accessor's write is exactly
+    // the kind of thing that looks obvious and is not. If this ever regresses,
+    // the check that catches it asserts selectionStart after an insert.
+    setTimeout(() => {
+      el.focus();
+      el.setSelectionRange(caret, caret);
+      // Focus was never really lost — the buttons preventDefault on mousedown
+      // precisely so the caret survives the click — but a programmatic focus
+      // here keeps the signal honest if anything else stole it.
+      this.focusedField.set(which);
+    }, 0);
   }
 
   protected readonly canSubmit = computed(() =>
