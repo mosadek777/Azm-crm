@@ -93,6 +93,14 @@
                           <path d="M3 13h4.2a1.8 1.8 0 011.8 1.8 1.8 1.8 0 001.8 1.8h2.4a1.8 1.8 0 001.8-1.8A1.8 1.8 0 0116.8 13H21" />
                         </svg>
                       }
+                      @case ('notifications') {
+                        <!-- A bell. The one icon nobody has to learn. -->
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M18 8.6a6 6 0 10-12 0c0 5.2-2.2 6.7-2.2 6.7h16.4S18 13.8 18 8.6z" />
+                          <path d="M13.7 19.2a2 2 0 01-3.4 0" />
+                        </svg>
+                      }
                       @case ('teamQueue') {
                         <!-- Stacked layers with people beneath: the shared pile
                              of work and who is carrying it. Deliberately not an

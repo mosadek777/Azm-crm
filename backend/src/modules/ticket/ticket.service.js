@@ -25,6 +25,8 @@ import { nextTicketReference } from '../../DB/models/counter.model.js'
 import { recordAudit, redact } from '../../utils/audit.js'
 import { scopeFilter, rolesForTarget, assignmentCovers } from '../../utils/scope.js'
 import { elapsedBusinessMinutes } from '../../utils/elapsed-time.js'
+import { validateMentions } from './mention.service.js'
+import { notify } from '../notification/notification.service.js'
 import { STATUSES, STATUS_KEYS, PRIORITIES, canTransition, reachableFrom, isTerminal } from '../../utils/ticket-status.js'
 
 const bad = (res, ar, en, fields) =>
@@ -462,6 +464,25 @@ export const assignTicket = async (req, res, next) => {
         // here — moving `new` to `assigned` is a separate, explicit call
         // through the transition graph (FR-008).
         await ticket.save({ session })
+
+        // 004 FR-013's `assigned`, in the same transaction: a notification
+        // about an assignment that rolled back would send somebody to a ticket
+        // they do not hold.
+        //
+        // 002 FR-009 also says "reassignment MUST notify BOTH parties", and the
+        // previous holder is told for exactly that reason — work leaving your
+        // desk is news, and finding out by noticing it gone is worse.
+        // `notify` drops the caller from its own recipient list, so assigning
+        // to yourself or releasing your own ticket notifies nobody.
+        await notify({
+          userIds: [target?._id, previous].filter(Boolean),
+          kind: 'assigned',
+          ticketId: ticket._id,
+          actorId: req.user._id,
+          actorRef: req.user._id.toString(),
+          req,
+          session
+        })
       })
     } finally {
       await session.endSession()
@@ -623,6 +644,28 @@ export const addMessage = async (req, res, next) => {
       }
     }
 
+    // --- 004 FR-009 — mentions ---------------------------------------------
+    //
+    // Only on an INTERNAL note. FR-009 says "mention a colleague in an internal
+    // note", and a mention on a customer-visible reply would put a colleague's
+    // name in front of the customer — the same class of disclosure decision 29
+    // already closed for the assigned agent.
+    const requestedMentions = Array.isArray(req.body?.mentions) ? req.body.mentions : []
+    if (requestedMentions.length && visibility !== 'internal') {
+      return bad(res, 'لا يمكن ذكر زميل في رد مرئي للعميل — استخدم ملاحظة داخلية',
+        'A colleague can only be mentioned in an internal note, never in a customer-visible reply',
+        ['mentions'])
+    }
+
+    // Refused WHOLE, before anything is written — E-07 is "refused AT SAVE TIME
+    // naming them", not "saved and partially notified".
+    const checked = await validateMentions({ ticket, mentions: requestedMentions })
+    if (!checked.ok) {
+      return res.status(checked.status).json({
+        message: checked.message, fields: checked.fields, rejected: checked.rejected
+      })
+    }
+
     const messageId = new mongoose.Types.ObjectId()
     const msg = {
       _id: messageId,
@@ -631,6 +674,7 @@ export const addMessage = async (req, res, next) => {
       authorKind: 'user',
       authorUserId: req.user._id,
       body: String(body),
+      mentions: checked.userIds,
       channel: null
     }
 
@@ -651,6 +695,46 @@ export const addMessage = async (req, res, next) => {
           session
         })
         await Message.create([msg], { session })
+
+        if (checked.userIds.length) {
+          // §10: "Mention made | actor, timestamp, ticket, mentioned user,
+          // access granted". `accessGranted: false` is recorded EXPLICITLY
+          // rather than omitted — decision 39 declined FR-009's granting
+          // clause, and an auditor reading this must see that no access was
+          // conferred, not have to infer it from a missing field.
+          await recordAudit({
+            actorId: req.user._id,
+            actorRef: req.user._id.toString(),
+            action: 'ticket.mentioned',
+            entityType: 'Ticket',
+            entityId: ticket._id,
+            after: {
+              messageId,
+              mentionedUserIds: checked.userIds,
+              accessGranted: false,
+              rule: 'scoped_colleagues_only',
+              decision: 39
+            },
+            req,
+            session
+          })
+
+          // In the SAME transaction as the note: a notification about a note
+          // that was rolled back would point at nothing.
+          await notify({
+            userIds: checked.userIds,
+            kind: 'mentioned',
+            ticketId: ticket._id,
+            actorId: req.user._id,
+            actorRef: req.user._id.toString(),
+            req,
+            session
+          })
+        }
+
+        // FR-013's `customer_replied` is NOT produced here. This route is a
+        // message written by STAFF; the customer's own reply arrives through
+        // the portal, and that is where the assignee is told.
       })
     } finally {
       await session.endSession()

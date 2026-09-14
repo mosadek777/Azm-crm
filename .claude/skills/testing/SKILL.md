@@ -109,6 +109,35 @@ Related: a guard that cries wolf is a guard somebody disables. The same secrets
 guard fired on `seed-demo.js` *printing* the advice `DEMO_PASSWORD=$(openssl
 rand -base64 18)`. Tighten to a literal value rather than adding an exception.
 
+## A suite that hits a stale server tests the code you had an hour ago
+
+`npm test` starts its own server per suite. If a server you started by hand is
+**already listening on that port**, the runner's one cannot bind and every suite
+silently talks to yours — the one running whatever the source said when you
+launched it.
+
+It cost forty minutes here. A mention check kept failing on a rule that had been
+fixed twice; the file on disk was right, the assignments in the database were
+right, and the response was still wrong, because the server answering had been
+started before the fix. The fix was `Stop-Process`, not another edit.
+
+**Before a suite run, kill any hand-started server.** If a check disagrees with
+code you can read on disk, suspect the process before you suspect the logic.
+
+## Mongoose does not cast what it does not type
+
+`find()` casts query values against the schema. Two things do not:
+
+- **`aggregate()`** — an uncast `$match` compares strings against ObjectIds and
+  matches nothing. Pass `Model.find(filter).cast(Model)`.
+- **`Schema.Types.Mixed` paths** — `AuditEntry.entityId` is Mixed, so
+  `countDocuments({ entityId: someStringId })` finds zero while the entry sits
+  there. Compare as strings in JS instead.
+
+Both fail the same way: **a query that matches nothing looks like a feature that
+did nothing**. In a scope filter that is the safe direction and still wrong; in
+a test assertion it is a false failure that sends you editing working code.
+
 ## Non-negotiables this repo tests for
 
 - **Scope**: out-of-scope is **404, never 403**, and byte-identical to a

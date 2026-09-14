@@ -1,0 +1,105 @@
+<!-- The notification centre. See notifications.ts for which of FR-013's eight
+     kinds can be produced today and which have no producer at all. -->
+<div class="flex flex-col gap-6">
+
+  <div class="flex flex-wrap items-center gap-3">
+    <h1 class="m-0 text-2xl font-semibold text-surface-900">
+      {{ 'notifications.title' | translate: i18n.lang() }}
+    </h1>
+    @if (unread() > 0) {
+      <span class="ltr rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-semibold text-primary-900">
+        {{ unread() }}
+      </span>
+    }
+    @if (hasUnread()) {
+      <button type="button" [disabled]="busy()"
+        class="ms-auto rounded-lg border border-surface-200 bg-surface-0 px-3 py-1.5 text-sm
+               font-medium text-surface-700 hover:bg-surface-50 disabled:opacity-50
+               motion-safe:transition-colors
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+        (click)="markAllRead()">
+        {{ 'notifications.markAllRead' | translate: i18n.lang() }}
+      </button>
+    }
+  </div>
+
+  <!-- IN-APP ONLY, said on the screen. An agent who assumes an email is coming
+       and does not get one is worse off than one who knows to look. -->
+  <p class="m-0 text-xs text-surface-500">
+    {{ 'notifications.inAppOnly' | translate: i18n.lang() }}
+  </p>
+
+  <section class="rounded-xl border border-surface-200 bg-surface-0">
+    @if (loading()) {
+      <p class="m-0 p-4 text-sm text-surface-500">{{ 'common.loading' | translate: i18n.lang() }}</p>
+    } @else if (groups().length === 0) {
+      <p class="m-0 p-6 text-sm text-surface-600">
+        {{ 'notifications.empty' | translate: i18n.lang() }}
+      </p>
+    } @else {
+      <ul class="m-0 list-none p-0">
+        @for (g of groups(); track g.key + g.newestAt) {
+          <li class="border-b border-surface-100 last:border-0"
+              [class.bg-primary-50]="g.unread">
+            <button type="button"
+              class="flex w-full flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 text-start
+                     hover:bg-surface-50 motion-safe:transition-colors
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+              (click)="open(g)">
+
+              <!-- Never colour alone: unread carries a word as well as a tint. -->
+              <span class="w-20 shrink-0 text-xs font-semibold"
+                    [class.text-primary-700]="g.unread"
+                    [class.text-surface-400]="!g.unread">
+                {{ (g.unread ? 'notifications.unread' : 'notifications.read') | translate: i18n.lang() }}
+              </span>
+
+              <span class="min-w-0 flex-1 text-sm text-surface-900">
+                {{ ('notifications.kind.' + g.kind) | translate: i18n.lang() }}
+                @if (g.actor) {
+                  <!-- A name, never a database id, and resolved through the one
+                       actor resolver so a deactivated colleague still renders. -->
+                  <span class="text-surface-600"> — {{ g.actor.displayName }}</span>
+                }
+                @if (g.ticketSubject) {
+                  <span class="block text-xs text-surface-600">{{ g.ticketSubject }}</span>
+                }
+              </span>
+
+              <!-- FR-013's grouping made visible: the count is shown rather than
+                   the other events being silently dropped. -->
+              @if (g.count > 1) {
+                <span class="ltr shrink-0 rounded-full bg-surface-100 px-2 py-0.5 text-xs
+                             font-semibold tabular-nums text-surface-700">
+                  ×{{ g.count }}
+                </span>
+              }
+
+              @if (g.ticketReference) {
+                <span class="ltr shrink-0 font-mono text-xs text-primary-700">{{ g.ticketReference }}</span>
+              } @else {
+                <!-- The ticket is no longer in this caller's scope. The
+                     notification stays; the record is not disclosed. -->
+                <span class="shrink-0 text-xs text-surface-400">
+                  {{ 'notifications.unreachable' | translate: i18n.lang() }}
+                </span>
+              }
+
+              <!-- A timestamp, not a duration — constitution III. -->
+              <span class="ltr shrink-0 text-xs text-surface-500">{{ g.newestAt | date: 'short' }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+
+      @if (windowMinutes() > 0) {
+        <p class="m-0 rounded-b-xl border-t border-surface-100 bg-surface-50 px-4 py-3
+                  text-xs text-surface-600">
+          {{ 'notifications.grouping' | translate: i18n.lang() }}
+          <span class="ltr">{{ windowMinutes() }}</span>
+          {{ 'notifications.minutes' | translate: i18n.lang() }}
+        </p>
+      }
+    }
+  </section>
+</div>

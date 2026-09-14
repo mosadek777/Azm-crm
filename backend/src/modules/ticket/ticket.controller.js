@@ -17,6 +17,7 @@ import { Router } from 'express'
 import draftcontroller from '../draft/draft.controller.js'
 import { ticketTaskRouter } from '../task/task.controller.js'
 import { teamQueue } from './team-queue.service.js'
+import * as mentions from './mention.service.js'
 
 const router = Router()
 
@@ -249,5 +250,29 @@ router.patch("/:id/status", authenticate, authorize(...WRITERS), ticketservice.c
 // first naming AGT/LEAD/MGR and locking administrators out of internal notes,
 // then using WRITERS and letting them speak to customers.
 router.post("/:id/message", authenticate, authorize(...WRITERS), ticketservice.addMessage)
+
+/**
+ * spec 004 FR-009 / AD-09 — who may be named in an internal note here.
+ *
+ * STAFF, not WRITERS: an auditor reads the internal thread (section 9) and the
+ * list is a read. It writes nothing.
+ *
+ * Decision 39: only colleagues who ALREADY hold scope on this ticket, because
+ * 010 FR-002 forbids per-user permission overrides and a record-level grant is
+ * one. The endpoint exists at all because 010 section 9 puts GET /user at LEAD
+ * and above, so an agent has no other way to name a colleague.
+ *
+ * @swagger
+ * /ticket/{id}/mentionable:
+ *   get:
+ *     tags: [Tickets]
+ *     summary: Colleagues who can be mentioned on this ticket (004 FR-009, decision 39)
+ *     responses:
+ *       200:
+ *         description: Name and id only — never role, scope or email.
+ *       404:
+ *         description: Out of scope or absent, byte-identical (constitution IV).
+ */
+router.get("/:id/mentionable", authenticate, authorize(...STAFF), mentions.listMentionable)
 
 export default router

@@ -1796,3 +1796,68 @@ a list that looks bigger than a team.
 **`§10`'s bulk assignment is not built.** One row at a time. Board card
 `team-queue-bulk-assign`; `002 FR-011` (SHOULD) already specifies the per-ticket
 outcome reporting it would need.
+
+---
+
+## 23. Spec 004 — what is closed, and what stays blocked
+
+**No decision is requested.** The state of spec `004` now that every buildable
+story is built, so "the agent dashboard is done" is not read as more than it is.
+
+### Built
+
+| Story | Requirement | Note |
+|---|---|---|
+| `AD-01` | `FR-001` | Personal queue, on `E-05`'s stated fallback order. |
+| `AD-02` | `FR-002` | Counters, each openable as the list it counts. Overdue renders `unavailable`, never 0. |
+| `AD-03` | `FR-003` | Customer context panel. |
+| `AD-04` | `FR-004` | Tasks, with `E-09`'s past due date accepted. |
+| `AD-05` | `FR-005` (task half) | Reminders, evaluated on request and saying so. |
+| `AD-06` | `FR-006`, `FR-007` | Quick replies on decision 41's vocabulary. |
+| `AD-09` | `FR-009` | Mentions — **notify only**, decision 39. |
+| `AD-13` | `FR-013` (in-app) | The notification centre, grouped per the window. |
+| `AD-15` | `FR-015` | Draft preservation, decision 42's seven days. |
+| `AD-16` | `FR-016` | Team queue — three views answered, at-risk refuses. |
+| `AD-18` | `FR-019` | Countdown, rendered as `unavailable` with its reason. |
+
+### Blocked, with what blocks each
+
+| Story | Blocked on | Board card |
+|---|---|---|
+| `AD-05` SLA half of `FR-005` | `005 FR-006` thresholds, blocked on `005 [CLARIFY-1]` | `reminder-sla-thresholds` |
+| `AD-13` email and push | Spec `003` does not exist — no transport, no provider, no token store. Also `004 [CLARIFY-4]` (may push reach agents outside working hours) | `reminder-channels-email-push` |
+| anything timed | **No scheduler.** `005 §11` already specifies one; a second inside `004` would pre-empt it | `reminder-scheduler` |
+| `AD-11`, `AD-14` presence (`FR-011`, `FR-014`) | `004 [CLARIFY-3]` — is live chat in phase one? Presence has no consumer without it | `presence-and-routing` |
+| `AD-16` at-risk view | The SLA clock, `005 [CLARIFY-2]` | covered by `reminder-sla-thresholds` |
+| `AD-16` bulk assignment (`§10`) | Nothing — unscheduled, not gated | `team-queue-bulk-assign` |
+| `AD-10` internal thread as its own view (`FR-010`) | Nothing blocking; internal notes exist on the thread today and a separate discussion view was not built | `internal-thread-view` |
+| `AD-12` shortcuts / palette (`FR-012`, MAY) | Nothing — a MAY, not attempted | `keyboard-shortcuts` |
+| `AD-17` take-next (`FR-017`, COULD) | `004 [CLARIFY-1]` — "urgency order" is undefined, and "take the next one" needs an order to take the next FROM | `take-next-ticket` |
+| `E-06` retired custom field in a quick reply | Custom fields do not exist (`010 FR-011`) | `quick-reply-custom-fields` |
+| `E-08` cross-scope mention | **Declined with decision 39's granting clause** — there is no grant, so there is nothing to permit. Reopens into a record-level grant if the client asks | decision 39 |
+
+### `FR-013`'s eight kinds, and which have a producer
+
+`assigned`, `mentioned` and `customer_replied` are produced. `escalated`
+(no escalation exists), `sla_threshold` (blocked), `delivery_failed` (needs a
+channel that can fail) and `chat_offered` (needs chat) have no producer at all.
+`task_due` is deliberately **not** written as a row: with no scheduler, a row
+written when somebody opens the workspace would carry a timestamp claiming a
+delivery that did not happen — `GET /task/mine` evaluates it on the request
+instead. All eight are in the enum and all eight are translated, so an
+unreachable kind is visibly unreachable rather than absent.
+
+### Grouping is applied on READ, not on write
+
+`FR-013`: "Notifications for one ticket within a configured window MUST be
+grouped, except escalations, which MUST NOT be grouped or suppressed."
+
+Grouped on the way out. Two reasons, and the first is the one that matters:
+`§10` requires an audit entry per notification GENERATED, so suppressing the
+second at write time would leave the audit trail and the centre disagreeing
+about what happened. Second, "grouped" is a presentation of several events, not
+the loss of all but one — the group carries its count and both timestamps.
+
+The window (`NOTIFICATION_GROUP_WINDOW_MINUTES`, default 15) is therefore safe
+to change after go-live: it changes how existing rows are presented, never
+which rows exist.

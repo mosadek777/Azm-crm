@@ -3,7 +3,7 @@
 
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { AgentLoad, Branch, ContactPoint, Customer, Department, HistoryEntry, Placeholder, QuickReply, Sla, Task, TeamQueueView, Ticket, TicketMessage, TicketMeta } from '../models/domain.model';
+import { AgentLoad, Branch, NotificationGroup, ContactPoint, Customer, Department, HistoryEntry, Placeholder, QuickReply, Sla, Task, TeamQueueView, Ticket, TicketMessage, TicketMeta } from '../models/domain.model';
 import { CreateUserRequest, LocalizedText, StaffUser } from '../models/user.model';
 
 const API = 'http://localhost:3000';
@@ -264,6 +264,42 @@ export class ApiService {
       unavailable: { reason: string; blockedBy: string } | null;
       scope: { unrestricted: boolean; branches: number | null; departments: number | null; teamDimension: boolean };
     }>(`${API}/ticket/team-queue`, { params });
+  }
+
+  // --- mentions and notifications (spec 004 FR-009, FR-013; AD-09, AD-13) ---
+  //
+  // Decision 39: only colleagues who ALREADY hold scope on the ticket may be
+  // mentioned, because 010 FR-002 forbids per-user permission overrides and a
+  // record-level grant is one. This endpoint is the list; the server refuses
+  // anything outside it regardless of what the picker offered.
+  mentionable(ticketId: string) {
+    return this.http.get<{
+      colleagues: { userId: string; displayName: string }[];
+      rule: string; decision: number;
+    }>(`${API}/ticket/${ticketId}/mentionable`);
+  }
+
+  /** Groups, per FR-013's grouping clause. `channels` is always ['in_app']. */
+  listNotifications() {
+    return this.http.get<{
+      notifications: NotificationGroup[];
+      unread: number;
+      channels: string[];
+      groupWindowMinutes: number;
+    }>(`${API}/notification`);
+  }
+
+  unreadNotifications() {
+    return this.http.get<{ unread: number }>(`${API}/notification/unread`);
+  }
+
+  /** A GROUP is marked, not a row — see the endpoint's own note. */
+  markNotificationsRead(ids: string[]) {
+    return this.http.patch<{ changed: number; unread: number }>(`${API}/notification/read`, { ids });
+  }
+
+  markAllNotificationsRead() {
+    return this.http.patch<{ changed: number; unread: number }>(`${API}/notification/read-all`, {});
   }
 }
 

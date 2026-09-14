@@ -294,6 +294,65 @@
               </button>
             </div>
           }
+
+          <!-- ── MENTIONS (004 FR-009, AD-09) ────────────────────────────────
+               INTERNAL NOTES ONLY. FR-009 says "mention a colleague in an
+               internal note", and a colleague's name on a customer-visible
+               reply is the disclosure decision 29 already closed for the
+               assigned agent. The server refuses it either way.
+
+               DECISION 39 is stated on the screen: only colleagues who already
+               hold scope on this ticket, and the mention notifies rather than
+               grants. An agent who cannot find someone in the list needs the
+               reason, or they read it as the picker being broken. -->
+          @if (mentionsAllowed()) {
+            <div class="flex flex-col gap-2 rounded-lg border border-surface-200 bg-surface-50 p-3">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs font-semibold text-surface-700">
+                  {{ 'mention.heading' | translate: i18n.lang() }}
+                </span>
+                @if (mentionable().length === 0) {
+                  <span class="text-xs text-surface-500">
+                    {{ 'mention.none' | translate: i18n.lang() }}
+                  </span>
+                } @else {
+                  <select name="mentionPicker" [ngModel]="''" (ngModelChange)="addMention($event)"
+                    class="rounded-lg border border-surface-300 bg-surface-0 px-2.5 py-1.5 text-xs
+                           focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200">
+                    <option value="">{{ 'mention.add' | translate: i18n.lang() }}</option>
+                    @for (c of unmentioned(); track c.userId) {
+                      <option [value]="c.userId">{{ c.displayName }}</option>
+                    }
+                  </select>
+                }
+              </div>
+
+              @if (mentionedNames().length) {
+                <ul class="m-0 flex list-none flex-wrap gap-2 p-0">
+                  @for (c of mentionedNames(); track c.userId) {
+                    <li class="flex items-center gap-1.5 rounded-full bg-primary-100 px-2.5 py-1
+                               text-xs font-medium text-primary-900">
+                      <span>{{ c.displayName }}</span>
+                      <button type="button"
+                        class="rounded-full px-1 text-primary-800 hover:bg-primary-200
+                               motion-safe:transition-colors
+                               focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                        [attr.aria-label]="('mention.remove' | translate: i18n.lang()) + ' ' + c.displayName"
+                        (click)="removeMention(c.userId)">×</button>
+                    </li>
+                  }
+                </ul>
+              }
+
+              <p class="m-0 text-xs text-surface-500">
+                {{ 'mention.rule' | translate: i18n.lang() }}
+              </p>
+            </div>
+          } @else if (visibility() === 'customer') {
+            <p class="m-0 text-xs text-surface-500">
+              {{ 'mention.internalOnly' | translate: i18n.lang() }}
+            </p>
+          }
           <!-- QUICK REPLIES (004 FR-006, AD-06). The SERVER substitutes: it
                chooses the body by the CUSTOMER's preferred language and refuses
                rather than inserting an unresolved placeholder. Nothing is

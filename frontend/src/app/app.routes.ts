@@ -72,6 +72,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/quick-replies/quick-replies').then(m => m.QuickReplies)
       },
       {
+        // 004 FR-013 / AD-13. Every staff role, an auditor included: section 9
+        // gives AUD their own notification preferences, and section 11 scopes
+        // the centre to 'user = caller only' — there is nobody else's to see.
+        path: 'notifications',
+        loadComponent: () => import('./features/notifications/notifications').then(m => m.Notifications)
+      },
+      {
         path: 'workspace',
         loadComponent: () => import('./features/workspace/workspace').then(m => m.Workspace)
       },

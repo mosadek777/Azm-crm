@@ -26,6 +26,19 @@ const messageSchema = new Schema({
   body: { type: String, required: true, immutable: true },
   // §3: "a channel where applicable". Null today — channels are spec 003.
   channel: { type: String, default: null, immutable: true },
+  // spec 004 FR-009 — who was named in this note.
+  //
+  // IMMUTABLE like everything else here: a mention notified somebody, and
+  // editing the list afterwards would leave a notification pointing at a note
+  // that no longer names them. The ids are VALIDATED at save time against the
+  // ticket scope (decision 39) and never re-checked on read — what is stored is
+  // what was permitted then, which is the same reasoning as the audit trail.
+  //
+  // Only meaningful on an INTERNAL note. FR-009 says "mention a colleague in an
+  // internal note", and the service refuses one on a customer-visible reply:
+  // a customer must never see a colleague being pulled in.
+  mentions: { type: [{ type: Schema.Types.ObjectId, ref: "User" }], default: [], immutable: true },
+
   // §3: "an immutable timestamp". Server-assigned, never from a request.
   sentAt: { type: Date, default: Date.now, required: true, immutable: true }
 }, { timestamps: true })

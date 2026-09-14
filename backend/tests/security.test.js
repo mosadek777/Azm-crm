@@ -152,7 +152,12 @@ const bgMe = await call('GET', '/auth/me', { token: bg.body.token })
 check('the break-glass administrator is told to show administration', bgMe.body?.show?.administration, true)
 check('and it carries no scope detail at all — nothing to authorise with',
   JSON.stringify(Object.keys(bgMe.body?.show ?? {}).sort()),
-  '["administration","customerReply","sharedQuickReplies","staffDirectory","ticketWrite"]')
+  // `teamAssign` joined the set with 004 FR-016 (decisions-pending §21). This
+  // check failing on a NEW flag is the check working: every addition has to be
+  // looked at, because the property below — that each one is a bare boolean
+  // with no scope in it — is what stops a rendering hint becoming a
+  // client-side authorisation decision.
+  '["administration","customerReply","sharedQuickReplies","staffDirectory","teamAssign","ticketWrite"]')
 // THE PROPERTY THAT MATTERS as flags are added: every one is a bare boolean.
 // A branch id, a department id or a record id here would be the beginning of a
 // client-side scope decision; a boolean cannot be one.

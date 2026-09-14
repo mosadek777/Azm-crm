@@ -408,6 +408,59 @@ export const DICTIONARY: Translations = {
     ar: 'يمكن اختيار موعد مضى — ستظهر المهمة متأخرة فورًا.',
     en: 'A past date is fine — the task simply shows as overdue straight away.'
   },
+  // --- mentions and notifications (spec 004 FR-009, FR-013; AD-09, AD-13) --
+  //
+  // ⚠ `notifications.inAppOnly` is the same honesty rule as the reminders, with
+  // one clause fewer: these ARE stored when the thing happens, so the count is
+  // live. What is missing is the other two channels, which need spec 003.
+  //
+  // `mention.rule` states decision 39 on the screen. FR-009 says a mention
+  // grants access; 010 FR-002 forbids per-user permission overrides; the
+  // decision resolves it by restricting who may be named. An agent who cannot
+  // find a colleague in the list needs to know why, or they will read it as
+  // the picker being broken.
+  'nav.notifications': { ar: 'الإشعارات', en: 'Notifications' },
+  'notifications.title': { ar: 'الإشعارات', en: 'Notifications' },
+  'notifications.unread': { ar: 'غير مقروء', en: 'Unread' },
+  'notifications.read': { ar: 'مقروء', en: 'Read' },
+  'notifications.markAllRead': { ar: 'تعليم الكل كمقروء', en: 'Mark all as read' },
+  'notifications.empty': { ar: 'لا توجد إشعارات.', en: 'No notifications.' },
+  'notifications.inAppOnly': {
+    ar: 'تظهر الإشعارات داخل النظام فقط — لا تُرسَل بالبريد ولا كإشعار مُنبثق.',
+    en: 'Notifications appear in the product only — they are not emailed or pushed.'
+  },
+  'notifications.unreachable': {
+    ar: 'التذكرة لم تعد ضمن نطاقك',
+    en: 'That ticket is no longer in your scope'
+  },
+  'notifications.grouping': {
+    ar: 'تُجمَّع الإشعارات الخاصة بالتذكرة الواحدة خلال',
+    en: 'Notifications about one ticket are grouped within'
+  },
+  'notifications.minutes': { ar: 'دقيقة.', en: 'minutes.' },
+  // FR-013's eight kinds. The five with no producer yet are translated anyway,
+  // so the day one lands the centre renders a sentence rather than a raw key.
+  'notifications.kind.assigned': { ar: 'أُسندت إليك تذكرة', en: 'A ticket was assigned' },
+  'notifications.kind.mentioned': { ar: 'ذكَرك زميل في ملاحظة داخلية', en: 'You were mentioned in an internal note' },
+  'notifications.kind.customer_replied': { ar: 'ردَّ العميل', en: 'The customer replied' },
+  'notifications.kind.escalated': { ar: 'تم تصعيد التذكرة', en: 'A ticket was escalated' },
+  'notifications.kind.task_due': { ar: 'مهمة مستحقة', en: 'A task is due' },
+  'notifications.kind.sla_threshold': { ar: 'اقتراب حد مستوى الخدمة', en: 'An SLA threshold is approaching' },
+  'notifications.kind.delivery_failed': { ar: 'فشل إرسال رسالة', en: 'A message could not be delivered' },
+  'notifications.kind.chat_offered': { ar: 'محادثة معروضة عليك', en: 'A chat was offered to you' },
+  // --- the mention picker on an internal note ------------------------------
+  'mention.heading': { ar: 'ذكر زميل', en: 'Mention a colleague' },
+  'mention.add': { ar: 'إضافة زميل', en: 'Add a colleague' },
+  'mention.none': { ar: 'لا يوجد زملاء يمكن ذكرهم على هذه التذكرة.', en: 'No colleagues can be mentioned on this ticket.' },
+  'mention.remove': { ar: 'إزالة', en: 'Remove' },
+  'mention.internalOnly': {
+    ar: 'الذكر متاح في الملاحظات الداخلية فقط — لن يظهر اسم الزميل للعميل أبدًا.',
+    en: 'Mentions are for internal notes only — a colleague\'s name is never shown to the customer.'
+  },
+  'mention.rule': {
+    ar: 'يمكن ذكر الزملاء المصرَّح لهم بنطاق هذه التذكرة فقط. الذكر يُشعِرهم ولا يمنحهم صلاحية جديدة.',
+    en: 'Only colleagues already scoped to this ticket can be mentioned. A mention notifies them; it grants no new access.'
+  },
   // --- the team queue (spec 004 FR-016, AD-16, AS-10, E-14) ----------------
   //
   // `teamQueue.scopeNote` says the team dimension is missing rather than

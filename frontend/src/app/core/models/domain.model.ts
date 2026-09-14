@@ -180,3 +180,34 @@ export interface AgentLoad {
   role: string | null;
   open: number;
 }
+
+// --- notifications (spec 004 FR-013, AD-13) ---------------------------------
+
+/**
+ * One GROUP of notifications, as FR-013 requires: "notifications for one ticket
+ * within a configured window MUST be grouped, except escalations, which MUST
+ * NOT be grouped or suppressed."
+ *
+ * Grouped on the way out, not suppressed on the way in — every event is still
+ * recorded and audited, and `count` says how many are in here.
+ */
+export interface NotificationGroup {
+  key: string;
+  kind: 'assigned' | 'mentioned' | 'customer_replied' | 'escalated'
+      | 'task_due' | 'sla_threshold' | 'delivery_failed' | 'chat_offered';
+  ticketId: string | null;
+  /** Every member's id. Marking the group read marks all of them. */
+  ids: string[];
+  count: number;
+  newestAt: string;
+  oldestAt: string;
+  unread: boolean;
+  /** Resolved through the one actor resolver — may be a deactivated user, or
+   *  a customer, or absent. Never a raw database id. */
+  actor: { kind: string; displayName: string; state?: string } | null;
+  /** Null when the ticket is no longer in the caller's scope. The
+   *  notification stays; the record is not disclosed. */
+  ticketReference: string | null;
+  ticketSubject: string | null;
+  reachable: boolean;
+}

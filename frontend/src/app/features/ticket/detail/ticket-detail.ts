@@ -117,6 +117,48 @@ export class TicketDetail implements OnDestroy {
   // is how an internal note becomes a customer reply by accident.
   protected readonly visibility = signal<Visibility | ''>('');
 
+  // --- 004 FR-009 / AD-09 — mentions ------------------------------------
+  //
+  // DECISION 39: only colleagues who ALREADY hold scope on this ticket. The
+  // list comes from the server (GET /ticket/:id/mentionable), which is the
+  // only thing that decides it — the picker cannot widen it, and the server
+  // refuses anything outside it at save time whatever the page offered.
+  //
+  // Why a picker and not free-text "@name" parsing: names here are Arabic or
+  // Latin, may contain spaces, and are not unique. Parsing them would make the
+  // set of people notified depend on how somebody typed. The picker carries
+  // ids; the body carries the name as ordinary text.
+  protected readonly mentionable = signal<{ userId: string; displayName: string }[]>([]);
+  protected readonly mentioned = signal<string[]>([]);
+
+  /** Only on an internal note — a mention on a customer reply is refused. */
+  protected readonly mentionsAllowed = computed(() => this.visibility() === 'internal');
+
+  protected readonly mentionedNames = computed(() =>
+    this.mentioned().map(id => this.mentionable().find(c => c.userId === id)).filter(Boolean) as
+      { userId: string; displayName: string }[]);
+
+  protected readonly unmentioned = computed(() =>
+    this.mentionable().filter(c => !this.mentioned().includes(c.userId)));
+
+  protected addMention(userId: string): void {
+    if (!userId || this.mentioned().includes(userId)) return;
+    const colleague = this.mentionable().find(c => c.userId === userId);
+    if (!colleague) return;
+    this.mentioned.update(list => [...list, userId]);
+    // The name goes into the body as ordinary text, so the note reads as a
+    // sentence rather than as a list of chips above an unrelated paragraph.
+    // The ID is what is sent; this is only what a reader sees.
+    const at = `@${colleague.displayName} `;
+    this.reply.update(body => body.length && !body.endsWith(' ') ? body + ' ' + at : body + at);
+  }
+
+  protected removeMention(userId: string): void {
+    this.mentioned.update(list => list.filter(id => id !== userId));
+    // The typed text is NOT edited back out. Removing a name the author wrote
+    // into their own sentence would mangle it; what changes is who is notified.
+  }
+
   constructor() {
     this.loadDraft();
 
@@ -127,6 +169,12 @@ export class TicketDetail implements OnDestroy {
     this.api.listQuickReplies().subscribe({
       next: r => this.quickReplies.set(r.quickReplies),
       error: () => this.quickReplies.set([])
+    });
+    // Who may be named here. A 404 means the ticket is out of scope, which the
+    // rest of the screen already reports — the picker just stays empty.
+    this.api.mentionable(this.id).subscribe({
+      next: r => this.mentionable.set(r.colleagues),
+      error: () => this.mentionable.set([])
     });
     this.api.ticketMeta().subscribe({ next: m => this.meta.set(m) });
     this.load();
@@ -196,12 +244,20 @@ export class TicketDetail implements OnDestroy {
   protected send(): void {
     this.refusal.set(null);
     this.busy.set(true);
-    this.api.addMessage(this.id, { body: this.reply(), visibility: this.visibility() })
+    this.api.addMessage(this.id, {
+      body: this.reply(),
+      visibility: this.visibility(),
+      // Sent only on an internal note. The server refuses mentions on a
+      // customer-visible reply, and sending an empty array either way keeps
+      // the request shape constant.
+      mentions: this.mentionsAllowed() ? this.mentioned() : []
+    })
       .subscribe({
         next: () => {
           this.busy.set(false);
           this.reply.set('');
           this.visibility.set('');
+          this.mentioned.set([]);
           this.lastSavedBody = '';
           // §10: the discard event carries its cause. The reply went out,
           // so the draft was not abandoned — it was sent.

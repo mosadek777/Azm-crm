@@ -1447,6 +1447,46 @@
       ],
       "status": "not started",
       "description": "Spec 004 section 10 lists an audit event for \"Bulk assignment from the team queue\" with the fields actor, timestamp, ticket count and PER-TICKET OUTCOME. The queue built today assigns one row at a time, so that event is never written.\n\nNothing blocks this. It is unscheduled rather than gated, and the hard part is already specified elsewhere: 002 FR-011 (SHOULD) requires that a bulk operation \"MUST apply per-ticket permission and transition validation, MUST report per-ticket outcomes, and MUST NOT abort the batch on one failure\". That last clause is what makes it more than a loop — a batch where one ticket is terminal, or one assignee is out of scope, must still assign the rest and say which ones it did not.\n\nWHAT EXISTS AND CARRIES OVER: the single-assignment path, with its terminal-status refusal, its assignee-must-be-scoped check, FR-009's mandatory reason and its audit entry in the same transaction. A batch endpoint calls that per ticket and collects outcomes; it must not reimplement any of it.\n\nA lead rebalancing after an absence is the case that makes this worth doing — one at a time is fine for three tickets and tedious for thirty."
+    },
+    {
+      "key": "internal-thread-view",
+      "name": "The internal discussion has no view of its own (AD-10)",
+      "tags": [
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "Spec 004 FR-010: \"An agent MUST be able to hold an internal discussion thread on the ticket, visible to staff only.\"\n\nInternal notes EXIST and are enforced correctly — visibility is immutable on the message, the portal query never loads one (008 FR-019, AS-06), and mentions attach to them (FR-009). What is not built is a separate discussion VIEW: today internal notes are interleaved with customer messages on one thread, distinguished by their styling.\n\nNothing blocks this. It is a presentation decision that was not made: whether staff read one merged thread or two tabs. The merged thread is arguably the better answer for a support tool — the conversation and the commentary about it are the same story — so this is carded rather than assumed to be a gap.\n\nIF IT IS BUILT: the query filter already exists and must stay in the query rather than moving into a view filter. AS-07 (\"a ticket with an internal discussion of four notes -> the customer sees none of the four\") is the test, and it is already passing."
+    },
+    {
+      "key": "keyboard-shortcuts",
+      "name": "No keyboard shortcuts or command palette (AD-12)",
+      "tags": [
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "Spec 004 FR-012 is a MAY: \"The workspace MAY provide keyboard shortcuts and a command palette for queue navigation, reply, status change, assignment and search.\"\n\nNot attempted. A MAY with no acceptance scenario behind it, and the story is a Could.\n\nWorth doing only once the screens it would drive have stopped moving. Shortcuts that point at a layout still being designed are shortcuts that get rebound twice."
+    },
+    {
+      "key": "take-next-ticket",
+      "name": "No take-next-ticket action (AD-17)",
+      "tags": [
+        "backend",
+        "frontend",
+        "blocked"
+      ],
+      "status": "not started",
+      "description": "Spec 004 FR-017 (COULD): \"take the next ticket from one button, so the queue is worked in order, not cherry-picked.\"\n\nBLOCKED ON 004 [CLARIFY-1]: what exactly is urgency order? A high-priority ticket with a distant deadline versus a low-priority ticket near breach — which is next? \"Take the NEXT one\" is meaningless without an answer, and picking one arbitrarily would mean the button hands out work in an order nobody agreed while looking authoritative about it.\n\nThe queue falls back to priority-then-age today (E-05) and SAYS SO, which is honest for a list a human reads and chooses from. It is not honest as the basis for a button that chooses for them.\n\nWHAT ALREADY EXISTS: section 11 requires the action be atomic — \"unassigned AND scope; atomic — no double assignment\". The assign endpoint is already transactional and already refuses a ticket somebody else holds, so the concurrency half is solved."
+    },
+    {
+      "key": "presence-and-routing",
+      "name": "No presence (AD-11, AD-14)",
+      "tags": [
+        "backend",
+        "frontend",
+        "blocked"
+      ],
+      "status": "not started",
+      "description": "Spec 004 FR-011 (SHOULD) and FR-014 (MAY): set presence to available/busy/away/offline, and see colleague presence and load before transferring.\n\nBLOCKED ON 004 [CLARIFY-3]: is live chat in phase one? AS-11 defines presence entirely in terms of chat routing — \"an agent sets presence to away -> a chat arrives requiring their skill -> it is not offered to them\". Without chat, presence has no consumer at launch: it would be a status somebody sets and nothing reads.\n\nPARTLY ANSWERED ALREADY: FR-014 is \"presence AND current assigned-ticket count\". The team queue (FR-016) shows open ticket count per colleague in scope, including those carrying zero, which is the half a lead actually uses when rebalancing. What is missing is availability, and that is the half that needs chat to mean anything."
     }
   ],
   "retiredIds": []

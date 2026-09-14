@@ -24,6 +24,7 @@
 import mongoose from 'mongoose'
 import { Ticket } from '../../DB/models/ticket.model.js'
 import { Message } from '../../DB/models/message.model.js'
+import { notify } from '../notification/notification.service.js'
 import { nextTicketReference } from '../../DB/models/counter.model.js'
 import { recordAudit } from '../../utils/audit.js'
 import { customerActorRef } from './portal.service.js'
@@ -399,6 +400,31 @@ export const replyToTicket = async (req, res, next) => {
           session
         })
         await Message.create([msg], { session })
+
+        // 004 FR-013's `customer_replied` — the only place it is produced,
+        // because this is the only place a customer speaks.
+        //
+        // ⚠ `actorId` IS NULL AND `actorRef` IS THE CUSTOMER'S. A customer is
+        // not a User, so the notification's `actorId` (a User ref) must stay
+        // empty; the audit entry carries the customer reference, which is what
+        // `utils/actor.js` already knows how to render. Putting a customer id
+        // in a User field would make the actor resolver answer "deactivated
+        // user" for a person who is not a user at all.
+        //
+        // Only the ASSIGNEE is told. An unassigned ticket notifies nobody: the
+        // team queue is where unheld work is found, and notifying a whole
+        // branch would train everyone to ignore the badge.
+        if (ticket.assignedAgentId) {
+          await notify({
+            userIds: [ticket.assignedAgentId],
+            kind: 'customer_replied',
+            ticketId: ticket._id,
+            actorId: null,
+            actorRef,
+            req,
+            session
+          })
+        }
       })
     } finally { await session.endSession() }
 

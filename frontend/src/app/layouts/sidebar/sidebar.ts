@@ -45,6 +45,7 @@ import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { CapabilityHints } from '../../core/models/user.model';
 import { SidebarState } from './sidebar-state';
 import { ReminderService } from '../../core/notifications/reminder.service';
+import { NotificationCountService } from '../../core/notifications/notification-count.service';
 
 export interface NavChild { labelKey: string; route: string }
 
@@ -55,7 +56,7 @@ export interface NavItem {
   icon: string;
   children?: NavChild[];
   /** Which live count, if any, this item carries. */
-  badge?: 'unassignedTickets' | 'taskReminders';
+  badge?: 'unassignedTickets' | 'taskReminders' | 'notifications';
   /**
    * The rendering hint this item depends on. Absent means always shown.
    *
@@ -131,7 +132,10 @@ export class Sidebar {
         // of it, an auditor included. What differs is the controls inside.
         { labelKey: 'nav.teamQueue', route: '/team-queue', icon: 'teamQueue' },
         { labelKey: 'nav.customers', route: '/customers', icon: 'customers' },
-        { labelKey: 'nav.quickReplies', route: '/quick-replies', icon: 'quickReplies' }
+        { labelKey: 'nav.quickReplies', route: '/quick-replies', icon: 'quickReplies' },
+        // 004 AD-13 — where a mention lands. The badge is the whole point of
+        // the feature: a mention with nowhere to appear is worthless.
+        { labelKey: 'nav.notifications', route: '/notifications', icon: 'notifications', badge: 'notifications' }
       ]
     },
     {
@@ -200,6 +204,13 @@ export class Sidebar {
   // quietly re-evaluated on every navigation by the navigation itself.
   private readonly reminders = inject(ReminderService);
 
+  // UNREAD NOTIFICATIONS. Unlike the reminder count this one is REFRESHED ON
+  // NAVIGATION, because a notification is a stored row written when the thing
+  // happened — reading it again is reading a fact, not re-running an
+  // evaluation. The reminder count is not refreshed here for exactly the
+  // opposite reason. See notification-count.service.ts.
+  private readonly notifications = inject(NotificationCountService);
+
   private readonly url = signal(this.router.url.split('?')[0]);
 
   constructor() {
@@ -214,6 +225,7 @@ export class Sidebar {
 
   private refreshBadges(): void {
     if (!this.auth.isSignedIn()) { this.unassignedTickets.set(null); return; }
+    this.notifications.refresh();
     this.api.listTickets({ unassigned: 'true', limit: '1' }).subscribe({
       next: r => this.unassignedTickets.set(r.total),
       // A failed count is not an error the navigation should report — the
@@ -225,13 +237,16 @@ export class Sidebar {
   protected badgeFor(item: NavItem): number | null {
     const n = item.badge === 'unassignedTickets' ? this.unassignedTickets()
       : item.badge === 'taskReminders' ? this.reminders.count()
+      : item.badge === 'notifications' ? this.notifications.unread()
       : null;
     return n && n > 0 ? n : null;
   }
 
   /** What the badge is a count OF — read aloud, never left to the colour. */
   protected badgeLabelKey(item: NavItem): string {
-    return item.badge === 'taskReminders' ? 'reminder.heading' : 'nav.unassigned';
+    if (item.badge === 'taskReminders') return 'reminder.heading';
+    if (item.badge === 'notifications') return 'notifications.unread';
+    return 'nav.unassigned';
   }
 
   /**
