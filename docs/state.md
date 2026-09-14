@@ -25,14 +25,21 @@ Four items, in this order. The first is not a feature and is the most valuable.
    now carry an accurate status per case and a revision date. `004` was the
    worst: it said *"this whole module is unbuilt"* and marked 17 of 18 cases
    not testable, when 11 are built and 3 fully automated.
-3. **Live updates** — the list and the thread changing without a reload. No spec
-   requires it, so the story and the requirement get written and shown before
-   any code, the way `PLT-15` was. The hard part is not the transport: **a push
-   must never reach somebody who could not read that record over HTTP**, and the
-   predicate has to be evaluated per recipient per push, not once per event.
-4. **The category tree** (`002 FR-004`), reversing decision 21. Last, because it
-   is the only one carrying a **data migration**: every existing ticket holds a
-   flat category string.
+3. **Live updates** — the list and the thread changing without a reload.
+   **Wording proposed, not added:** `decisions-pending.md` §26 carries a story
+   (`AD-19`) and a requirement (`FR-021`) awaiting the project owner. ⚠ Three
+   quarters of this is **already required and simply unbuilt** — `004 NFR-002`
+   (counters and queue, 30s, *"without manual reload"*), `AS-02`, and
+   `NFR-003` (in-app notification, 5s). Recommended mechanism: **polling on
+   conditional requests, not sockets** — a poll stays on the path that enforces
+   scope; a socket emit needs a second implementation of it.
+4. **The category tree** (`002 FR-004`), reversing decision 21.
+   **Analysed, not started:** `decisions-pending.md` §27. The migration must be
+   **additive** — keep the original string as provenance — and the first step is
+   not code: the distinct values have to go to the client, because choosing a
+   taxonomy without the people who use it is the one part that cannot be
+   recovered from. `FR-005`'s inheritance is only one third buildable: default
+   priority yes, owning team and SLA policy blocked.
 
 ---
 

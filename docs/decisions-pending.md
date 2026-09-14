@@ -2153,3 +2153,131 @@ an agent polling a ticket that **moves out of their scope** stops receiving it
 **on the very next poll**, while a colleague still in scope keeps receiving it.
 A check that only showed the first half would pass on a poller that had stopped
 working altogether.
+
+---
+
+## 27. The category tree — what the migration actually involves, BEFORE doing it
+
+**Nothing is built and nothing is migrated.** This is the answer to *"tell me
+what mapping those onto nodes involves and whether anything is lost"*, written
+before the work rather than after it, because the work touches live records and
+that is the wrong order to discover a problem in.
+
+### What is being reversed
+
+**Decision 21** made `category` a flat string, deviating from `002 FR-004`
+(**MUST**): *"Categories MUST form a tree; a ticket MUST reference a leaf node;
+non-leaf nodes MUST NOT be selectable."* **Decision 4** already ratified the
+shape — multi-level, **depth unbounded**, leaf-only selection — so the tree's
+own definition is not in question. Only the migration is.
+
+Today: `category: { type: String, required: true, trim: true, maxlength: 120 }`
+on every ticket. Free text. Nothing validates it against a list, because there
+is no list.
+
+### What is in there right now
+
+The demo data holds five distinct values across twelve tickets:
+
+| Value | Tickets |
+|---|---|
+| `Billing / Refund` | 4 |
+| `Account` | 4 |
+| `Technical` | 2 |
+| `Logistics` | 1 |
+| `Contracts` | 1 |
+
+**One of those is worth stopping at: `Billing / Refund`.** A free string has
+already been used with an implied hierarchy in it, by convention, because people
+need one. That is mild evidence that the tree is the right shape — and a warning
+that a naive migration mapping distinct strings to flat nodes would produce a
+node literally named "Billing / Refund" sitting beside "Billing", which is the
+worst of both.
+
+### Is anything lost? Only if the migration is destructive — so it must not be
+
+**The answer is no, on one condition: keep the string.** The migration must be
+**additive**.
+
+| | Destructive (overwrite `category` with an id) | Additive (recommended) |
+|---|---|---|
+| A string matching no node | **Data loss.** The only record of what an agent typed is gone | Kept; the ticket is parked under an explicit `Unmapped` node and the original is still readable |
+| A mapping later found wrong | Unfixable without the original | Re-runnable, because the input is still there |
+| The audit trail | `ticket.created` recorded `"Billing / Refund"`; the ticket now says an id. A reader sees a contradiction with no bridge | Same contradiction, but the ticket itself carries the bridge |
+| Reversal cost | A restore from backup | Drop a column |
+
+So: add `categoryId` (a ref to a leaf), **keep `category` as it stands** and stop
+writing to it. It becomes provenance — what was typed, at the time, by a person.
+Cheap to keep, and the only thing that makes the migration re-runnable.
+
+**One thing IS unavoidably lost even so, and it should be said rather than
+discovered:** the audit entry for every existing `ticket.created` records the
+category as a string, and audit entries are immutable — correctly. After the
+migration a ticket points at a node while its own creation record names a
+string. That is not a defect; it is what an append-only log is *for*. But
+anybody reading history needs to know the changeover date, so the migration must
+write its own audit entry recording when it ran and what it mapped.
+
+### The mapping, step by step
+
+1. **Read the distinct values** actually present, with counts. Never a list
+   somebody expects to be there — this is a production read, and the demo's five
+   values are not evidence about anybody's live data.
+2. **Put the list to the client.** Which of these are real categories, which are
+   typos, which are two names for one thing, and what is the tree they should
+   hang from. **This is not a developer decision.** Guessing produces a taxonomy
+   the business does not use, and every ticket then sits in the wrong place with
+   a `MUST` satisfied on paper.
+3. **Author the tree** from that answer, with bilingual labels — `FR-011`'s own
+   clause refuses a single-language save, so every node needs both from the
+   start.
+4. **Map**, case- and whitespace-insensitively, and only where it is exact after
+   normalising. Anything left over goes to a visible `Unmapped` leaf. **A
+   fuzzy match is worse than an unmapped ticket**: an unmapped one is a question
+   somebody answers, a wrongly-matched one is an error nobody sees.
+5. **Report before writing.** The migration runs in a dry mode first and prints
+   what it would do, per value and per count. Nothing about this should be
+   discovered from the result.
+6. **Write in one transaction** with its audit entry, like every other mutation
+   in this system.
+
+### Two things that block the requirement's OTHER half
+
+`002 FR-005` rides on the same tree: *"Each category node MUST support a default
+priority, owning team and SLA policy, inherited by descendants unless
+overridden."* Of those three:
+
+| | State |
+|---|---|
+| **default priority** | Buildable. The hook already exists — `prioritySource` enumerates `category_default` and it has never been reachable |
+| **owning team** | **Blocked.** `Team` does not exist (decision 20) |
+| **SLA policy** | **Blocked.** Spec `005`, on `[CLARIFY-1]` and `[CLARIFY-2]` |
+
+So `FR-004` (the tree and leaf-only selection) is fully buildable now, and
+`FR-005` is one third buildable. Building the tree does not close both, and
+claiming otherwise later would be worse than saying it here.
+
+### What it touches, honestly
+
+- `ticket.model.js` — one new field, one kept.
+- `createTicket` and the portal's create — validate the leaf instead of accepting
+  a string. Both already refuse an unknown value in other fields, so the shape
+  is familiar.
+- The list filter — `?category=` becomes an id, and **a parent node must return
+  its descendants**, or filtering by "Billing" would return nothing while four
+  tickets sit under it.
+- Two create screens and the ticket list filter — a tree picker where a text
+  input is now, **with non-leaf nodes visible but not selectable**, which is the
+  part of `FR-004` a flat dropdown quietly drops.
+- A configuration screen under `010 FR-011`, which is card
+  `configurable-categories`.
+- Spec `009`'s rollups, when they exist, gain a real hierarchy to roll up — which
+  is the reason `[CLARIFY-5]` asked about depth in the first place.
+
+### Recommendation
+
+**Do not start with the migration. Start with step 2 — the client's own list.**
+
+Everything else here is a day or two of ordinary work against a shape decision 4
+already ratified. The part that cannot be recovered from is choosing the taxonomy
+without the people who use it, and that is a question, not a task.
