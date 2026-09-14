@@ -2037,3 +2037,119 @@ and `scope.test.js` proves it.
 The target user is loaded through the same overlap predicate `listUsers` uses,
 so an administrator cannot grant a role to somebody outside their own scope, and
 an unreachable user answers **404, never 403** (constitution IV).
+
+---
+
+## 26. Live updates — PROPOSED wording, and the mechanism argued rather than assumed
+
+**Nothing here is added to `specs/` yet.** The wording below is put to the
+project owner first, the way `012 FR-016` / `PLT-15` (in-app toasts) was. If it
+is not ratified, this section is what gets deleted.
+
+### ⚠ First, a correction: three quarters of this is ALREADY REQUIRED
+
+The brief said *"nothing in the specs requires this"*. That is not quite true,
+and the difference changes what needs writing.
+
+| Already specified | Where | Says |
+|---|---|---|
+| The **counters and the queue** refresh without a reload | `004 NFR-002` | *"Counter and queue freshness — ≤ 30s, without manual reload"* |
+| …and it is an acceptance scenario, not only a budget | `004 AS-02` | *"the counters refresh within the `NFR-002` interval **without a manual reload**"* |
+| **In-app notifications** arrive promptly | `004 NFR-003` | *"Notification delivery, in-app — ≤ 5s from the triggering event"* |
+
+So the sidebar count, the workspace counters and the queue are **unbuilt
+requirements, not new ones** — the screens currently satisfy them only at the
+moment they are opened. `NFR-003`'s **five seconds** is the binding constraint
+on the whole design, and it is already ratified.
+
+**What is genuinely unspecified** is the ticket **list** changing when a customer
+submits or replies, and the **thread** changing when the other side replies.
+That is one story and one requirement, below.
+
+### PROPOSED story — `AD-19`
+
+| ID | As a | I want | So that | Priority |
+|---|---|---|---|---|
+| `AD-19` | AGT | the list I am looking at and the conversation I am reading to update themselves | I am not answering a customer who already replied, or working a ticket somebody took two minutes ago | Should |
+
+### PROPOSED requirement — `004 FR-021`
+
+> **`FR-021`** — An open list or conversation MUST reflect a change to its
+> contents without the user reloading, within the `NFR-002` interval for lists
+> and the `NFR-003` interval for a message on an open conversation. An update
+> MUST be delivered **only to a recipient who could have read that record
+> through an ordinary request at the moment of delivery**, and the scope
+> predicate MUST be evaluated per recipient at that moment, never once per
+> event. An update MUST NOT carry any field the recipient's own read of that
+> record would withhold. **SHOULD** — `AD-19`, constitution IV.
+
+Two sentences of that are the whole point, and they are the project owner's
+constraint written as a requirement rather than as a note: *evaluated per
+recipient at that moment, never once per event*, and *MUST NOT carry any field
+the recipient's own read would withhold*.
+
+### The mechanism: POLLING, and why I would defend it
+
+**Recommendation: polling, on a conditional request. Not sockets.** Four
+reasons, the first of which is decisive on its own.
+
+**1. Polling cannot lose the scope predicate, because it never leaves the path
+that enforces it.** A poll is an ordinary HTTP request from that user: it goes
+through `authenticate`, `authorize`, and the same `scopeFilter` every other read
+uses. There is no second code path, so there is nothing to keep in step. A
+socket emit is the opposite — the server decides who to send to, which means
+re-implementing "may this person see this record" on the emit side. That is a
+**second implementation of the single strongest invariant in the system**, and
+`utils/scope.js` exists precisely because there is meant to be one. The brief
+says *"a socket bypasses the whole HTTP path, and that's exactly where scoping
+quietly goes missing"* — the cheapest way to honour that is not to build the
+bypass.
+
+**2. The numbers that would justify sockets do not exist.** `013 [CLARIFY-1]`
+(target volume — concurrent agents, monthly tickets) is unanswered, and every
+`NFR` table in the project says so. Sockets win at high concurrency; polling
+wins at low. Choosing sockets now is optimising for a load nobody has stated,
+and paying for it in connection lifecycle, authentication on upgrade,
+reconnection and backoff, and a horizontal-scaling story (sticky sessions or a
+pub/sub backplane) — none of which this deployment has.
+
+**3. A socket server is exactly the long-lived background component this
+project has twice declined to add.** The reminder surface refused to stand up a
+scheduler because `005 §11` already specifies one and a second would pre-empt
+it. The same argument holds here with less force but the same direction.
+
+**4. It is the reversible choice.** Polling is a small deletable thing. If the
+volume answer comes back large, polling is replaced by sockets and **the
+server-side reads do not change** — they are already what a socket emitter would
+have to consult. The reverse is not true: unpicking a socket layer means
+unpicking an authorisation surface.
+
+**The honest cost, stated.** A latency floor equal to the poll interval, and one
+request per interval per open screen. At `NFR-003`'s five seconds that is twelve
+requests a minute per agent for the notification count — which is why the design
+below is conditional rather than naive.
+
+### How it would be built
+
+- **Conditional requests.** Each pollable read answers `ETag`, and a poll sends
+  `If-None-Match`. Unchanged data answers **304 with no body**, so the cost of a
+  quiet minute is twelve tiny requests, not twelve payloads.
+- **One poller, not one per component.** A single service holds the interval and
+  the visibility state; components subscribe. Two independent pollers on one
+  screen is how a count and its list end up disagreeing.
+- **Stop when the tab is hidden**, resume on focus, and poll once immediately on
+  resume. An agent who comes back to a tab should not wait out an interval.
+- **Intervals from one config file**, unratified like every other number this
+  project has had to choose, and defaulting to 5s for notifications
+  (`NFR-003`'s figure) and 30s for lists (`NFR-002`'s).
+- **No new read endpoints.** The polls call `GET /notification/unread`,
+  `GET /ticket`, `GET /ticket/:id` — all of which already apply the predicate and
+  already audit nothing, because reads are not mutations.
+
+### What would have to be proven before it ships
+
+The falsifiability check for `FR-021`'s second sentence, and it must be paired:
+an agent polling a ticket that **moves out of their scope** stops receiving it
+**on the very next poll**, while a colleague still in scope keeps receiving it.
+A check that only showed the first half would pass on a poller that had stopped
+working altogether.
