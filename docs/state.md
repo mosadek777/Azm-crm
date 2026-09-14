@@ -21,10 +21,10 @@ Four items, in this order. The first is not a feature and is the most valuable.
    the break-glass root holds an `ADM` assignment and is active, so the
    population it counted was never smaller than one. Fixed in both the
    deactivation and revocation paths, and now asserted.
-2. **Bring `test-cases/` current.** All thirteen files exist, but `004` was
-   written before the workspace was built and still reads *"0 automated · 17 not
-   testable yet"* when most of it is now automated. `008` and `010` have drifted
-   for the same reason. See "Where the documents have drifted" below.
+2. ~~Bring `test-cases/` current~~ — **DONE 2026-09-14.** All thirteen files
+   now carry an accurate status per case and a revision date. `004` was the
+   worst: it said *"this whole module is unbuilt"* and marked 17 of 18 cases
+   not testable, when 11 are built and 3 fully automated.
 3. **Live updates** — the list and the thread changing without a reload. No spec
    requires it, so the story and the requirement get written and shown before
    any code, the way `PLT-15` was. The hard part is not the transport: **a push
@@ -250,8 +250,7 @@ visibly incomplete.
 
 | Document | Drift |
 |---|---|
-| `test-cases/004` | Says *"0 automated · 17 not testable yet"*. Written before the workspace existed; most of it is now automated across six suites. **Item 2 in NEXT ACTION** |
-| `test-cases/008`, `010` | Smaller drift from the same cause — the portal conversation and `FR-011` moved under them |
+| `test-cases/` | **Current as of 2026-09-14.** Every file carries a revision date; the ones revised that day say what changed |
 | `docs/trace.md`, `docs/story-coverage.md` | Not re-derived since spec `004` was built |
 | Browser verification scripts | Written per feature into the scratchpad and thrown away. Nothing in the repository runs them, so a regression on any screen is invisible to CI. Board card `mobile-overflow-guard` covers the 390px half of this |
 | `tools/tasks.json` | Current — 66 cards, nine added 2026-09-14. Run `node tools/sync-clickup.js` to project it onto the board |
