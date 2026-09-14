@@ -16,6 +16,7 @@ import { authorize } from '../../middlewares/permission.middleware.js'
 import { Router } from 'express'
 import draftcontroller from '../draft/draft.controller.js'
 import { ticketTaskRouter } from '../task/task.controller.js'
+import { teamQueue } from './team-queue.service.js'
 
 const router = Router()
 
@@ -53,6 +54,39 @@ const WRITERS = ['AGT', 'LEAD', 'MGR', 'ADM']
  *                 transitions: { type: object, description: 'status key -> array of reachable status keys' }
  */
 router.get("/meta", authenticate, authorize(...STAFF), ticketservice.getTicketMeta)
+
+/**
+ * spec 004 FR-016 / AD-16 — the team queue.
+ *
+ * ⚠ DECLARED BEFORE `/:id`, or Express reads "team-queue" as a ticket id and
+ * the route answers 404 for a reason that has nothing to do with scope. Same
+ * reason `/meta` sits above.
+ *
+ * STAFF, not WRITERS: 004 §9 gives AUD "View team queue — read only". This
+ * endpoint writes nothing; assignment from the list goes through
+ * `PATCH /:id/assign`, which is WRITERS and refuses an auditor there.
+ *
+ * @swagger
+ * /ticket/team-queue:
+ *   get:
+ *     tags: [Tickets]
+ *     summary: Team queue — unassigned, oldest, at-risk or per-agent load (004 FR-016)
+ *     parameters:
+ *       - in: query
+ *         name: view
+ *         schema: { type: string, enum: [unassigned, oldest, at_risk, agent] }
+ *       - in: query
+ *         name: agentId
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: >
+ *           The queue, plus per-agent open load for every assignable colleague in
+ *           scope. `unavailable` is non-null for the at-risk view, which cannot
+ *           be answered while the SLA clock is blocked on 005 [CLARIFY-2].
+ *           `scope.teamDimension` is false — Team does not exist (decision 20).
+ */
+router.get("/team-queue", authenticate, authorize(...STAFF), teamQueue)
 
 /**
  * @swagger

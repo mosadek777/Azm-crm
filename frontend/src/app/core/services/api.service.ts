@@ -3,7 +3,7 @@
 
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Branch, ContactPoint, Customer, Department, HistoryEntry, Placeholder, QuickReply, Sla, Task, Ticket, TicketMessage, TicketMeta } from '../models/domain.model';
+import { AgentLoad, Branch, ContactPoint, Customer, Department, HistoryEntry, Placeholder, QuickReply, Sla, Task, TeamQueueView, Ticket, TicketMessage, TicketMeta } from '../models/domain.model';
 import { CreateUserRequest, LocalizedText, StaffUser } from '../models/user.model';
 
 const API = 'http://localhost:3000';
@@ -244,6 +244,26 @@ export class ApiService {
   setTaskState(id: string, state: 'done' | 'cancelled') {
     return this.http.patch<{ task: Task }>(
       `${API}/task/${id}/${state === 'done' ? 'complete' : 'cancel'}`, {});
+  }
+
+  // --- the team queue (spec 004 FR-016, AD-16) ---
+  //
+  // `unavailable` is non-null for the at-risk view and the screen renders the
+  // reason. `scope.teamDimension` is false — Team does not exist (decision 20),
+  // so this is scoped by branch and department only, which the screen states.
+  teamQueue(params: Record<string, string>) {
+    return this.http.get<{
+      view: TeamQueueView;
+      tickets: Ticket[];
+      total: number;
+      page: number;
+      limit: number;
+      ordering: { applied: string; reason: string | null };
+      load: AgentLoad[];
+      scopeEmpty: boolean;
+      unavailable: { reason: string; blockedBy: string } | null;
+      scope: { unrestricted: boolean; branches: number | null; departments: number | null; teamDimension: boolean };
+    }>(`${API}/ticket/team-queue`, { params });
   }
 }
 

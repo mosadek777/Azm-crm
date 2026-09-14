@@ -159,3 +159,24 @@ export interface Task {
   ticketReference?: string | null;
   ticketSubject?: string | null;
 }
+
+// --- the team queue (spec 004 FR-016, AD-16) --------------------------------
+
+/**
+ * FR-016's four views. `at_risk` is offered and cannot be answered: "at risk"
+ * is a statement about remaining time against an SLA target, and the clock is
+ * blocked on 005 [CLARIFY-2]. The server returns `unavailable` with its reason
+ * rather than an empty list, because an empty list would read as a claim that
+ * nothing is at risk.
+ */
+export type TeamQueueView = 'unassigned' | 'oldest' | 'at_risk' | 'agent';
+
+/** One colleague's open workload. Agents carrying ZERO are included — they are
+ *  the answer to "who can take this", and a group-by over tickets alone cannot
+ *  produce them. */
+export interface AgentLoad {
+  userId: string;
+  displayName: string;
+  role: string | null;
+  open: number;
+}

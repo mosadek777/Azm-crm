@@ -408,6 +408,53 @@ export const DICTIONARY: Translations = {
     ar: 'يمكن اختيار موعد مضى — ستظهر المهمة متأخرة فورًا.',
     en: 'A past date is fine — the task simply shows as overdue straight away.'
   },
+  // --- the team queue (spec 004 FR-016, AD-16, AS-10, E-14) ----------------
+  //
+  // `teamQueue.scopeNote` says the team dimension is missing rather than
+  // letting a lead infer it from a list that looks larger than their team.
+  // `teamQueue.atRiskUnavailable` is a refusal, not an empty state: an empty
+  // at-risk list would assert that nothing is at risk.
+  'nav.teamQueue': { ar: 'قائمة الفريق', en: 'Team queue' },
+  'teamQueue.title': { ar: 'قائمة الفريق', en: 'Team queue' },
+  'teamQueue.scopeNote': {
+    ar: 'محدودة بالفروع والأقسام المصرَّح لك بها. لا يوجد تقسيم إلى فرق بعد، لذا تظهر هنا كل تذاكر نطاقك.',
+    en: 'Bounded by the branches and departments you hold. There is no team dimension yet, so this shows every ticket in your scope.'
+  },
+  'teamQueue.view.unassigned': { ar: 'غير مسندة', en: 'Unassigned' },
+  'teamQueue.view.oldest': { ar: 'الأقدم', en: 'Oldest' },
+  'teamQueue.view.at_risk': { ar: 'معرَّضة للتجاوز', en: 'At risk' },
+  'teamQueue.view.agent': { ar: 'حسب الموظف', en: 'By agent' },
+  'teamQueue.load': { ar: 'حِمل الفريق', en: 'Who is carrying what' },
+  'teamQueue.loadNote': {
+    ar: 'التذاكر المفتوحة لكل زميل — اختر أحدهم لعرض قائمته.',
+    en: 'Open tickets per colleague — choose one to see their list.'
+  },
+  'teamQueue.noColleagues': {
+    ar: 'لا يوجد زملاء ضمن نطاقك.',
+    en: 'No colleagues in your scope.'
+  },
+  'teamQueue.orderOldest': { ar: 'مرتَّبة من الأقدم إلى الأحدث.', en: 'Ordered oldest first.' },
+  'teamQueue.atRiskUnavailable': {
+    ar: 'لا يمكن تحديد التذاكر المعرَّضة للتجاوز بعد.',
+    en: 'Which tickets are at risk cannot be determined yet.'
+  },
+  'teamQueue.scopeEmpty': {
+    ar: 'لا يشمل نطاقك أي فرع أو قسم، فلا توجد قائمة لعرضها. هذا ليس خطأ.',
+    en: 'Your scope covers no branch or department, so there is no queue to show. This is not an error.'
+  },
+  'teamQueue.pickAgent': { ar: 'اختر زميلًا من القائمة أعلاه.', en: 'Choose a colleague above.' },
+  'teamQueue.empty': { ar: 'لا توجد تذاكر في هذه القائمة.', en: 'Nothing in this list.' },
+  'teamQueue.assign': { ar: 'إسناد', en: 'Assign' },
+  'teamQueue.assignTo': { ar: 'إسناد إلى', en: 'Assign to' },
+  'teamQueue.choose': { ar: 'اختر…', en: 'Choose…' },
+  // 002 FR-009 (MUST): assignment records a reason. Required, never defaulted.
+  'teamQueue.reason': { ar: 'سبب الإسناد (مطلوب)', en: 'Reason for the assignment (required)' },
+  'teamQueue.confirmAssign': { ar: 'تأكيد الإسناد', en: 'Confirm assignment' },
+  'teamQueue.selfOnly': {
+    ar: 'يمكنك إسناد التذكرة إلى نفسك فقط — إسنادها إلى زميل يتطلب قائد فريق أو أعلى.',
+    en: 'You can assign this to yourself only — assigning to a colleague needs a team lead or above.'
+  },
+  'teamQueue.assigned': { ar: 'تم إسناد التذكرة', en: 'Ticket assigned' },
   // --- reminders (spec 004 FR-005 task half, FR-013 in-app, AD-05) ---------
   //
   // ⚠ `reminder.howItWorks` SAYS THREE THINGS AND ALL THREE ARE LOAD-BEARING:

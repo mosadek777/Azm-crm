@@ -76,6 +76,14 @@ export const routes: Routes = [
         loadComponent: () => import('./features/workspace/workspace').then(m => m.Workspace)
       },
       {
+        // 004 FR-016 / AD-16. No hint guard: 004 section 9 gives every staff role
+        // a view of the team queue, an auditor included (read only). What differs
+        // by role is which controls are offered, and the server refuses
+        // regardless.
+        path: 'team-queue',
+        loadComponent: () => import('./features/team-queue/team-queue').then(m => m.TeamQueue)
+      },
+      {
         path: 'customers',
         loadComponent: () => import('./features/customer/list/customer-list').then(m => m.CustomerList)
       },

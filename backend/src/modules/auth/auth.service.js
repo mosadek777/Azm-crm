@@ -247,7 +247,21 @@ export const me = async (req, res, next) => {
         // global row. Where a requirement and the matrix differ in precision
         // the matrix is the more specific statement, and for a permission the
         // narrower reading is the safer default. decisions-pending §19.
-        sharedQuickReplies: ['MGR', 'ADM'].some(r => roles.has(r))
+        sharedQuickReplies: ['MGR', 'ADM'].some(r => roles.has(r)),
+
+        // 004 §9: "Assign from the team queue | AGT: self only | LEAD ✓ | MGR ✓
+        // | ADM ✓". So the queue offers a LEAD the whole roster and an AGT only
+        // themselves.
+        //
+        // ⚠ THIS ONE IS A PRESENTATION RULE AND NOT A SERVER CONTROL, and the
+        // difference is recorded rather than glossed. 002 §9 has its own row —
+        // "Assign / self-assign | AGT ✓" — and 002 FR-010 is a MUST that an
+        // agent may self-assign any unassigned ticket in scope. The assign
+        // endpoint answers to spec 002 and permits an agent to route an
+        // UNASSIGNED ticket to a colleague; what 004 §9 constrains is this
+        // SURFACE. Taking over a ticket somebody else already holds is refused
+        // server-side for an agent either way. decisions-pending §21.
+        teamAssign: ['LEAD', 'MGR', 'ADM'].some(r => roles.has(r))
       }
     })
   } catch (err) {

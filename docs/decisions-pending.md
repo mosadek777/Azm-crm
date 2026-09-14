@@ -1702,3 +1702,97 @@ The third clause is the one that reads badly, and it stays. "Not emailed" alone
 is accurate and incomplete: an agent could read it and still believe a reminder
 is waiting for them the moment it falls due. An agent who knows to look is
 better off than one who is waiting for something that will never arrive.
+
+---
+
+## 21. `004 §9` and `002 §9` disagree on who may assign an unassigned ticket
+
+**No decision is requested.** Recorded because the resolution leaves one control
+on screen that is NOT backed by a server refusal, which is unusual in this
+codebase and should not be discovered by someone reading the code later.
+
+### The two statements
+
+`004 §9`, the agent-dashboard permission matrix:
+
+| Action | AGT | LEAD | MGR | ADM | AUD |
+|---|---|---|---|---|---|
+| View team queue | own teams | ✓ | ✓ | ✓ | read only |
+| **Assign from the team queue** | **self only** | ✓ | ✓ | ✓ | — |
+
+`002 §9`, the ticket-management matrix, on the same action:
+
+| Action | CUST | AGT | LEAD | MGR | ADM | AUD |
+|---|---|---|---|---|---|---|
+| Assign / self-assign | — | ✓ | ✓ | ✓ | ✓ | — |
+| Reassign another agent's ticket | — | — | ✓ | ✓ | ✓ | — |
+
+And `002 FR-010` is a **MUST**: *"An agent MUST be able to self-assign any
+unassigned ticket within their scope."*
+
+They are specific along different axes. `004` constrains a **surface** — the
+team queue. `002` constrains the **action** — assignment, wherever it is
+invoked. Both are specific; neither is the obvious general case of the other.
+
+### What was built
+
+- **The endpoint answers to `002`.** `PATCH /ticket/:id/assign` lets an agent
+  assign an unassigned ticket in their scope, to themselves or to a colleague.
+  Taking over a ticket somebody else already holds is refused for an agent
+  (403), which is `002 §9`'s second row and is enforced server-side.
+- **The team queue offers `004`'s narrower rule.** For a caller without LEAD,
+  the picker contains exactly one name — their own — and the panel says why.
+
+### The honest consequence
+
+**The team queue's self-only restriction is presentation, not enforcement.** An
+agent who edited the page could assign a queued ticket to a colleague, and the
+server would accept it — because `002 FR-010` and `002 §9` say it may.
+
+That is stated rather than papered over. It is not a scope or audit hole: the
+ticket is inside the caller's scope by the same predicate as every other read,
+the assignee is checked to be scoped to it, and the mutation writes its audit
+entry with `FR-009`'s mandatory reason either way. What an agent could reach by
+editing this screen, they can already reach from the ticket detail screen, which
+`002` governs and which offers the same control openly.
+
+### What would change it
+
+Tightening the endpoint to "agents may only self-assign" would contradict
+`002 §9`'s explicit row and would need that matrix changed first. If the client
+wants that, it is a change to `002 §9`, made there — not a quiet narrowing in
+the code, which would leave two specs and the implementation disagreeing in
+three different directions.
+
+---
+
+## 22. `004 FR-016` — what the team queue can and cannot answer
+
+**No decision is requested.** The record of which of `FR-016`'s four views are
+real, so "the team queue is built" is not read as more than it is.
+
+| View | State | Note |
+|---|---|---|
+| unassigned | built | Ordered priority then age — `E-05`'s fallback, the same order the personal queue uses. |
+| oldest | built | The one view that needs no rule to define it. |
+| per-agent load | built | Open count per assignable colleague in scope, **including those carrying zero** — a group-by over tickets alone cannot produce them, and they are the answer to "who takes this". |
+| **at risk** | **cannot be answered** | "At risk" is remaining time against an SLA target. `elapsed-time.js` answers `unavailable` while `005 [CLARIFY-2]` is open, and constitution III forbids a substitute. |
+
+The at-risk tab is **offered and refuses**, rather than hidden. Hiding it makes
+a blocked requirement look like one nobody read; returning an empty list would
+assert that no ticket is at risk, which nobody knows. `AS-08` is the reason
+faking it would be worse than useless: it requires the team queue's number to be
+*identical* to the one spec `009` reports for the same ticket at the same
+instant, and an invented number disagrees by construction.
+
+**Team is not a dimension.** `§11`'s predicate is "team ∈ caller teams AND
+branch ∈ scope AND department ∈ scope". Team does not exist (decision 20, spec
+defect §7), so the queue runs on two of three conjuncts — which **widens** the
+result. Not a new exposure: `GET /ticket` already returns exactly this set to
+exactly these callers through the same `scopeFilter`. Said on the screen and in
+the payload (`scope.teamDimension: false`) rather than left to be inferred from
+a list that looks bigger than a team.
+
+**`§10`'s bulk assignment is not built.** One row at a time. Board card
+`team-queue-bulk-assign`; `002 FR-011` (SHOULD) already specifies the per-ticket
+outcome reporting it would need.

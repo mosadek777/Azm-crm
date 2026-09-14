@@ -1437,6 +1437,16 @@
       ],
       "status": "not started",
       "description": "This system has NO scheduler. No cron, no queue, no worker, no timer: index.js boots an Express app and nothing else, and package.json carries no scheduling dependency.\n\nSo \"notify ahead of a task due date\" (004 FR-005) cannot fire while nobody has the product open. What is built instead is honest about that: reminders are EVALUATED ON REQUEST — when an agent opens the workspace, the server computes which of their tasks are due or overdue and answers with them. An agent who is not logged in is not notified, and the interface does not imply otherwise.\n\nWHY NOT JUST ADD ONE. A scheduler is not a small dependency, and it is not this spec's to design: 005 section 11 already names a \"run scheduled automation (internal) | Scheduler entry | system; idempotent per ticket per occurrence\" — the scheduler belongs to the SLA and automation engine. Adding a second, different one here would pre-empt a design 005 owns and leave two things to reconcile later.\n\nWHAT CARRIES OVER: the evaluation is a pure function of (tasks, now). Whether it is called by a request or by a scheduled job is a caller question, so the engine landing means pointing it at the same function."
+    },
+    {
+      "key": "team-queue-bulk-assign",
+      "name": "The team queue assigns one ticket at a time, not a batch",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "Spec 004 section 10 lists an audit event for \"Bulk assignment from the team queue\" with the fields actor, timestamp, ticket count and PER-TICKET OUTCOME. The queue built today assigns one row at a time, so that event is never written.\n\nNothing blocks this. It is unscheduled rather than gated, and the hard part is already specified elsewhere: 002 FR-011 (SHOULD) requires that a bulk operation \"MUST apply per-ticket permission and transition validation, MUST report per-ticket outcomes, and MUST NOT abort the batch on one failure\". That last clause is what makes it more than a loop — a batch where one ticket is terminal, or one assignee is out of scope, must still assign the rest and say which ones it did not.\n\nWHAT EXISTS AND CARRIES OVER: the single-assignment path, with its terminal-status refusal, its assignee-must-be-scoped check, FR-009's mandatory reason and its audit entry in the same transaction. A batch endpoint calls that per ticket and collects outcomes; it must not reimplement any of it.\n\nA lead rebalancing after an absence is the case that makes this worth doing — one at a time is fine for three tickets and tedious for thirty."
     }
   ],
   "retiredIds": []

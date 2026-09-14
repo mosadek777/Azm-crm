@@ -93,6 +93,19 @@
                           <path d="M3 13h4.2a1.8 1.8 0 011.8 1.8 1.8 1.8 0 001.8 1.8h2.4a1.8 1.8 0 001.8-1.8A1.8 1.8 0 0116.8 13H21" />
                         </svg>
                       }
+                      @case ('teamQueue') {
+                        <!-- Stacked layers with people beneath: the shared pile
+                             of work and who is carrying it. Deliberately not an
+                             inbox — that is Tickets, and two inboxes side by
+                             side would say the screens do the same thing. -->
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="3.2" y="3.4" width="17.6" height="5.2" rx="1.6" />
+                          <path d="M5.4 11.6h13.2M7.2 15.2h9.6" />
+                          <circle cx="8.4" cy="19.4" r="1.5" />
+                          <circle cx="15.6" cy="19.4" r="1.5" />
+                        </svg>
+                      }
                       @case ('quickReplies') {
                         <!-- A speech bubble with lines: saved wording. -->
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"

@@ -127,6 +127,9 @@ export class Sidebar {
         // with no destination.
         { labelKey: 'nav.workspace', route: '/workspace', icon: 'workspace', badge: 'taskReminders' },
         { labelKey: 'nav.tickets', route: '/tickets', icon: 'tickets', badge: 'unassignedTickets' },
+        // 004 AD-16. Offered to everyone: section 9 gives every staff role a view
+        // of it, an auditor included. What differs is the controls inside.
+        { labelKey: 'nav.teamQueue', route: '/team-queue', icon: 'teamQueue' },
         { labelKey: 'nav.customers', route: '/customers', icon: 'customers' },
         { labelKey: 'nav.quickReplies', route: '/quick-replies', icon: 'quickReplies' }
       ]

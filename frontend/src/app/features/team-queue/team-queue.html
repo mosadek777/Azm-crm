@@ -1,0 +1,195 @@
+<!-- The team queue. See team-queue.ts for why the at-risk view is OFFERED and
+     cannot answer, and why "team" is branch + department here. -->
+<div class="flex flex-col gap-6">
+
+  <div class="flex flex-wrap items-center gap-3">
+    <h1 class="m-0 text-2xl font-semibold text-surface-900">
+      {{ 'teamQueue.title' | translate: i18n.lang() }}
+    </h1>
+  </div>
+
+  <!-- Team is not a dimension. Said on the page, not left to be inferred from
+       a row count that looks larger than expected. -->
+  <p class="m-0 text-xs text-surface-500">
+    {{ 'teamQueue.scopeNote' | translate: i18n.lang() }}
+  </p>
+
+  <!-- ── THE FOUR VIEWS ─────────────────────────────────────────────────── -->
+  <div class="flex flex-wrap gap-2" role="tablist">
+    @for (v of views; track v) {
+      <button type="button" role="tab" [attr.aria-selected]="view() === v"
+        [class]="view() === v
+          ? 'rounded-lg bg-primary-600 px-3.5 py-2 text-sm font-semibold text-white motion-safe:transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500'
+          : 'rounded-lg border border-surface-200 bg-surface-0 px-3.5 py-2 text-sm font-medium text-surface-700 hover:bg-surface-50 motion-safe:transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500'"
+        (click)="setView(v)">
+        {{ ('teamQueue.view.' + v) | translate: i18n.lang() }}
+      </button>
+    }
+  </div>
+
+  <!-- ── PER-AGENT LOAD ─────────────────────────────────────────────────────
+       AD-16's "so I rebalance load while it still matters". Shown for every
+       view, because the decision needs the queue and the loads together.
+       Agents carrying ZERO are here deliberately — they are the answer. -->
+  <section class="rounded-xl border border-surface-200 bg-surface-0">
+    <div class="flex flex-wrap items-center gap-3 border-b border-surface-200 p-4">
+      <h2 class="m-0 text-sm font-semibold text-surface-900">
+        {{ 'teamQueue.load' | translate: i18n.lang() }}
+      </h2>
+      <span class="text-xs text-surface-500">{{ 'teamQueue.loadNote' | translate: i18n.lang() }}</span>
+    </div>
+    @if (load().length === 0) {
+      <p class="m-0 p-4 text-sm text-surface-600">{{ 'teamQueue.noColleagues' | translate: i18n.lang() }}</p>
+    } @else {
+      <ul class="m-0 flex list-none flex-wrap gap-2 p-4">
+        @for (a of load(); track a.userId) {
+          <button type="button"
+            class="flex items-center gap-2 rounded-lg border border-surface-200 bg-surface-0 px-3 py-2
+                   text-sm text-surface-800 hover:border-primary-300 hover:bg-primary-50
+                   motion-safe:transition-colors
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            [class.border-primary-400]="view() === 'agent' && agentId() === a.userId"
+            [class.bg-primary-50]="view() === 'agent' && agentId() === a.userId"
+            (click)="showAgent(a)">
+            <span class="truncate">{{ a.displayName }}</span>
+            <!-- A count is direction-neutral. Zero is SHOWN, not hidden: an
+                 empty badge would lose the only row a lead is looking for. -->
+            <span class="ltr rounded-full bg-surface-100 px-2 py-0.5 text-xs font-semibold tabular-nums text-surface-700">
+              {{ a.open }}
+            </span>
+          </button>
+        }
+      </ul>
+    }
+  </section>
+
+  <!-- ── THE QUEUE ──────────────────────────────────────────────────────── -->
+  <section class="rounded-xl border border-surface-200 bg-surface-0">
+    <div class="flex flex-wrap items-center gap-3 border-b border-surface-200 p-4">
+      <h2 class="m-0 text-sm font-semibold text-surface-900">
+        {{ ('teamQueue.view.' + view()) | translate: i18n.lang() }}
+      </h2>
+      @if (!loading() && !unavailable()) {
+        <span class="ltr rounded-full bg-surface-100 px-2.5 py-0.5 text-xs text-surface-600">
+          {{ total() }}
+        </span>
+      }
+    </div>
+
+    <!-- E-05: the queue STATES the order it was given, never one it assumed. -->
+    @if (ordering()?.applied === 'priority_then_age') {
+      <p class="m-0 border-b border-surface-100 px-4 py-2.5 text-xs text-surface-500">
+        {{ 'workspace.orderFallback' | translate: i18n.lang() }}
+      </p>
+    } @else if (ordering()?.applied === 'oldest_first') {
+      <p class="m-0 border-b border-surface-100 px-4 py-2.5 text-xs text-surface-500">
+        {{ 'teamQueue.orderOldest' | translate: i18n.lang() }}
+      </p>
+    }
+
+    @if (loading()) {
+      <p class="m-0 p-4 text-sm text-surface-500">{{ 'common.loading' | translate: i18n.lang() }}</p>
+    } @else if (unavailable()) {
+      <!-- NOT AN EMPTY LIST. An empty at-risk list would say that nothing is at
+           risk, which nobody knows. The reason is rendered instead. -->
+      <div class="flex flex-col items-start gap-2 p-6">
+        <p class="m-0 text-sm font-medium text-surface-700">
+          {{ 'teamQueue.atRiskUnavailable' | translate: i18n.lang() }}
+        </p>
+        <p class="m-0 text-xs text-surface-500">
+          {{ 'sla.unavailableWhy' | translate: i18n.lang() }}
+        </p>
+      </div>
+    } @else if (scopeEmpty()) {
+      <!-- E-14: empty WITH AN EXPLANATION, not an error and not a blank. -->
+      <p class="m-0 p-6 text-sm text-surface-600">
+        {{ 'teamQueue.scopeEmpty' | translate: i18n.lang() }}
+      </p>
+    } @else if (view() === 'agent' && !agentId()) {
+      <p class="m-0 p-6 text-sm text-surface-600">
+        {{ 'teamQueue.pickAgent' | translate: i18n.lang() }}
+      </p>
+    } @else if (tickets().length === 0) {
+      <p class="m-0 p-6 text-sm text-surface-600">
+        {{ 'teamQueue.empty' | translate: i18n.lang() }}
+      </p>
+    } @else {
+      <ul class="m-0 list-none p-0">
+        @for (t of tickets(); track t._id) {
+          <li class="border-b border-surface-100 last:border-0">
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
+              <button type="button"
+                class="ltr shrink-0 rounded-lg border border-surface-200 px-2.5 py-1 font-mono text-xs
+                       text-primary-700 hover:bg-primary-50 motion-safe:transition-colors
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                (click)="openTicket(t)">
+                {{ t.reference }}
+              </button>
+              <span class="min-w-0 flex-1 text-sm text-surface-900">{{ t.subject }}</span>
+              <span class="shrink-0 text-xs text-surface-600">{{ t.priority }}</span>
+              <app-tag [tone]="t.status | statusTone" [raw]="t.status">{{ t.status }}</app-tag>
+              <!-- FR-034 / constitution III: read, never computed. -->
+              <span class="shrink-0 text-xs text-surface-400">
+                {{ 'common.unavailable' | translate: i18n.lang() }}
+              </span>
+              @if (t.assignedAgentName) {
+                <span class="shrink-0 text-xs text-surface-600">{{ t.assignedAgentName }}</span>
+              }
+              @if (canAssign()) {
+                <button type="button"
+                  class="shrink-0 rounded-lg border border-surface-200 px-2.5 py-1 text-xs font-medium
+                         text-surface-800 hover:bg-surface-50 motion-safe:transition-colors
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                  (click)="openAssign(t)">
+                  {{ 'teamQueue.assign' | translate: i18n.lang() }}
+                </button>
+              }
+            </div>
+
+            @if (assigning() === t._id) {
+              <div class="flex flex-wrap items-end gap-3 border-t border-surface-100 bg-surface-50 px-4 py-3">
+                <label class="flex min-w-[12rem] flex-1 flex-col gap-1">
+                  <span class="text-xs font-medium text-surface-700">
+                    {{ 'teamQueue.assignTo' | translate: i18n.lang() }}
+                  </span>
+                  <select name="assignTo" [ngModel]="assignTo()" (ngModelChange)="assignTo.set($event)"
+                    class="rounded-lg border border-surface-300 bg-surface-0 px-3 py-2 text-sm
+                           focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200">
+                    <option value="">{{ 'teamQueue.choose' | translate: i18n.lang() }}</option>
+                    @for (a of assignableAgents(); track a.userId) {
+                      <option [value]="a.userId">{{ a.displayName }} ({{ a.open }})</option>
+                    }
+                  </select>
+                </label>
+
+                <label class="flex min-w-[14rem] flex-[2] flex-col gap-1">
+                  <!-- FR-009 (MUST): a reason is required and stored. Never
+                       defaulted — an invented reason makes the trail useless. -->
+                  <span class="text-xs font-medium text-surface-700">
+                    {{ 'teamQueue.reason' | translate: i18n.lang() }}
+                  </span>
+                  <input name="reason" type="text" [ngModel]="reason()" (ngModelChange)="reason.set($event)"
+                    class="rounded-lg border border-surface-300 bg-surface-0 px-3 py-2 text-sm
+                           focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200" />
+                </label>
+
+                <button type="button" [disabled]="!canSubmitAssign() || busy() === t._id"
+                  class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white
+                         hover:bg-primary-700 disabled:opacity-50 motion-safe:transition-colors
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                  (click)="submitAssign(t)">
+                  {{ 'teamQueue.confirmAssign' | translate: i18n.lang() }}
+                </button>
+              </div>
+              @if (!canAssignOthers()) {
+                <p class="m-0 border-t border-surface-100 bg-surface-50 px-4 pb-3 text-xs text-surface-500">
+                  {{ 'teamQueue.selfOnly' | translate: i18n.lang() }}
+                </p>
+              }
+            }
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</div>

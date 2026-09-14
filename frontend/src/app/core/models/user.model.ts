@@ -79,6 +79,16 @@ export interface CapabilityHints {
   customerReply: boolean;
   /** Holds LEAD or above: 004 FR-007 keeps shared quick replies off an agent. */
   sharedQuickReplies: boolean;
+  /**
+   * Holds LEAD or above: 004 section 9 gives an agent "self only" when
+   * assigning from the team queue, and a lead the whole roster.
+   *
+   * Presentation only, and unusually so — see the long note on the endpoint.
+   * Spec 002 permits an agent to route an UNASSIGNED ticket to a colleague, so
+   * the server does not refuse what this hides. Taking over a ticket somebody
+   * else already holds IS refused server-side, for an agent, regardless.
+   */
+  teamAssign: boolean;
 }
 
 /** The starting point, and what a failed lookup falls back to: show nothing. */
@@ -87,7 +97,8 @@ export const NO_CAPABILITIES: CapabilityHints = {
   staffDirectory: false,
   ticketWrite: false,
   customerReply: false,
-  sharedQuickReplies: false
+  sharedQuickReplies: false,
+  teamAssign: false
 };
 
 export interface MeResponse {
