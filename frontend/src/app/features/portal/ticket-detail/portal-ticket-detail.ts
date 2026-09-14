@@ -29,11 +29,11 @@ import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { StatusTonePipe } from '../../../shared/pipes/status-tone.pipe';
 import { Tag } from '../../../shared/components/tag/tag';
 import { ToastService } from '../../../core/notifications/toast.service';
-import { MessageBubble } from '../../../shared/components/message-bubble/message-bubble';
+import { Conversation, ConversationMessage } from '../../../shared/components/conversation/conversation';
 
 @Component({
   selector: 'app-portal-ticket-detail',
-  imports: [FormsModule, RouterLink, DatePipe, TranslatePipe, StatusTonePipe, MessageBubble, Tag],
+  imports: [FormsModule, RouterLink, DatePipe, TranslatePipe, StatusTonePipe, Conversation, Tag],
   templateUrl: './portal-ticket-detail.html'
 })
 export class PortalTicketDetail {
@@ -50,6 +50,34 @@ export class PortalTicketDetail {
 
   protected readonly ticket = signal<PortalTicket | null>(null);
   protected readonly messages = signal<PortalMessage[]>([]);
+
+  /**
+   * The thread, mapped for the shared conversation component.
+   *
+   * ⚠ NOTHING IS FILTERED HERE, and that is the point. 008 FR-019 is enforced
+   * in the QUERY — portal-ticket.service.js puts `visibility: 'customer'` in
+   * the find — so an internal note never reaches this browser at all. A filter
+   * at this line would mean the text had already arrived and was being hidden,
+   * which is one devtools panel away from being read.
+   *
+   * `internal` is not set and `showVisibility` is not passed: every message a
+   * customer can see is customer-visible by construction, so a chip saying so
+   * would be noise, and a chip that could ever say 'internal' is exactly what
+   * FR-019 forbids.
+   *
+   * THE AUTHOR IS A KEY, NEVER A NAME. Decision 29 resolved 002 [CLARIFY-6]:
+   * a customer sees no individual agent, including the author of a reply they
+   * can read. The API does not send one — `from` is 'you' or 'support' — so
+   * there is no name here to leak even by accident.
+   */
+  protected readonly conversation = computed<ConversationMessage[]>(() =>
+    this.messages().map(m => ({
+      _id: m._id,
+      body: m.body,
+      sentAt: m.sentAt,
+      fromCustomer: m.from === 'you',
+      authorKey: m.from === 'you' ? 'portal.fromYou' : 'portal.fromSupport'
+    })));
   protected readonly loading = signal(true);
   protected readonly notFound = signal(false);
 

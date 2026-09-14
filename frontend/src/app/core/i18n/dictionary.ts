@@ -408,6 +408,20 @@ export const DICTIONARY: Translations = {
     ar: 'يمكن اختيار موعد مضى — ستظهر المهمة متأخرة فورًا.',
     en: 'A past date is fine — the task simply shows as overdue straight away.'
   },
+  // --- the shared conversation (002 FR-014, 008 FR-019; decision 29) ------
+  //
+  // ONE COMPONENT RENDERS BOTH THREADS. The empty state differs only because
+  // the two readers are waiting for different things: staff for the customer,
+  // the customer for us.
+  'conversation.empty': { ar: 'لا توجد رسائل بعد.', en: 'No messages yet.' },
+  'conversation.emptyStaff': {
+    ar: 'لا توجد رسائل على هذه التذكرة بعد.',
+    en: 'Nothing on this ticket yet.'
+  },
+  'conversation.emptyPortal': {
+    ar: 'لا توجد رسائل بعد — سنرد عليك هنا.',
+    en: 'No messages yet — we will reply to you here.'
+  },
   // --- mentions and notifications (spec 004 FR-009, FR-013; AD-09, AD-13) --
   //
   // ⚠ `notifications.inAppOnly` is the same honesty rule as the reminders, with

@@ -1,0 +1,40 @@
+<!-- One conversation, rendered identically for staff and for the customer.
+     See conversation.ts for the only two things that differ between them, and
+     for why neither of them is a filter applied here. -->
+<section class="rounded-xl border border-surface-200 bg-surface-0 p-4">
+  <h2 class="m-0 mb-3 text-sm font-semibold text-surface-900">
+    {{ headingKey() | translate: i18n.lang() }}
+  </h2>
+
+  @if (messages().length === 0) {
+    <!-- A conversation with nothing in it is a normal state, not an error —
+         a request raised a minute ago has no reply yet. -->
+    <p class="m-0 py-2 text-sm text-surface-600">
+      {{ emptyKey() | translate: i18n.lang() }}
+    </p>
+  } @else {
+    <!-- TWO THINGS ARE VISIBLE AT A GLANCE, and they are independent.
+
+         WHO wrote it — the customer's words sit at the START edge on white,
+         ours at the END edge tinted, so the thread reads as a conversation
+         rather than a list. Logical properties, so it mirrors in Arabic with
+         no second stylesheet.
+
+         WHETHER THE CUSTOMER CAN SEE IT — an internal note additionally
+         carries an amber start-rule and an amber chip, so it stands out
+         whoever wrote it and however the author colours fall. FR-014 / AS-07:
+         nobody should post an internal note believing it is a reply. Both
+         signals are shape and text as well as colour. -->
+    <ul class="m-0 flex list-none flex-col gap-3 p-0">
+      @for (m of messages(); track m._id) {
+        <app-message-bubble
+          [fromCustomer]="m.fromCustomer"
+          [authorKey]="m.authorKey"
+          [body]="m.body"
+          [sentAt]="m.sentAt"
+          [internal]="!!m.internal"
+          [showVisibility]="showVisibility()" />
+      }
+    </ul>
+  }
+</section>

@@ -29,11 +29,11 @@ import {
   Ticket, Customer, TicketMessage, HistoryEntry, Sla, Visibility, TicketMeta
 } from '../../../core/models/domain.model';
 import { ToastService } from '../../../core/notifications/toast.service';
-import { MessageBubble } from '../../../shared/components/message-bubble/message-bubble';
+import { Conversation, ConversationMessage } from '../../../shared/components/conversation/conversation';
 
 @Component({
   selector: 'app-ticket-detail',
-  imports: [FormsModule, TranslatePipe, StatusTonePipe, ActionTonePipe, MessageBubble, Tag, DatePipe, CustomerContext, TicketTasks],
+  imports: [FormsModule, TranslatePipe, StatusTonePipe, ActionTonePipe, Conversation, Tag, DatePipe, CustomerContext, TicketTasks],
   templateUrl: './ticket-detail.html'
 })
 export class TicketDetail implements OnDestroy {
@@ -48,6 +48,27 @@ export class TicketDetail implements OnDestroy {
   //
   // An AUDITOR is read-everything, change-nothing (002 §9), so every write
   // control on this screen is refused for them, every time.
+  /**
+   * The thread, mapped into the shape the shared conversation renders.
+   *
+   * MAPPED HERE RATHER THAN SHARED AS A WIRE TYPE. The staff response carries
+   * `authorKind` and `visibility`; the portal response carries neither, because
+   * neither is anything a customer may know (008 FR-019, decision 29). Keeping
+   * the mapping in each screen keeps that asymmetry where the API put it.
+   */
+  protected readonly conversation = computed<ConversationMessage[]>(() =>
+    this.messages().map(m => ({
+      _id: m._id,
+      body: m.body,
+      sentAt: m.sentAt,
+      fromCustomer: m.authorKind === 'customer',
+      // A KEY, never a name. Staff see a role; see the portal for why.
+      authorKey: m.authorKind === 'customer' ? 'ticket.authorCustomer'
+        : m.authorKind === 'system' ? 'ticket.authorSystem'
+        : 'ticket.authorStaff',
+      internal: m.visibility === 'internal'
+    })));
+
   protected readonly canWrite = computed(() => this.auth.show().ticketWrite);
 
   // 002 §9 splits authorship BY VISIBILITY: an ADMINISTRATOR may write an
