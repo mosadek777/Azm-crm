@@ -151,10 +151,6 @@ export const DICTIONARY: Translations = {
     en: 'Roles are fixed in code and are not created or edited from the interface. Permissions are granted through roles only — there are no per-user overrides (010 FR-002).'
   },
   // Stated plainly: role assignment happens at creation and nowhere else yet.
-  'admin.rolesAtCreationNote': {
-    ar: 'تُمنح الأدوار عند إنشاء المستخدم. لا يوجد حتى الآن إجراء في الواجهة البرمجية لتغيير أدوار مستخدم قائم.',
-    en: 'Roles are granted when the user is created. There is not yet an API action to change the roles of an existing user.'
-  },
 
   'role.AGT': { ar: 'وكيل', en: 'Agent' },
   'role.LEAD': { ar: 'قائد فريق', en: 'Team lead' },
@@ -407,6 +403,37 @@ export const DICTIONARY: Translations = {
   'task.pastAllowed': {
     ar: 'يمكن اختيار موعد مضى — ستظهر المهمة متأخرة فورًا.',
     en: 'A past date is fine — the task simply shows as overdue straight away.'
+  },
+  // Replaced 'admin.rolesAtCreationNote', which said roles could only be set at
+  // creation. That stopped being true on 2026-09-14 and a note that is quietly
+  // wrong is worse than none.
+  'admin.rolesChangeableNote': {
+    ar: 'الأدوار تُمنح وتُسحب من شاشة المستخدمين. لا يمكن ترك مستخدم بلا أي دور، ولا سحب دور آخر مسؤول نظام نشط.',
+    en: 'Roles are granted and removed from the Users screen. A user cannot be left with no role at all, and the last active administrator cannot lose theirs.'
+  },
+  // --- role assignment (spec 010 §10, §11; decision 43) -------------------
+  //
+  // ⚠ `admin.grantScopeNote` exists because FR-021's resolution is invisible:
+  // the screen sends NO scope, and the server resolves it to the granting
+  // administrator's own. Without the line, nobody can tell which branches a
+  // granted role covers.
+  'admin.manageRoles': { ar: 'الأدوار', en: 'Roles' },
+  'admin.manageRolesFor': { ar: 'أدوار', en: 'Roles for' },
+  'admin.grantRole': { ar: 'إضافة دور', en: 'Add a role' },
+  'admin.chooseRole': { ar: 'اختر دورًا…', en: 'Choose a role…' },
+  'admin.grant': { ar: 'منح', en: 'Grant' },
+  'admin.revokeRole': { ar: 'سحب الدور', en: 'Remove the role' },
+  'admin.roleGranted': { ar: 'تم منح الدور', en: 'Role granted' },
+  'admin.roleRevoked': { ar: 'تم سحب الدور', en: 'Role removed' },
+  'admin.grantScopeNote': {
+    ar: 'يُمنح الدور ضمن نطاقك أنت — الفروع والأقسام التي تملكها، ولا يمكن أن يتجاوزها.',
+    en: 'A role is granted within your own scope — the branches and departments you hold, and it cannot exceed them.'
+  },
+  // 002 E-12 covers a DEACTIVATED agent's tickets and says nothing about a role
+  // change, so nothing is moved. The number is reported so somebody can decide.
+  'admin.strandedTickets': {
+    ar: 'تذاكر ما زالت مُسندة إليه ولم تعد ضمن نطاقه — لم يُنقل أي منها:',
+    en: 'Tickets still assigned to them that their remaining scope no longer covers — none were moved:'
   },
   // --- administrator configuration (spec 010 FR-011, spec 002 §8) ----------
   //

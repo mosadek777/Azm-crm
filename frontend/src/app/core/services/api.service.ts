@@ -4,7 +4,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { AgentLoad, Branch, NotificationGroup, TicketLabel, ContactPoint, Customer, Department, HistoryEntry, Placeholder, QuickReply, Sla, Task, TeamQueueView, Ticket, TicketMessage, TicketMeta } from '../models/domain.model';
-import { CreateUserRequest, LocalizedText, StaffUser } from '../models/user.model';
+import { CreateUserRequest, LocalizedText, Role, StaffUser } from '../models/user.model';
 
 const API = 'http://localhost:3000';
 
@@ -149,6 +149,26 @@ export class ApiService {
     return this.http.patch<{ user: StaffUser }>(
       `${API}/user/${id}/${active ? 'reactivate' : 'deactivate'}`, {});
   }
+  // --- role assignment (spec 010 §10, §11; decision 43) ---
+  //
+  // Changing a role no longer means deleting the account and recreating it,
+  // which changed the id and orphaned every audit entry naming it.
+  //
+  // The server refuses four things whatever this client sends: the last role
+  // (decision 43), the last active administrator's ADM (E-01), your own roles
+  // (E-02 by analogy), and a grant exceeding the granter's scope (FR-021).
+  grantRole(userId: string, role: Role, scope?: { branchIds: string[]; departmentIds: string[] }) {
+    return this.http.post<{ user: StaffUser; granted: unknown }>(
+      `${API}/user/${userId}/role`, { role, ...(scope ? { scope } : {}) });
+  }
+
+  /** `strandedTickets` counts what the user still holds but can no longer
+   *  reach. Reported, never refused, and nothing is moved. */
+  revokeRole(userId: string, role: Role) {
+    return this.http.delete<{ user: StaffUser; revoked: string; strandedTickets: number }>(
+      `${API}/user/${userId}/role/${role}`);
+  }
+
   // --- quick replies (spec 004 FR-006, FR-007) ---
   //
   // THE VOCABULARY IS FETCHED, NOT DUPLICATED. Decision 41 requires one list,

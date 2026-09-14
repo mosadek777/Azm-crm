@@ -1966,3 +1966,74 @@ shown on the screen and refused by the model (`immutable: true`).
 | notification and email templates | spec `003` does not exist | `notification-templates` |
 | ticket types, custom fields, form definitions | new subsystems with no consumer today | `custom-fields` |
 | branding | cosmetic, unscheduled | `branding-configuration` |
+
+---
+
+## 25. Decision 43 — a user may not be left holding zero roles (project owner, provisional)
+
+**Answered by the project owner 2026-09-14, recorded as theirs and provisional,
+the same treatment as decisions 26–30, 41 and 42.** This unblocks
+`decisions-pending.md` §15 and board card `role-revocation`.
+
+### The question §15 was blocked on
+
+`010 §10` and `§11` both name role revocation as a first-class action — the
+audit event *"Role assignment granted / revoked | actor, subject, role, scope
+granted, timestamp"* and the contract *"grant / revoke role assignment | Access
+| admin; scope granted ⊆ granter's scope"*. **No `FR-*` requires it**, and no
+spec says what happens to a user left holding none. Three ways out were put:
+
+1. **Refuse the last revocation**, as `010 E-01` refuses deactivating the last
+   administrator.
+2. **Permit it**, leaving an account that authenticates and can reach nothing.
+3. **Treat it as deactivation**, collapsing two concepts into one.
+
+### The answer
+
+> **Refuse the last revocation.** An account that signs in and can reach
+> nothing is worse than a refusal that says why.
+
+Option 1. Two things follow from it, and both are built:
+
+- A user always holds **at least one** role assignment. The refusal is a 409
+  naming the reason, the same shape `E-01` already uses for the last
+  administrator.
+- **`E-01` is extended to revocation, not only to deactivation.** Revoking the
+  last active administrator's `ADM` role is refused for the same reason
+  deactivating them is. Without that, the rule `E-01` exists to enforce could be
+  walked around by using a different verb — which is `E-01` in a different
+  shape rather than a new decision.
+
+### Two things the spec is silent on, decided as readings
+
+Recorded separately from the project owner's answer, because they are the
+developer's and are cheap to relax.
+
+**An administrator may not change their own role assignments.** By analogy to
+`010 E-02`, which refuses deactivating yourself. An administrator who revoked
+their own `ADM` would be the only person unable to undo it, and nobody is
+obliged to notice. Another administrator can always do it for them, and an
+administrator granting themselves a lesser role gains nothing they do not
+already hold. One rule, stated once, removes the whole class.
+
+**A revocation is not refused because work would be stranded — it is reported.**
+Revoking a role can leave a user holding tickets their remaining scope no longer
+covers. `002 E-12` covers the deactivation case ("the ticket returns to the
+owning team queue as unassigned") and says nothing about role change. Refusing
+would block legitimate reorganisation; doing it silently would strand work
+nobody can see. So the response carries `strandedTickets` — a **count**, never
+the records — and the screen shows it before and after. No ticket is moved:
+moving them would be inventing `E-12`'s behaviour for a case it does not cover.
+
+### What is unchanged, and must stay proven
+
+`FR-021` and `AS-04` are untouched: **a granting administrator cannot grant
+scope exceeding their own**, an empty scope set resolves to the granter's own
+scope and never to all, and the resolution happens at grant time with the
+concrete list stored. The new grant endpoint calls the same
+`resolveGrantedScope` that user creation calls — there is one implementation,
+and `scope.test.js` proves it.
+
+The target user is loaded through the same overlap predicate `listUsers` uses,
+so an administrator cannot grant a role to somebody outside their own scope, and
+an unreachable user answers **404, never 403** (constitution IV).

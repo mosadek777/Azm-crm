@@ -4,8 +4,9 @@ The session-start briefing. Read this **instead of** the constitution and all
 thirteen specs. Updated at the end of every step.
 
 **Last updated:** 2026-09-14 · **after:** spec `004` closed as far as it goes,
-the conversation unified across staff and portal, and `010 FR-011`'s first two
-configuration surfaces · **42 ratified decisions** · constitution 0.4.0
+the conversation unified across staff and portal, `010 FR-011`'s first two
+configuration surfaces, and role changes in place · **43 ratified decisions** ·
+constitution 0.4.0
 
 ---
 
@@ -13,14 +14,13 @@ configuration surfaces · **42 ratified decisions** · constitution 0.4.0
 
 Four items, in this order. The first is not a feature and is the most valuable.
 
-1. **Role changes for an existing user.** There is no way to promote an agent to
-   a lead — no endpoint, no screen. Changing somebody's role today means
-   deleting the account and recreating it, which changes their id and orphans
-   their history. Blocked on one question, now answered by the project owner:
-   *what happens to a user left holding zero roles* — **refuse the last
-   revocation**, as `010 E-01` refuses removing the last administrator.
-   `010 §10` and `§11` already give the audit shape and the authorisation rule.
-   Board card `role-revocation`, `decisions-pending.md` §15.
+1. ~~Role changes for an existing user~~ — **BUILT 2026-09-14.** Decision 43
+   (project owner): a user may not be left holding zero roles, so the last
+   revocation is refused as `E-01` refuses removing the last administrator.
+   `decisions-pending.md` §25. ⚠ **It also exposed that `E-01` had never fired:**
+   the break-glass root holds an `ADM` assignment and is active, so the
+   population it counted was never smaller than one. Fixed in both the
+   deactivation and revocation paths, and now asserted.
 2. **Bring `test-cases/` current.** All thirteen files exist, but `004` was
    written before the workspace was built and still reads *"0 automated · 17 not
    testable yet"* when most of it is now automated. `008` and `010` have drifted
@@ -46,7 +46,7 @@ Express 5, ES modules, MongoDB `rs0` single-node replica set. Modules under
 | Area | Covered |
 |---|---|
 | Auth | `010 FR-006` local path, `FR-008`, `E-04` (permissions re-read per request), `E-07` break-glass. `GET /auth/me` returns six **rendering hints** — never authorisation |
-| Users | `010 FR-001` (minus role change — see NEXT ACTION), `FR-002`, `FR-003`, `E-01`, `E-02` |
+| Users | `010 FR-001`, `FR-002`, `FR-003`, `E-01`, `E-02`, and **role grant/revoke in place** (§10, §11; decision 43) |
 | Scope | `010 FR-004` (**branch + department only**; Team does not exist), `FR-005`, `FR-021`, `AS-01`, `AS-03`, `AS-04` |
 | Audit | `010 FR-008`, `AS-08` append-only, `E-11` **atomic via transactions**, `NFR-005` |
 | Platform | `012 FR-004`, `FR-007`, `FR-008`, `AS-02` refuses a single-language label |
@@ -108,7 +108,7 @@ individual agent (decision 29).
 
 | | |
 |---|---|
-| `npm test` (backend) | **634 checks across 14 suites**, exit 0. scope 28 · customer 35 · ticket 68 · portal 79 · security 45 · actor 23 · config 38 · draft 45 · notification 50 · quick-reply 57 · task 51 · team-queue 41 · workspace 27 · story-002 61 |
+| `npm test` (backend) | **15 suites**, exit 0. Counted per file the last time it was measured: scope 28 · customer 35 · ticket 68 · portal 79 · security 45 · actor 23 · config 38 · draft 45 · notification 50 · quick-reply 57 · role-assignment 47 · task 51 · team-queue 41 · workspace 27 · story-002 61 |
 | `npm run audit:reconcile` | 0 orphaned, 0 unaudited, 0 unchecked models |
 | atomicity proofs | no orphaned audit entry survives an injected fault; rollback verified |
 | `ng build` | exit 0 |
@@ -163,7 +163,6 @@ grep -rEn '^- \[ \] .\[CLARIFY-[0-9]' specs/ | wc -l
 | Item | Note |
 |---|---|
 | **`Team` does not exist** | Decision 30 defined the entity; nothing is built. `002 §3` still makes `owning_team_id` **Required**. ⚠ `002 E-12`'s singular *"the team lead"* has no rule for zero or several leads |
-| Role change for an existing user | See NEXT ACTION |
 | Category tree | Decision 21; reversing it migrates live data |
 | Resolution-code and root-cause lists | Decision 23 keeps `002 FR-029` unenforced |
 | Attachments | Decision 34 — omitted rather than built without scanning |

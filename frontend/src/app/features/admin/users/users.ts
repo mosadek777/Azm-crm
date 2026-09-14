@@ -32,11 +32,21 @@
 //    value, and an Arabic layout otherwise renders a trailing underscore at the
 //    visual start — what was typed and what is seen disagree.
 //
-// WHAT THIS SCREEN CANNOT DO, and does not pretend otherwise: roles are granted
-// at creation. There is no API action to change an existing user's roles — §10
-// and §11 of spec 010 name "role assignment granted / revoked" but no FR
-// requires it and no endpoint implements it. Rather than a control that always
-// fails, the screen says so on the page.
+// ROLES CAN NOW BE CHANGED IN PLACE (2026-09-14). Until then, changing somebody's
+// role meant deleting the account and recreating it, which changed their id and
+// orphaned every ticket and audit entry naming them.
+//
+// FOUR REFUSALS come back from the server and are rendered as it wrote them:
+//
+//   the last role          decision 43 — an account that signs in and can reach
+//                          nothing is worse than a refusal that says why
+//   the last administrator E-01, extended from deactivation to revocation
+//   your own roles         E-02 by analogy; another administrator must do it
+//   an excessive grant     FR-021 / AS-04
+//
+// The screen does not pre-empt any of them except the one it can state without
+// guessing: it does not offer the controls on your own row, because that
+// refusal depends only on who you are.
 
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -94,6 +104,75 @@ export class AdminUsers {
   protected readonly refusal = signal<LocalizedText | null>(null);
 
   protected readonly allRoles = ALL_ROLES;
+
+  // --- role assignment (010 §10, §11; decision 43) ---
+
+  /** Which row has its role panel open. One at a time. */
+  protected readonly managingRoles = signal<string | null>(null);
+  protected readonly roleToGrant = signal<Role | ''>('');
+  /** The last revocation's stranded count, shown until the panel closes. */
+  protected readonly stranded = signal<{ userId: string; count: number } | null>(null);
+
+  /** Their own row. The one refusal this screen can state without guessing. */
+  protected readonly me = computed(() => this.auth.user()?.id ?? '');
+
+  protected rolesFor(u: StaffUser): Role[] { return (u.roles ?? []) as Role[]; }
+
+  /** Roles they do not already hold — the same list the server would accept. */
+  protected grantable(u: StaffUser): Role[] {
+    return ALL_ROLES.filter(r => !this.rolesFor(u).includes(r));
+  }
+
+  protected toggleRolePanel(u: StaffUser): void {
+    this.managingRoles.set(this.managingRoles() === u._id ? null : u._id);
+    this.roleToGrant.set('');
+    this.stranded.set(null);
+    this.refusal.set(null);
+  }
+
+  protected grant(u: StaffUser): void {
+    const role = this.roleToGrant();
+    if (!role) return;
+    this.busy.set(u._id);
+    this.refusal.set(null);
+    // NO SCOPE IS SENT. FR-021: an omitted scope resolves to the GRANTER's own
+    // scope, server-side, and never to "all". Sending one from here would be a
+    // scope decision made in the client.
+    this.api.grantRole(u._id, role).subscribe({
+      next: () => {
+        this.busy.set(null);
+        this.roleToGrant.set('');
+        this.toast.success('admin.roleGranted');
+        this.load();
+      },
+      error: (e: HttpErrorResponse) => this.failRole(e)
+    });
+  }
+
+  protected revoke(u: StaffUser, role: Role): void {
+    this.busy.set(u._id);
+    this.refusal.set(null);
+    this.api.revokeRole(u._id, role).subscribe({
+      next: r => {
+        this.busy.set(null);
+        this.toast.success('admin.roleRevoked');
+        // Reported, not refused. 002 E-12 covers deactivation and says nothing
+        // about a role change, so nothing was moved — the number is here so
+        // somebody can decide what to do about it.
+        this.stranded.set(r.strandedTickets > 0 ? { userId: u._id, count: r.strandedTickets } : null);
+        this.load();
+      },
+      error: (e: HttpErrorResponse) => this.failRole(e)
+    });
+  }
+
+  /** The server's refusal, bilingual, rendered as it was written. */
+  private failRole(e: HttpErrorResponse): void {
+    this.busy.set(null);
+    const message = e.error?.message;
+    if (message?.ar && message?.en) this.refusal.set(message);
+    else this.toast.fromHttpError(e, { ar: 'تعذر تغيير الأدوار', en: 'Could not change the roles' });
+  }
   protected readonly activeCount = computed(() => this.rows().filter(u => u.state === 'active').length);
 
   constructor() {

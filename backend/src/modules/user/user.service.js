@@ -18,6 +18,7 @@ import { User, LANGUAGES } from '../../DB/models/user.model.js'
 import { RoleAssignment, ROLES } from '../../DB/models/role-assignment.model.js'
 import { recordAudit, redact } from '../../utils/audit.js'
 import { resolveGrantedScope, reachableScope } from '../../utils/scope.js'
+import { isLastActiveAdmin } from './role-assignment.service.js'
 import { RoleAssignment as RA } from '../../DB/models/role-assignment.model.js'
 
 export const createUser = async (req, res, next) => {
@@ -234,12 +235,17 @@ const setState = (nextState, action) => async (req, res, next) => {
 
     // E-01: "Last administrator is deactivated — refused. At least one active
     // administrator must remain."
+    //
+    // ⚠ THE POPULATION EXCLUDES THE BREAK-GLASS ROOT, and it did not until
+    // 2026-09-14. The root holds an ADM assignment and is active, so counting
+    // it meant this refusal could never fire in any deployment where the root
+    // exists — which is all of them. The rule read as enforced and was not, and
+    // no test caught it because none asserted the refusal itself.
+    //
+    // One implementation now, shared with role revocation, so the two paths
+    // cannot disagree about who counts. See role-assignment.service.js.
     if (nextState === 'deactivated') {
-      const adminIds = (await RoleAssignment.find({ role: 'ADM' })).map(a => a.userId)
-      const activeAdmins = await User.countDocuments({ _id: { $in: adminIds }, state: 'active' })
-      const targetIsAdmin = adminIds.some(id => id.equals(target._id))
-
-      if (targetIsAdmin && activeAdmins <= 1) {
+      if (await isLastActiveAdmin(target._id)) {
         return res.status(409).json({
           message: {
             ar: 'مرفوض: يجب أن يبقى مدير نظام واحد نشط على الأقل',
