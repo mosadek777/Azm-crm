@@ -1861,3 +1861,108 @@ the loss of all but one — the group carries its count and both timestamps.
 The window (`NOTIFICATION_GROUP_WINDOW_MINUTES`, default 15) is therefore safe
 to change after go-live: it changes how existing rows are presented, never
 which rows exist.
+
+---
+
+## 24. `010 FR-011` — the order the configuration surfaces were built in, and why
+
+**No decision is requested.** `FR-011` is one requirement naming **fourteen**
+configuration surfaces. Two are built. This records the order and the reasoning,
+so "administrator configuration exists" is not read as more than it is.
+
+### The requirement
+
+> Administrators MUST be able to configure **statuses and transitions**,
+> **categories**, **ticket types**, **custom fields**, **priorities**, **SLA
+> policies**, **business calendars and holidays**, **escalation policies**,
+> **automation rules**, **notification and email templates**, **form
+> definitions**, **segments**, **resolution codes** and **branding**, from an
+> administration surface with no release required. Any change to a user-visible
+> label MUST be refused unless both language values are supplied.
+
+### The order, and the argument for it
+
+The project owner's instinct was statuses and priorities before categories,
+because the category tree carries a migration. That is right, and it goes one
+step further: **priorities and statuses together, labels first, and stop there
+for now.**
+
+1. **Labels, for statuses and priorities — BUILT.** The smallest slice that
+   proves the whole pattern end to end: an admin-authored bilingual label on an
+   existing ratified key, refused on a single language, audited in its
+   transaction, and read by every screen through `/ticket/meta`. It touches no
+   graph and migrates no data. It also fixes something already wrong — priority
+   rendered as the raw English key `high` inside an Arabic interface.
+
+2. **`pausesSla` — BUILT, with the irreversibility on screen.** It belongs to
+   configuring a status and `FR-011` names statuses. See below.
+
+3. **Transitions — NOT BUILT.** `FR-008` makes them administrator-defined and
+   decision 22 is the developer default. Editing the graph needs a reachability
+   check, because `AS-03` requires a refused move to NAME the reachable
+   statuses — an editor that let somebody strand `resolved` with no way out
+   would break a MUST rather than a preference. Card:
+   `configurable-transitions`.
+
+4. **Categories — NOT BUILT, and deliberately last.** Decision 21 stored
+   category as a free STRING on every ticket. Making it an entity is a migration
+   of live records, and `002 FR-004` (MUST) wants a tree with leaf-only
+   selection on top of that. Two changes, one of them irreversible, and the
+   wrong thing to start at the end of a long day. Card:
+   `configurable-categories`.
+
+### What the keys are, and why they are not editable
+
+The ten status keys are decision 15 and the four priority keys are `002 §3`.
+`§8` is explicit that a status `key` is "language-neutral" and the LABEL carries
+`{ar, en}` — so the key is the stable identifier and the label is the
+configuration. Neither key set is editable, for two different reasons:
+
+- **A status key** is written onto every ticket and into every audit entry.
+  Renaming one orphans history; adding one needs a row and a column in the
+  transition graph, which is card 3 above. Card: `configurable-status-set`.
+- **A priority key** carries a RANK the queue ordering uses (`E-05`'s "priority
+  then age"). A new priority has no rank, so the queue could not place it.
+  Card: `configurable-priority-set`.
+
+### `pausesSla` is editable and says what it cannot undo
+
+The project owner's constraint, met as stated: *"decision 14 ratified those
+values, the pause ledger is append-only, and a flag changed after go-live can't
+be applied retroactively. If the screen allows it, it must say what it can't
+undo."*
+
+The screen allows it, and says so three times over:
+
+1. A standing line at the foot of the status card, naming the append-only
+   ledger as the reason rather than only asserting the rule.
+2. A confirmation in the way of the click, which names what it cannot undo
+   rather than asking "are you sure" — a prompt with no reason teaches people
+   to click through it.
+3. The audit entry records `retroactive: false` **explicitly**, alongside the
+   before and after values, so an auditor sees that the change starts at that
+   timestamp rather than rewriting what came before it.
+
+**Today the change affects nothing retroactively, because nothing has been
+computed** — spec `005` is not built and `elapsed-time.js` answers
+`unavailable`. That stops being true the day `005` lands, and it stops being
+true silently. The warning is written now for that reason.
+
+`terminal` is NOT editable, and that is a different judgement rather than the
+same one. It is structural: `002 §3` says "terminal statuses accept no reply and
+no assignment", so flipping it would change what can be done to tickets that are
+already closed, retroactively and without any record on those tickets. It is
+shown on the screen and refused by the model (`immutable: true`).
+
+### The rest, each with a card
+
+| Surface | Blocked on | Card |
+|---|---|---|
+| transitions | `AS-03`'s reachability requirement; needs an editor, not a field | `configurable-transitions` |
+| categories | decision 21's string category is on every ticket — a migration | `configurable-categories` |
+| resolution codes | decision 23 disabled `002 FR-029` because the lists do not exist | `resolution-code-lists` |
+| segments | spec `001`, not built | `customer-segments` |
+| SLA policies, calendars, holidays, escalation, automation | spec `005`, blocked on `[CLARIFY-1]` and `[CLARIFY-2]` | `sla-and-automation-config` |
+| notification and email templates | spec `003` does not exist | `notification-templates` |
+| ticket types, custom fields, form definitions | new subsystems with no consumer today | `custom-fields` |
+| branding | cosmetic, unscheduled | `branding-configuration` |

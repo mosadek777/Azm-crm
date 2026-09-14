@@ -1487,6 +1487,55 @@
       ],
       "status": "not started",
       "description": "Spec 004 FR-011 (SHOULD) and FR-014 (MAY): set presence to available/busy/away/offline, and see colleague presence and load before transferring.\n\nBLOCKED ON 004 [CLARIFY-3]: is live chat in phase one? AS-11 defines presence entirely in terms of chat routing — \"an agent sets presence to away -> a chat arrives requiring their skill -> it is not offered to them\". Without chat, presence has no consumer at launch: it would be a status somebody sets and nothing reads.\n\nPARTLY ANSWERED ALREADY: FR-014 is \"presence AND current assigned-ticket count\". The team queue (FR-016) shows open ticket count per colleague in scope, including those carrying zero, which is the half a lead actually uses when rebalancing. What is missing is availability, and that is the half that needs chat to mean anything."
+    },
+    {
+      "key": "configurable-transitions",
+      "name": "The status transition graph is not editable (010 FR-011, 002 FR-008)",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "010 FR-011 names \"statuses AND TRANSITIONS\" as administrator-configurable, and 002 FR-008 makes transitions administrator-defined. Status LABELS are now editable; the graph is not — it is decision 22, a developer default authored in utils/ticket-status.js and flagged as data.\n\nWHY IT IS NOT A FIELD. 002 AS-03 requires a refused transition to NAME the reachable statuses: \"Given a ticket with status = closed, where no transition from closed to in_progress is defined, the change is refused and the reachable statuses are named.\" An editor that let an administrator strand a status — no way out of resolved, say — would break that MUST rather than a preference. So it needs a reachability check at save time, not a checkbox grid.\n\nWHAT EXISTS AND CARRIES OVER: the graph is already data in one place, canTransition and reachableFrom already read it, and /ticket/meta already publishes it to the screens. The change is to move it into the collection the labels now live in and add the validation."
+    },
+    {
+      "key": "configurable-categories",
+      "name": "Category is a free string and cannot be configured (010 FR-011, 002 FR-004)",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "Decision 21 stored category as a FLAT STRING on every ticket, deviating from 002 FR-004 (MUST): \"Categories MUST form a tree; a ticket MUST reference a leaf.\" 010 FR-011 also names categories as administrator-configurable, and 002 FR-005 adds inheritance down the tree.\n\nTHIS IS THE ONE CONFIGURATION SURFACE THAT CARRIES A DATA MIGRATION. Every existing ticket holds a string in ticket.category; making category an entity means mapping those strings onto records, deciding what happens to a string that matches nothing, and doing it without losing the value that is there. It is also two changes at once — entity, then tree — and the tree is the part FR-004 actually requires.\n\nBUILT LAST ON PURPOSE, and after transitions: the label surface and the reachability validation are both smaller and prove the pattern. Also listed as R1 in remaining.md, where the reversal cost is estimated."
+    },
+    {
+      "key": "configurable-status-set",
+      "name": "Status and priority KEYS cannot be added or renamed",
+      "tags": [
+        "backend",
+        "blocked"
+      ],
+      "status": "not started",
+      "description": "The configuration surface built for 010 FR-011 edits LABELS. The key sets are fixed: ten statuses (decision 15) and four priorities (002 §3).\n\n002 §8 is the reason this is defensible rather than a gap: a status key is \"language-neutral\" and the LABEL is what carries {ar, en}. The key is the stable identifier.\n\nWHY ADDING ONE IS NOT A SMALL CHANGE:\n- A STATUS key is written onto every ticket and into every audit entry. Renaming one orphans history. Adding one needs a row and a column in the transition graph, which is card configurable-transitions, and a decision about whether it pauses the SLA clock and whether it is terminal.\n- A PRIORITY key carries a RANK that the queue ordering uses (004 E-05, \"priority then age\"). A new priority has no rank, so the queue could not place it — it would sort last silently, which looks like the queue being wrong rather than the configuration being incomplete.\n\nNot blocked on a client answer. Blocked on the transition editor for statuses, and on a ranking field for priorities."
+    },
+    {
+      "key": "sla-and-automation-config",
+      "name": "SLA policies, calendars, holidays, escalation and automation are not configurable",
+      "tags": [
+        "backend",
+        "blocked"
+      ],
+      "status": "not started",
+      "description": "010 FR-011 names SLA policies, business calendars and holidays, escalation policies and automation rules among the fourteen things an administrator must be able to configure. None exists.\n\nBLOCKED ON SPEC 005, which is itself blocked on two client answers: [CLARIFY-1] the actual SLA numbers per priority and per customer tier, and [CLARIFY-2] working hours and holidays per branch. elapsed-time.js answers \"unavailable\" for the same reason, and 009 E-19 already fixes that periods are evaluated in the branch own timezone, which is the shape a calendar has to take.\n\nWHAT EXISTS AND CARRIES OVER: every branch already carries a required timezone, added precisely to drive these boundaries. pausesSla per status is now configurable and audited as non-retroactive, which is the input an SLA engine reads."
+    },
+    {
+      "key": "branding-configuration",
+      "name": "Branding is not configurable (010 FR-011)",
+      "tags": [
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "010 FR-011 lists branding among the configuration surfaces. Nothing blocks it and nothing has been done; the product name, the mark and the palette are authored in the design tokens and the shell.\n\nUNSCHEDULED RATHER THAN GATED. It is the one item on FR-011 list with no consumer waiting on it: no requirement elsewhere reads a branding value, and no acceptance scenario fails without it. Worth doing when somebody asks for a second visual identity, not before.\n\nIF IT IS BUILT: the tokens are in frontend/src/styles.css under @theme and are the single source the screens use, so the change is to feed them rather than to find every hard-coded colour. Any customer-visible label added with it carries {ar, en} like every other, per FR-011 own clause."
     }
   ],
   "retiredIds": []

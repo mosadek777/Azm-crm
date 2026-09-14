@@ -12,6 +12,7 @@ import ticketcontroller from "./modules/ticket/ticket.controller.js"
 import quickreplycontroller from './modules/quick-reply/quick-reply.controller.js'
 import taskcontroller from './modules/task/task.controller.js'
 import notificationcontroller from './modules/notification/notification.controller.js'
+import configcontroller from './modules/config/config.controller.js'
 import portalcontroller from "./modules/portal/portal.controller.js"
 import { checkDBconnection } from "./DB/connection.db.js"
 
@@ -46,6 +47,10 @@ const bootstrap = async () => {
   // spec 004 FR-013. Its own root because section 11 scopes it to the CALLER
   // rather than to a ticket: 'user = caller only'.
   app.use('/notification', notificationcontroller)
+  // spec 010 FR-011. Platform configuration: global, so it carries no branch or
+  // department dimension — authorisation is by role alone (read: staff, write:
+  // ADM). See ticket-label.model.js for why that is stated rather than implied.
+  app.use('/config', configcontroller)
   // spec 008. Separate from the staff routes because a customer is not a User:
   // no role, no branch, no department. Its own middleware and its own predicate.
   app.use('/portal', portalcontroller)

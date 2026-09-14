@@ -211,3 +211,29 @@ export interface NotificationGroup {
   ticketSubject: string | null;
   reachable: boolean;
 }
+
+// --- administrator configuration (spec 010 FR-011, spec 002 §8) -------------
+
+/**
+ * One configurable label for a ratified status or priority key.
+ *
+ * THE KEY IS NOT EDITABLE and `editable.key` says so. A key is written onto
+ * every ticket and into every audit entry; renaming one orphans history, and
+ * adding one needs either a transition graph (statuses) or a queue rank
+ * (priorities) that no spec supplies.
+ */
+export interface TicketLabel {
+  _id: string;
+  kind: 'status' | 'priority';
+  key: string;
+  /** Both languages, always. Constitution I; the server refuses a partial save. */
+  label: { ar: string; en: string };
+  /** Status only. Editable, and NOT retroactive — spec 005's pause ledger is
+   *  append-only, so time already accounted keeps its old accounting. */
+  pausesSla: boolean | null;
+  /** Status only, and structural: a terminal status accepts no reply and no
+   *  assignment (002 §3), so this is shown and never edited. */
+  terminal: boolean;
+  order: number;
+  editable: { label: boolean; pausesSla: boolean; terminal: boolean; key: boolean };
+}

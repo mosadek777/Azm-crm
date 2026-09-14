@@ -152,7 +152,10 @@ export class Sidebar {
           requires: 'administration',
           children: [
             { labelKey: 'admin.branches', route: '/admin/branches' },
-            { labelKey: 'admin.departments', route: '/admin/departments' }
+            { labelKey: 'admin.departments', route: '/admin/departments' },
+            // 010 FR-011 — status and priority labels. Organisation rather
+            // than Access: it is what the platform IS, not who may reach it.
+            { labelKey: 'admin.configuration', route: '/admin/configuration' }
           ]
         },
         {

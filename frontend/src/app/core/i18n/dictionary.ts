@@ -408,6 +408,56 @@ export const DICTIONARY: Translations = {
     ar: 'يمكن اختيار موعد مضى — ستظهر المهمة متأخرة فورًا.',
     en: 'A past date is fine — the task simply shows as overdue straight away.'
   },
+  // --- administrator configuration (spec 010 FR-011, spec 002 §8) ----------
+  //
+  // ⚠ `config.scopeNote` says this screen is TWO of FR-011's fourteen surfaces.
+  // Without it, "Configuration" reads as though the requirement is met.
+  //
+  // ⚠ `config.pausesSlaWarning` and `config.pausesSlaConfirm` are the same fact
+  // said twice on purpose: once standing on the page, once in the way of the
+  // click. Decision 14 ratified these values and spec 005's pause ledger is
+  // append-only, so the change cannot be applied backwards.
+  'admin.configuration': { ar: 'الحالات والأولويات', en: 'Statuses and priorities' },
+  'config.title': { ar: 'إعدادات الحالات والأولويات', en: 'Status and priority configuration' },
+  'config.scopeNote': {
+    ar: 'تغطي هذه الشاشة تسميات الحالات والأولويات وخاصية إيقاف مؤقّت مستوى الخدمة. باقي عناصر الإعداد — التصنيفات وقواعد التصعيد والقوالب وغيرها — غير مبنية بعد ومسجَّلة في سجل القرارات.',
+    en: 'This screen covers status labels, priority labels and whether a status pauses the SLA clock. The rest of the configuration FR-011 names — categories, escalation rules, templates and the others — is not built, and each is recorded on the board.'
+  },
+  'config.readOnly': {
+    ar: 'تُعرض الإعدادات للاطّلاع فقط — تعديلها يتطلب صلاحية مسؤول النظام.',
+    en: 'Shown for reading only — changing these requires an administrator.'
+  },
+  'config.statuses': { ar: 'الحالات', en: 'Statuses' },
+  'config.priorities': { ar: 'الأولويات', en: 'Priorities' },
+  'config.keysFixed': {
+    ar: 'المفاتيح ثابتة — التسمية وحدها قابلة للتعديل.',
+    en: 'The keys are fixed — only the label can be changed.'
+  },
+  'config.priorityOrder': {
+    ar: 'مرتَّبة كما يرتّبها ترتيب قائمة العمل.',
+    en: 'Listed in the order the queue sorts them.'
+  },
+  'config.editLabel': { ar: 'تعديل التسمية', en: 'Edit label' },
+  'config.labelAr': { ar: 'التسمية بالعربية', en: 'Arabic label' },
+  'config.labelEn': { ar: 'التسمية بالإنجليزية', en: 'English label' },
+  'config.bothRequired': {
+    ar: 'اللغتان مطلوبتان معًا — لا يُقبل حفظ لغة واحدة.',
+    en: 'Both languages are required — a single-language save is refused.'
+  },
+  'config.save': { ar: 'حفظ التسمية', en: 'Save label' },
+  'config.saved': { ar: 'تم حفظ الإعداد', en: 'Configuration saved' },
+  'config.terminal': { ar: 'حالة نهائية', en: 'Terminal' },
+  'config.pauses': { ar: 'يوقف مؤقّت مستوى الخدمة', en: 'Pauses the SLA clock' },
+  'config.doesNotPause': { ar: 'لا يوقف المؤقّت', en: 'Does not pause the clock' },
+  'config.togglePauses': { ar: 'تغيير', en: 'Change' },
+  'config.pausesSlaWarning': {
+    ar: 'تغيير إيقاف المؤقّت لا يُطبَّق بأثر رجعي: سجل الإيقاف في المواصفة 005 لا يُعاد كتابته، فالوقت المحتسَب سابقًا يبقى كما احتُسب. القيم الحالية مُعتمدة بالقرار 14.',
+    en: 'Changing whether a status pauses the clock is not applied backwards: spec 005\'s pause ledger is append-only, so time already accounted stays accounted the way it was. The current values were ratified as decision 14.'
+  },
+  'config.pausesSlaConfirm': {
+    ar: 'هذا التغيير لا يُطبَّق بأثر رجعي — الوقت المحتسَب سابقًا يبقى كما هو، ولا يمكن التراجع عن ذلك. هل تريد المتابعة؟',
+    en: 'This change is not applied backwards — time already accounted stays as it is, and that part cannot be undone. Continue?'
+  },
   // --- the shared conversation (002 FR-014, 008 FR-019; decision 29) ------
   //
   // ONE COMPONENT RENDERS BOTH THREADS. The empty state differs only because

@@ -3,7 +3,7 @@
 
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { AgentLoad, Branch, NotificationGroup, ContactPoint, Customer, Department, HistoryEntry, Placeholder, QuickReply, Sla, Task, TeamQueueView, Ticket, TicketMessage, TicketMeta } from '../models/domain.model';
+import { AgentLoad, Branch, NotificationGroup, TicketLabel, ContactPoint, Customer, Department, HistoryEntry, Placeholder, QuickReply, Sla, Task, TeamQueueView, Ticket, TicketMessage, TicketMeta } from '../models/domain.model';
 import { CreateUserRequest, LocalizedText, StaffUser } from '../models/user.model';
 
 const API = 'http://localhost:3000';
@@ -300,6 +300,26 @@ export class ApiService {
 
   markAllNotificationsRead() {
     return this.http.patch<{ changed: number; unread: number }>(`${API}/notification/read-all`, {});
+  }
+
+  // --- administrator configuration (spec 010 FR-011) ---
+  //
+  // Readable by every staff role, because every screen renders these labels.
+  // Writable by ADM only, and the server refuses a single-language label
+  // whatever this client sends.
+  ticketLabels() {
+    return this.http.get<{
+      statuses: TicketLabel[];
+      priorities: TicketLabel[];
+      covers: string[];
+      keysEditable: boolean;
+    }>(`${API}/config/labels`);
+  }
+
+  updateTicketLabel(kind: string, key: string,
+                    body: { label?: LocalizedText; pausesSla?: boolean }) {
+    return this.http.patch<{ label: TicketLabel; changed: string[] }>(
+      `${API}/config/labels/${kind}/${key}`, body);
   }
 }
 

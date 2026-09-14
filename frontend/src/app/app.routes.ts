@@ -138,6 +138,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/departments/departments').then(m => m.AdminDepartments)
       },
       {
+        // 010 FR-011. ADM only, like branches and departments: platform
+        // configuration is section 9's administrator row.
+        path: 'admin/configuration',
+        canActivate: [requiresHint('administration')],
+        loadComponent: () => import('./features/admin/configuration/configuration').then(m => m.Configuration)
+      },
+      {
         path: 'admin/users',
         canActivate: [requiresHint('staffDirectory')],
         loadComponent: () => import('./features/admin/users/users').then(m => m.AdminUsers)

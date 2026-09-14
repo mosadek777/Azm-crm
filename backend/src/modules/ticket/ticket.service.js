@@ -27,6 +27,7 @@ import { scopeFilter, rolesForTarget, assignmentCovers } from '../../utils/scope
 import { elapsedBusinessMinutes } from '../../utils/elapsed-time.js'
 import { validateMentions } from './mention.service.js'
 import { notify } from '../notification/notification.service.js'
+import { labelMap } from '../config/label.service.js'
 import { STATUSES, STATUS_KEYS, PRIORITIES, canTransition, reachableFrom, isTerminal } from '../../utils/ticket-status.js'
 
 const bad = (res, ar, en, fields) =>
@@ -748,9 +749,26 @@ export const addMessage = async (req, res, next) => {
 
 // Reference data for the UI, so the client never hardcodes a status list.
 export const getTicketMeta = async (req, res) => {
+  // 010 FR-011 / 002 §8: the LABEL is administrator-authored and bilingual; the
+  // KEY is language-neutral and ratified. Both are sent, and the label is read
+  // from the configuration collection rather than from a constant here, so an
+  // administrator's change reaches every screen without a release.
+  //
+  // `pausesSla` and `terminal` still come from the ratified map, not from the
+  // configuration row: this endpoint is what the ticket screens work from, and
+  // the two must not be able to disagree about whether a status is terminal.
+  // The configuration row mirrors them for display; this is the source.
+  const labels = await labelMap()
+
   return res.json({
-    statuses: Object.entries(STATUSES).map(([key, meta]) => ({ key, ...meta })),
-    priorities: PRIORITIES,
+    statuses: Object.entries(STATUSES).map(([key, meta]) => ({
+      key, ...meta, label: labels.status[key] ?? null
+    })),
+    priorities: PRIORITIES.map(key => ({ key, label: labels.priority[key] ?? null })),
+    // Kept as a bare array too, because callers written before labels existed
+    // read it that way and a silent shape change would break them without a
+    // single error to point at.
+    priorityKeys: PRIORITIES,
     transitions: Object.fromEntries(STATUS_KEYS.map(k => [k, reachableFrom(k)]))
   })
 }
