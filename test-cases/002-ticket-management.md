@@ -5,6 +5,9 @@ prioritising, assigning, moving through statuses, and the conversation on each.
 
 **Coverage:** 4 automated · 8 partial · 0 manual · 20 not testable yet
 
+**Last revised 2026-09-14.** TM-09 step 5 (notify both parties on
+reassignment) is now built, and TM-14 gained the unified conversation.
+
 ---
 
 ## Before you start
@@ -317,16 +320,29 @@ notifies both people.
 - Step 6: the reason is still there. This is the point of the story — six months
   later somebody asks why this moved, and the answer is in the record.
 
-**Status:** ⚠ **Partial — and this is the clearest example in the whole
-folder.**
+**Status:** ⚠ **Partial — and this is still the clearest example in the whole
+folder of a check that cannot fail.**
+
 Automated: a reason is **required** (the empty attempt is refused), the call
 succeeds when one is given, and the new assignee is correct.
-**Missing:** **nothing reads the reason back.** Remove the reason from what gets
-stored and every automated check still passes. The stored value is correct
-today — this is a gap in the tests, not in the behaviour — but nothing would
-catch it breaking. Steps 4 and 6 must be run by hand.
-**Also missing:** step 5. No notification of any kind is sent to staff; tracked
-as *staff-notifications* under the agent workspace.
+
+**Missing, and unchanged: nothing reads the reason back.** Remove the reason
+from what gets stored and every automated check still passes. The stored value
+is correct today — this is a gap in the tests, not in the behaviour — but
+nothing would catch it breaking. Steps 4 and 6 must be run by hand.
+
+**Step 5 is now built.** `FR-009`'s *"reassignment MUST notify both parties"* is
+real: the new holder is notified, and so is the previous one, because work
+leaving your desk is news and finding out by noticing it gone is worse.
+Automated in `backend/tests/notification.test.js`. Two caveats worth knowing:
+the notification is **in-app only** — email and push need spec `003` — and both
+assignment events on one ticket inside the grouping window arrive as **one row
+carrying a count of two**, which is `FR-013`'s grouping clause working, not a
+notification going missing.
+
+**Assignment from the team queue is also built** — a lead can rebalance without
+opening each ticket. Same endpoint, same required reason, same audit entry;
+there is deliberately no second path for those to drift on. See `004` AD-16.
 
 ---
 
@@ -480,10 +496,27 @@ channel and never appear on any customer-facing surface.
 - Step 6 is **refused**: posting to a customer requires an agent, team lead or
   manager role. An administrator administers; they do not speak to customers.
 
-**Status:** **Automated** — `backend/tests/ticket.test.js`, *"FR-014 / AS-07:
+**Status:** ✅ **Automated** — `backend/tests/ticket.test.js`, *"FR-014 / AS-07:
 message visibility"*; and from the customer's side,
 `backend/tests/portal.test.js`, *"FR-019 / AS-06: internal content never reaches
 a portal surface"*, which asserts the note appears in **no** portal response.
+
+**Since 2026-09-14 the staff thread and the portal thread are the same
+component**, which makes this case stronger rather than weaker. The exclusion is
+still enforced **in the query** — the portal's read never loads an internal
+note, so the component cannot render one because it is never handed one. A
+filter in the interface would mean the text had already reached the customer's
+browser and was being hidden, one devtools panel away from being read.
+
+Proved with real content rather than by reading the code: a browser check writes
+an internal note as staff, then opens the same request as the customer and
+asserts the text is in **neither the visible thread nor the page's HTML at
+all** — while the customer-visible messages are still there, so "the portal
+shows nothing" cannot pass it.
+
+An internal note also now carries **mentions** (`004 FR-009`). A mention is
+refused outright on a customer-visible reply: a colleague's name in front of the
+customer is the same disclosure decision 29 closed for the assigned agent.
 
 ---
 

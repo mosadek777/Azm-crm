@@ -5,6 +5,9 @@ it, and replying — without telephoning anyone.
 
 **Coverage:** 1 automated · 6 partial · 0 manual · 11 not testable yet
 
+**Last revised 2026-09-14.** CP-04: the portal conversation is now the same
+component as the staff thread, measured and asserted identical.
+
 ---
 
 ## Before you start
@@ -184,10 +187,31 @@ field cannot be shown. Recorded as a ratified deviation.
 - Step 7: refused with an explanation, because reopening on reply is not built
   and guessing would be worse than declining.
 
-**Status:** **Automated** — `backend/tests/portal.test.js`, sections *"FR-004 /
+**Status:** ✅ **Automated** — `backend/tests/portal.test.js`, sections *"FR-004 /
 AS-07: a reply joins the same thread"* and *"FR-019 again: a reply cannot be
 made internal"*.
-**Not covered:** attachments (unbuilt), and step 7's reopen behaviour is
+
+**The conversation is now literally the same component the staff thread uses**
+(2026-09-14). Before that the two showed the same data and had drifted into
+looking like different products — different card treatment, different heading
+weights, different row spacing, and an empty state on one side and not the
+other. A browser check measures both cards — corner radius, border, padding, row
+gap, heading weight and size — and asserts they are **identical**, in both
+languages.
+
+**Exactly two things still differ, and neither is a filter applied in the
+interface:** the portal is never *handed* an internal note (excluded in the
+query), and it names no individual agent — the author label is a dictionary key,
+so nothing in the component knows a name to leak. Step 5 is satisfied by the
+coarsest honest distinction: the customer's own words, or ours.
+
+**Step 2 now also notifies the assigned agent** that the customer has replied
+(`004 FR-013`). In-app only, and nobody is notified on an unassigned request —
+the team queue is where unheld work is found, and notifying a whole branch would
+train everyone to ignore the badge.
+
+**Not covered:** attachments (unbuilt — decision 34 omitted them rather than
+shipping an upload path with no scanning), and step 7's reopen behaviour is
 deliberately absent rather than wrong.
 
 ---

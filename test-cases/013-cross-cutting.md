@@ -9,10 +9,13 @@ published legal terms.
 
 ## Before you start
 
-⛔ **Nothing in this module is built**, and like the agent workspace it had **no
-card on the project board at all** until a requirement-by-requirement audit
-found it. The reason it disappeared is worth naming: **these are not features,
-so there was no module to hang a card on.**
+⛔ **Nothing in this module is built**, and it had **no card on the project
+board at all** until a requirement-by-requirement audit found it. The reason it
+disappeared is worth naming: **these are not features, so there was no module to
+hang a card on.**
+
+*(An earlier revision said "like the agent workspace". Spec  has since been
+built as far as it can go — see . This module has not.)*
 
 **These cases become urgent at a specific moment** — when somebody outside the
 project relies on the system. None of them matters for a demonstration. All of
