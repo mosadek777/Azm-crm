@@ -1,293 +1,173 @@
 # state.md — read this first
 
-The session-start briefing. Read this instead of the constitution and all
+The session-start briefing. Read this **instead of** the constitution and all
 thirteen specs. Updated at the end of every step.
 
-**Last updated:** 2026-09-08 · **after:** the eight-phase build pass — design
-system (Tailwind only, PrimeNG removed), customer and ticket screens, demo
-seed, API documentation, ClickUp board restructured into a tree, GitHub Pages
-— 30 ratified decisions, constitution 0.4.0
-
----
-
-## ⚠ Any verification claim made before 2026-09-08 needs re-running
-
-`MONGO_URI` names no database in its path, and `src/DB/connection.db.js`
-overrides it with `dbName: 'azmCrm'`. A verification script that connects with
-the URI alone therefore talks to `test` — an empty database the application
-never touches — while the app reads and writes `azmCrm`.
-
-That mistake was made during the 2026-09-08 audit: a drop-and-reseed hit `test`,
-the suites then ran against a dirty `azmCrm` carrying leftovers from earlier
-sessions, and the first result was a failure that did not exist. **A clean run
-against the wrong database is worse than a failing run** — it reports success
-for work it never examined.
-
-The audit's own results were re-run against a correctly dropped `azmCrm` and are
-sound. What cannot be established retrospectively is which database earlier
-sessions used. So:
-
-- **Treat every "verified", "passing" or "clean" claim in this repository dated
-  before 2026-09-08 as unconfirmed** until re-run. That includes the check
-  counts quoted in earlier revisions of this file and of `next-steps.md`.
-- Re-running is now one command: `npm test` in `backend/`.
-- The name is exported as `DB_NAME` from `connection.db.js` and the test runner
-  imports it, so the runner cannot drift from the application again.
+**Last updated:** 2026-09-14 · **after:** spec `004` closed as far as it goes,
+the conversation unified across staff and portal, and `010 FR-011`'s first two
+configuration surfaces · **42 ratified decisions** · constitution 0.4.0
 
 ---
 
 ## NEXT ACTION
 
-**Step 4 shipped today under an explicit delivery-compression instruction —
-"working software on GitHub today."** Two simplifications were authorised and
-are deviations, not resolved questions:
+Four items, in this order. The first is not a feature and is the most valuable.
 
-- **`Team` scoped out** (decision 20) — tickets assign directly to an agent.
-  The `Team` defect (§7) is **NOT resolved**, it is stepped around.
-- **Category is a flat string** (decision 21), deviating from `FR-004`'s
-  **MUST** that categories form a tree.
-
-**What was NOT compromised, on explicit instruction:** the scope predicate
-applies to every ticket and customer read and write, and every mutation writes
-an audit entry through `utils/audit.js` inside a transaction. Both proven by
-test, not asserted.
-
-**Next candidates, not started, no obligation yet:**
-
-1. Define `Team` properly and reverse decision 20 before any ticket-heavy work grows on top of it
-2. Root-cause / resolution-code lists, to enable `FR-029` (currently unenforced — decision 23)
-3. Convert the flat category string to the real tree (decision 21) if the client confirms the category list is stable enough to model
-4. Everything in the "Scoped out today" table below
-
-**Unbuilt MUST created today:** `001 E-15` (outbound-on-shared-contact-point
-refusal) is specified but there is no outbound code to enforce it against yet —
-see `trace.md`.
+1. **Role changes for an existing user.** There is no way to promote an agent to
+   a lead — no endpoint, no screen. Changing somebody's role today means
+   deleting the account and recreating it, which changes their id and orphans
+   their history. Blocked on one question, now answered by the project owner:
+   *what happens to a user left holding zero roles* — **refuse the last
+   revocation**, as `010 E-01` refuses removing the last administrator.
+   `010 §10` and `§11` already give the audit shape and the authorisation rule.
+   Board card `role-revocation`, `decisions-pending.md` §15.
+2. **Bring `test-cases/` current.** All thirteen files exist, but `004` was
+   written before the workspace was built and still reads *"0 automated · 17 not
+   testable yet"* when most of it is now automated. `008` and `010` have drifted
+   for the same reason. See "Where the documents have drifted" below.
+3. **Live updates** — the list and the thread changing without a reload. No spec
+   requires it, so the story and the requirement get written and shown before
+   any code, the way `PLT-15` was. The hard part is not the transport: **a push
+   must never reach somebody who could not read that record over HTTP**, and the
+   predicate has to be evaluated per recipient per push, not once per event.
+4. **The category tree** (`002 FR-004`), reversing decision 21. Last, because it
+   is the only one carrying a **data migration**: every existing ticket holds a
+   flat category string.
 
 ---
 
-## Scoped out today, by instruction — one task each in ClickUp
+## What is built
 
-Not blocked by a marker; simply not attempted in this pass. Each has one
-top-level ClickUp task under list `901525782663`, workspace `90152504892`,
-tagged `backend`/`frontend`, carrying a **Blocked by** line naming what would
-have to be answered first.
+### Backend
 
-**The board is a projection of `tools/tasks.json`, re-derived 2026-09-08 from
-this file and `roadmap.md`** — 34 top-level tasks, 50 subtasks, **63 COMPLETE ·
-21 TO DO · 0 IN PROGRESS**. Two rules make it readable by someone outside the
-project, which it has to be because the list is publicly shared:
-
-- **A parent is COMPLETE when its delivered scope works.** Unfinished children
-  are not left in place dragging the parent down — they are lifted out into
-  their own top-level TO DO card. Seven were (SSO, deactivation handling, team
-  scope, the audit viewer, the outbound refusal, resolution codes, elapsed
-  time), plus five split out of the portal (one-time-code sign-in, verified
-  contact points, notifications, attachments, feedback).
-- **Descriptions carry no requirement ids, spec numbers, decision numbers or
-  section marks.** A reader without the specs open gets the whole meaning.
-
-⚠ **A subtask cannot be promoted back to a top-level task.** `PUT /task` with
-`parent: null` — and with `parent: ""` — answers 200 and leaves the parent
-unchanged; verified against throwaway tasks on the live list. Moving a child out
-therefore means deleting it and creating a new task, so `tasks.json` carries a
-`retiredIds` list that the sync deletes and then empties.
-
-Run `node tools/sync-clickup.js` after changing that file: it is idempotent (a
-second run creates zero), handles rate limiting, and finishes by **reading the
-board back from ClickUp** and counting it — counting the file it just wrote
-would only prove the file agrees with itself. It only ever writes, so a status
-changed by hand in ClickUp is reverted on the next run — the file is the source
-of truth, the board is its rendering.
-
-| Module | Blocked on |
-|---|---|
-| Email / WhatsApp / SMS / chat (spec 003) | `003 [CLARIFY-1]` — which channels ship in phase one |
-| SLA & automation engine (spec 005) | `005 [CLARIFY-1]` SLA numbers, `[CLARIFY-2]` calendars |
-| Knowledge base (spec 006) | `006 [CLARIFY-1]`, and `012 [CLARIFY-1]` |
-| Customer portal (spec 008) | `008 [CLARIFY-1]` **RESOLVED 2026-09-08** (decisions 26, 27): one-time code, accounts only. Now blocked on build effort, not a decision — see `portal-plan.md` |
-| Reports & management (spec 009) | The SLA engine, for every duration figure |
-| ERP integration (spec 011) | Ownership resolved (decision 6); `011 [CLARIFY-2]` — which ERP |
-| AI features (spec 007) | `007 [CLARIFY-1]` blocks the whole spec; constitution V |
-
-## Other blockers, unrelated to today's scope compression
-
-| Blocker | Effect |
-|---|---|
-| **`Team` — entity now decided, one rule still missing** | Owned by spec `012`; belongs to exactly one Department, independent of Branch; membership rides on `RoleAssignment` (decision 30). `002` §3 still makes `owning_team_id` **Required** and no ticket carries one — backfill is piece `B5`. ⚠ **Still open:** `002 E-12`'s singular *"the team lead"* has no stated rule for zero or several leads, and `005 FR-009` cannot be built against an undefined recipient. Needed before piece `E1`. |
-| `001 [CLARIFY-4]` privacy regime / retention | Blocks `FR-021` erasure |
-| `001 [CLARIFY-5]` consent scope | Blocks `FR-022`, and keeps `E-15` refusing |
-| ~~`002 [CLARIFY-6]`~~ **RESOLVED 2026-09-08** (decision 29) | Team only, no agent identity including the replier. Spec `002` is now **0 open markers** |
-| `005 [CLARIFY-1]` SLA numbers, `[CLARIFY-2]` calendars | Spec `005` buildable but untestable. `elapsed-time.js` returns `unavailable` |
-| `010 [CLARIFY-2]` which IdP, whose MFA, mandatory? | `FR-006` (SSO) is an **uncovered MUST** |
-| `013 [CLARIFY-1]` volumes | Every `NFR` table unacceptable-because-unquantified |
-
-**Marker state: 67 unresolved · 15 resolved · 4 provisional** (from 82). Three more resolved 2026-09-08 — `008 [CLARIFY-1]`, `008 [CLARIFY-2]` (provisional), `002 [CLARIFY-6]` — taking spec `002` to **0 open**. See `decisions-pending.md` §0 decisions 26–30 and `portal-plan.md` §5.
-
-```bash
-grep -rEn '^- \[ \] .\[CLARIFY-[0-9]' specs/ | wc -l    # the gate
-```
-
----
-
-## What is built and passing
-
-**Backend** — Express 5, ES modules, MongoDB `rs0` single-node replica set.
+Express 5, ES modules, MongoDB `rs0` single-node replica set. Modules under
+`src/modules/<name>/{controller,service}.js`.
 
 | Area | Covered |
 |---|---|
-| Auth | `010 FR-006` local path, `FR-008`, `E-04`, `E-07` break-glass |
-| Users | `FR-001` (minus the ticket-reassign clause), `FR-002`, `FR-003`, `E-01`, `E-02` |
-| Scope | `FR-004` (**branch + department only**), `FR-005`, `FR-021`, `AS-01`, `AS-03`, `AS-04` |
-| Audit | `FR-008`, `AS-08` append-only, `E-11` **atomic** via transactions, `NFR-005` |
-| Platform | `012 FR-004` localised values, `FR-007`, `FR-008`, `AS-02` refuses single-language |
-| Bilingual | `012 FR-001`, `FR-002`, `AS-03` no-fallback, `AS-06` Arabic typography (Cairo, self-hosted) |
-| Customer | `001 FR-001`, `FR-002`, `FR-003`, `FR-004` (decision 16), `FR-010`, `FR-020`, `AS-01`–`AS-04`, `E-05`, `E-06` |
-| Ticket | `002 FR-001`, `FR-002`, `FR-007`–`FR-010`, `FR-013`, `FR-014`, `FR-021`, `FR-033`, `FR-034`, `AS-01`, `AS-03`, `AS-05`–`AS-07`, `E-11`, `E-12`, `E-16` — deviations: no Team (decision 20), flat category (decision 21) |
-| API docs | `/api-docs` (Swagger UI), `docs/openapi.json`, Postman collection + environment with auto-token-save on login |
-| **Customer portal** | `008 FR-001` (sign-in, via the decision-31 password shortcut), `FR-002` submit, `FR-003`/`FR-005` list and detail, `FR-004` reply, `FR-019`/`AS-06` internal content excluded **in the query**, `AS-02` out-of-scope is 404, `FR-020` every portal action audited as the customer. §11's `customer = session` predicate is real, not stubbed |
+| Auth | `010 FR-006` local path, `FR-008`, `E-04` (permissions re-read per request), `E-07` break-glass. `GET /auth/me` returns six **rendering hints** — never authorisation |
+| Users | `010 FR-001` (minus role change — see NEXT ACTION), `FR-002`, `FR-003`, `E-01`, `E-02` |
+| Scope | `010 FR-004` (**branch + department only**; Team does not exist), `FR-005`, `FR-021`, `AS-01`, `AS-03`, `AS-04` |
+| Audit | `010 FR-008`, `AS-08` append-only, `E-11` **atomic via transactions**, `NFR-005` |
+| Platform | `012 FR-004`, `FR-007`, `FR-008`, `AS-02` refuses a single-language label |
+| Configuration | `010 FR-011` — **status and priority labels, and `pausesSla`**. Two of the requirement's fourteen surfaces; `decisions-pending.md` §24 says why these two and in what order the rest come |
+| Customer | `001 FR-001`–`FR-004` (decision 16), `FR-010`, `FR-020`, `AS-01`–`AS-04`, `E-05`, `E-06` |
+| Ticket | `002 FR-001`, `FR-002`, `FR-007`–`FR-010`, `FR-013`, `FR-014`, `FR-021`, `FR-033`, `FR-034`, `AS-01`, `AS-03`, `AS-05`–`AS-07`, `E-11`, `E-12`, `E-16` |
+| **Agent workspace** | `004` — see the table below. Closed as far as it can go |
+| Portal | `008 FR-001` (decision-31 password shortcut), `FR-002`–`FR-005`, `FR-019`/`AS-06` internal content excluded **in the query**, `AS-02` 404 not 403, `FR-020` |
+| API docs | `/api-docs` Swagger UI, `docs/openapi.json`, Postman collection with auto-token-save |
 
-**Frontend** — Angular 22, standalone, signals, **Tailwind v4 only** (no
-component library — decision 24), runtime language switching. **Ten screens
-across two interfaces**: staff — login, customer list/detail/create, ticket
-list/detail/create; customer portal — sign-in, my requests, request detail with
-the conversation thread, new request. The two shells are told apart by product
-name and an area pill and are otherwise identical in treatment. Every component
-is hand-rolled and **none has had an accessibility or RTL keyboard audit** —
-see `next-steps.md` §5.
+### Spec 004 — the honest count
 
-**Verification** (all re-run 2026-09-08 against a correctly dropped `azmCrm`):
+**Eleven of eighteen stories built. Seven not, and none of them on effort.**
+
+| Built | On what |
+|---|---|
+| `AD-01` personal queue | `E-05`'s stated fallback order — the degraded path IS the requirement while the SLA clock is blocked |
+| `AD-02` counters | Each openable as the list it counts. Overdue renders `unavailable`, never `0` |
+| `AD-03` customer context | Beside the conversation |
+| `AD-04` tasks | `E-09`'s past due date accepted, not refused |
+| `AD-05` reminders | Task half only. **Evaluated when you open the workspace**, and the screen says so |
+| `AD-06` quick replies | Decision 41's placeholder vocabulary |
+| `AD-09` mentions | **Notify only, no grant** — decision 39 |
+| `AD-13` notifications | In-app only, grouped per `FR-013`'s window |
+| `AD-15` drafts | Decision 42's seven days |
+| `AD-16` team queue | Three views answered; **at-risk is offered and refuses** |
+| `AD-18` countdown | Renders `unavailable` with its reason |
+
+| Blocked | On what | Card |
+|---|---|---|
+| `AD-05` SLA half | `005 FR-006`, blocked on `005 [CLARIFY-1]` | `reminder-sla-thresholds` |
+| `AD-13` email + push | Spec `003` does not exist | `reminder-channels-email-push` |
+| anything timed | **There is no scheduler** — `005 §11` specifies one | `reminder-scheduler` |
+| `AD-11`, `AD-14` presence | `004 [CLARIFY-3]` — is chat in phase one? | `presence-and-routing` |
+| `AD-17` take-next | `004 [CLARIFY-1]` — "urgency order" is undefined | `take-next-ticket` |
+| `AD-10` thread view | Nothing; notes exist on the merged thread | `internal-thread-view` |
+| `AD-12` shortcuts | Nothing; a `MAY`, not attempted | `keyboard-shortcuts` |
+
+Full write-up: `decisions-pending.md` §23.
+
+### Frontend
+
+Angular 22, standalone, signals, **Tailwind v4 only** (decision 24), runtime
+language switching. **Sixteen routed screens across two interfaces.**
+
+Staff: login · workspace · tickets list/detail/create · team queue · customers
+list/detail/create · quick replies · notifications · admin branches /
+departments / configuration / users / roles.
+Portal: sign-in · my requests · request detail · new request.
+
+**One conversation component serves both interfaces.** Only two things differ,
+and neither is a filter applied in the interface: the portal is never *handed*
+an internal note (excluded in the query — `008 FR-019`), and it names no
+individual agent (decision 29).
+
+---
+
+## Verification — what is actually proven
 
 | | |
 |---|---|
-| `npm test` (backend) | **210 checks** — scope 28, customer 35, ticket 68, portal 79. Exit 0 |
-| `npm run audit:reconcile` | 0 orphaned, 0 unaudited, 0 unchecked models (8 checked) |
-| atomicity + transaction proofs | no orphaned entry survives an injected fault; rollback verified |
+| `npm test` (backend) | **634 checks across 14 suites**, exit 0. scope 28 · customer 35 · ticket 68 · portal 79 · security 45 · actor 23 · config 38 · draft 45 · notification 50 · quick-reply 57 · task 51 · team-queue 41 · workspace 27 · story-002 61 |
+| `npm run audit:reconcile` | 0 orphaned, 0 unaudited, 0 unchecked models |
+| atomicity proofs | no orphaned audit entry survives an injected fault; rollback verified |
 | `ng build` | exit 0 |
-| `ng test` (frontend) | 6/6 — app shell and language service only |
-| Screens | login, customer and ticket screens screenshotted in both languages |
+| `ng test` (frontend) | **6/6 — app shell and language service only.** No screen has one |
+| Browser verification | Ad-hoc CDP scripts per feature, both languages, 1400px **and 390px**. Not committed and not run by CI — see the drift section |
 
-`npm test` drops the database and restarts the server **before each suite**.
-That is not belt-and-braces: the suites each create their own
-`sara@azmsquad.com`, so sharing a database makes the second suite sign in as the
+**`npm test` drops the database and restarts the server before each suite.**
+Both halves are load-bearing. The suites each create their own
+`sara@azmsquad.com`, so a shared database makes the second suite sign in as the
 first one's user and fail as though the scope predicate were broken. Dropping
-also drops the indexes, which mongoose only rebuilds at model compilation —
-hence the server restart too, or the customer suite would pass while the
-one-primary-per-channel-type constraint quietly did not exist.
+also drops the indexes, which mongoose rebuilds only at model compilation —
+hence the restart, or the customer suite would pass while the
+one-primary-contact-point-per-channel constraint quietly did not exist.
 
-**The frontend still has no meaningful tests.** The 6 that pass cover the app
-shell and the language service; none of the six screens has one.
+**After any test run, re-seed before touching the browser:** `npm run seed:demo`
+with the API already running.
 
 ```bash
-# backend/          npm test   — drops the DB and runs every acceptance suite
-# backend/          npm run seed:admin (once) · npm run dev · npm run audit:reconcile
-# backend/          npm run docs:build · npm run docs:postman
-# backend/          npm run seed:demo   (needs DEMO_AGENT_PASSWORD) · npm run seed:demo:clear
-# frontend/         npm start · npm test · npx ng build
-# repo root/        node tools/sync-clickup.js   — idempotent, see tools/tasks.json
+# backend/   npm test  ·  npm test -- <name>   (one suite)
+# backend/   npm run dev  ·  npm run seed:admin  ·  npm run seed:demo  ·  npm run audit:reconcile
+# backend/   npm run docs:build  ·  npm run docs:postman
+# frontend/  npm start  ·  npm test  ·  npx ng build
+# root/      node tools/sync-clickup.js      (idempotent; tools/tasks.json is the source)
 ```
 
-**Published documentation:** https://mosadek777.github.io/Azm-crm/ — GitHub
-Pages serving `docs/index.html` (Swagger UI) over `docs/openapi.json`, from
-`main` / `docs`. Regenerate with `npm run docs:build` and commit; there is no
-build step on the Pages side.
-
-Break-glass administrator credentials are in `backend/.env`
-(`BREAKGLASS_EMAIL`, `BREAKGLASS_PASSWORD`), which is gitignored. **No
-credential belongs in a tracked file** — once committed it survives in history
-even after removal.
-
 ---
 
-## Ratified decisions — the short list
+## What is blocked, and on whom
 
-Full text and evidence in `decisions-pending.md` §0.
+**Marker state: 67 unresolved `[CLARIFY]` markers.** The gate:
 
-| # | Decision |
+```bash
+grep -rEn '^- \[ \] .\[CLARIFY-[0-9]' specs/ | wc -l
+```
+
+### Waiting on the client
+
+| Marker | Blocks |
 |---|---|
-| 1 | Isolated entities **not supported** (`012 FR-011` dropped) |
-| 2 | Departments **flat**, no nesting |
-| 3 | Reference: unique, immutable, never reused |
-| 4 | Category tree **multi-level, depth unbounded**, leaf-only selection. The earlier "fixed depth 3" was withdrawn as invented |
-| 5 | **SSO required as a capability**; local password permitted alongside |
-| 6 | **CRM is the system of record**; ERP read-only. No CRM→ERP writes |
-| 7 | **No single identity key** — a ranked match list instead |
-| 8 | Status list: **ten** statuses, admin-editable — the spec's original nine, with `pending_third_party` split by decision 15 |
-| 9 | **No auto-close** — customer confirmation only, until `005` unblocks |
-| 10 | Reopen window **14 calendar days, from `closed`** |
-| 11 | Reference format **`TKT-YYYY-NNNNN`** |
-| 12 | *Duplicate of 4 — same decision (unbounded category depth). Number retained rather than renumbered, because `decisions-pending.md` §0 and the spec annotations cite these numbers.* |
-| 13 | `stories/001` corrected — blocks `FR-014`/`FR-019` |
-| 14 | `pauses_sla` ratified for all ten statuses |
-| 15 | `pending_third_party` **split** → `pending_supplier` (pauses) / `pending_internal` (does not) |
-| 16 | **Shared contact points permitted** — `FR-004` unique-by-default, overridable |
-| 17 | **Outbound on a shared contact point refused** (`001 E-15`) — specified, unbuilt (no outbound code exists yet) |
-| 18 | `nationalId`/`accountRef` uniqueness scoped to **active** customers only, by analogy to `FR-004`'s own population |
-| 19 | `DEFAULT_COUNTRY_CODE=+20`, inferred from `AS-02`'s worked examples |
-| 20 | **`Team` SCOPED OUT** — direct agent assignment. Defect NOT resolved, stepped around |
-| 21 | **Category is a flat string**, not a tree — deviates from `FR-004` **MUST** |
-| 22 | A default status-transition graph was authored (`FR-008` supplies none) |
-| 23 | `requiresResolutionFields` false everywhere — `FR-029`/`AS-13` unenforced |
+| `005 [CLARIFY-1]` SLA numbers, `[CLARIFY-2]` calendars and holidays | **The single biggest blocker.** Every duration in the product: `elapsed-time.js` answers `unavailable`, the queue falls back to priority-then-age, the overdue counter has no number, the team queue's at-risk view cannot answer, and spec `009`'s reports have no denominators |
+| `004 [CLARIFY-1]` what "urgency order" means | `AD-17` take-next; the fallback order is stated in the meantime |
+| `004 [CLARIFY-3]` is live chat in phase one | Presence (`AD-11`, `AD-14`) has no consumer without it |
+| `004 [CLARIFY-4]` push outside working hours | Half of `FR-013`; an employment question as much as a technical one |
+| `001 [CLARIFY-4]` privacy regime, `[CLARIFY-5]` consent scope | `001 FR-021` erasure, `FR-022`; keeps `E-15` refusing |
+| `010 [CLARIFY-2]` which IdP | `010 FR-006` SSO is an **uncovered MUST** |
+| `013 [CLARIFY-1]` volumes | Every `NFR` threshold is unquantified — including the one that would decide polling vs sockets |
+| `011 [CLARIFY-2]` which ERP | Spec `011` |
+| `003 [CLARIFY-1]` which channels ship first | Spec `003`, and with it email, push, inbound reply and `002 FR-022` reopen |
 
-### Which of these are judgement, not readings
+### Blocked on us, not on an answer
 
-**Decisions 1, 6, 9, 10 and 11 are the developer's own choices.** The sources do
-not settle them; they were decided on balance and are annotated as such in the
-specs.
-
-- **6 — CRM is the system of record.** The evidence review found the sources
-  genuinely divided: the entity model reads CRM-native (optional ERP join key,
-  unlinked customers a normal state) while the integration spec assumes
-  negotiated two-way sync (`INT-06` conflict rules, `E-10` sync loop). Nothing
-  resolves it, and the deciding facts — which ERP, what surface it exposes, who
-  maintains customers today — are absent. **A1 was a judgement call.**
-- **9, 10, 11 — no auto-close, 14 calendar days, `TKT-YYYY-NNNNN`.** Fill
-  silences. `14` and the format each appear once, as illustrations inside
-  unrelated acceptance scenarios.
-- **1 — isolation not supported.** Judgement, but of a *weaker* kind than the
-  others: `PLT-11` is `Could` and `FR-011` is `MAY`, and declining to build a
-  `MAY` is discretion the spec itself grants. What is missing is the business
-  fact that would make it a requirement — whether a subsidiary exists. So the
-  decision is authorised by the spec's own level, while the fact behind it is
-  unknown.
-
-**Decisions 2, 3, 4, 5, 7, 8, 13, 14, 15, 16 and 17 rest on quoted evidence.**
-Decision 2 (flat departments) is the strongest of them: *no story asks for
-nesting at all*, so under constitution VIII the capability had no upstream
-reason to exist.
-
-**And a caveat over all of them:** the source document *Customer Support CRM ·
-Core Features* is **not in this repository**, so no decision here traces to the
-client's own words — only to derived material the README itself calls
-*"Nothing here is client-approved."*
-
----
-
-## The `frontend-design` skill — it exists now, in this repository
-
-**Created 2026-09-14, after several sessions spent looking for one that did not
-exist.** It lives at `.claude/skills/frontend-design/SKILL.md`, alongside
-`.claude/skills/testing/SKILL.md`, and it is derived from THIS codebase rather
-than from general advice. Read it before touching `frontend/src`.
-
-The assistant's own bundled skills do not cover in-app frontend design.
-`artifact-design` is the near miss and is the wrong tool: it governs published
-Artifacts — standalone HTML pages hosted on claude.ai — not an Angular
-application. Following it here would import conventions from a different medium.
-
-The authority underneath the skill is this application's own design tokens, in
-`frontend/src/styles.css`, because they are what the existing screens already
-use.
-| Concern | Where it is defined |
+| Item | Note |
 |---|---|
-| Colour | `@theme` — violet `--color-primary-*`, warm stone `--color-surface-*`. Deliberately not blue-on-white, and the neutrals are warm so the background does not reintroduce it |
-| Type | `--text-xs` … `--text-3xl`, a fourth-ish ratio rounded to whole pixels at the small end |
-| Typeface | Cairo, one stack for both languages, self-hosted, unicode-range split |
-| Card treatment | `rounded-xl`, `border-surface-200`, `shadow-lg` — copy an existing screen rather than inventing a variant |
-| Direction | Logical properties only (`ms-`/`me-`/`ps-`/`pe-`/`start`/`end`). The **only** sanctioned `[dir="rtl"]` rule in the codebase is the toast keyframe, because CSS keyframes have no logical-property form |
-
-A new component is judged by whether it looks like it was always there. The test
-for that is a screenshot beside an existing screen, in both languages — not a
-description.
+| **`Team` does not exist** | Decision 30 defined the entity; nothing is built. `002 §3` still makes `owning_team_id` **Required**. ⚠ `002 E-12`'s singular *"the team lead"* has no rule for zero or several leads |
+| Role change for an existing user | See NEXT ACTION |
+| Category tree | Decision 21; reversing it migrates live data |
+| Resolution-code and root-cause lists | Decision 23 keeps `002 FR-029` unenforced |
+| Attachments | Decision 34 — omitted rather than built without scanning |
+| Portal one-time code | Decision 31's password shortcut is **debt the moment one real customer exists** |
 
 ---
 
@@ -295,30 +175,122 @@ description.
 
 | | Rule |
 |---|---|
-| **I** | Bilingual is architecture. Admin-authored labels carry `{ ar, en }`, both required, refuse on missing. **No fallback ever.** User-authored content is single-language; references/phones/emails/durations always LTR |
-| **II** | Every mutation writes an immutable audit entry. `utils/audit.js` is the only writer, and `session` is a **required** parameter |
-| **III** | `utils/elapsed-time.js` is the sole duration implementation. Nothing else subtracts dates. Returns `{status:'unavailable'}` until `005` unblocks |
-| **IV** | Scope is enforced server-side per request. Out-of-scope is **404, not 403** |
+| **I** | Bilingual is architecture. Admin-authored labels carry `{ ar, en }`, both required, refuse on missing. **No fallback ever.** User-authored content is single-language. References, phones, emails and durations are always LTR |
+| **II** | Every mutation writes an immutable audit entry. `utils/audit.js` is the only writer and `session` is a **required** parameter |
+| **III** | `utils/elapsed-time.js` is the sole duration implementation. Nothing else subtracts dates to produce a duration. Returns `{status:'unavailable'}` until `005` unblocks |
+| **IV** | Scope is enforced server-side per request, against the target record. Out of scope is **404, never 403**, and byte-identical to absent |
 | **V** | No AI feature is to be built |
 | **VII** | Unknowns are marked and block the requirement, never guessed |
-| **VIII** | Every requirement traces to a story. `009 FR-025`/`RP-21` traces to a dated amendment and says so |
+| **VIII** | Every requirement traces to a story |
 
-**Fixed structure, non-negotiable:** backend `modules/<name>/{controller,service}.js`,
-ES modules, `.js` on every relative import. No TypeScript on the backend.
+**Fixed structure:** backend `modules/<name>/{controller,service}.js`, ES
+modules, `.js` on every relative import. No TypeScript on the backend.
+
+**`GET /auth/me` is a rendering hint, never an authorisation check.** Its six
+flags decide whether to *offer* a control. The server refuses regardless, and
+`security.test.js` proves a forged hint grants nothing. That test pins the exact
+flag list, so adding a flag fails it on purpose — every addition has to be
+looked at, because the property that matters is that each one is a bare boolean
+with no scope inside it.
+
+---
+
+## Skills — read before touching code
+
+- **`.claude/skills/frontend-design/SKILL.md`** — tokens, RTL absolutes, the
+  shells, and how to verify a screen. Derived from this codebase.
+- **`.claude/skills/testing/SKILL.md`** — how to write a check that can fail,
+  and the faults that have already cost a passing suite that proved nothing.
+
+The design authority underneath the skill is `frontend/src/styles.css`:
+
+| Concern | Where |
+|---|---|
+| Colour | `@theme` — violet `--color-primary-*`, warm stone `--color-surface-*` |
+| Type | `--text-xs` … `--text-3xl` |
+| Typeface | Cairo, one stack for both languages, self-hosted, unicode-range split |
+| Cards | `rounded-xl`, `border-surface-200` — copy an existing screen |
+| Direction | Logical properties only. The **only** sanctioned `[dir="rtl"]` rule is the toast keyframe, because CSS keyframes have no logical form |
+
+---
+
+## Ratified decisions — the short list
+
+Full text and evidence in `decisions-pending.md` §0. **42 decisions.** The ones
+that shape the code you will read first:
+
+| # | Decision |
+|---|---|
+| 14 | `pauses_sla` ratified for all ten statuses — **now editable, and non-retroactive by construction** (§24) |
+| 15 | `pending_third_party` split → `pending_supplier` (pauses) / `pending_internal` (does not) |
+| 20 | **`Team` scoped out** — tickets assign directly to an agent. The defect is stepped around, not resolved |
+| 21 | **Category is a flat string**, deviating from `002 FR-004`'s **MUST** |
+| 22 | A default status-transition graph was authored (`FR-008` supplies none) |
+| 23 | `requiresResolutionFields` false everywhere — `002 FR-029` unenforced |
+| 24 | Tailwind only, no component library |
+| 29 | A customer sees the owning team and **no agent identity at all**, including the author of a reply they can read |
+| 30 | `Team` belongs to spec `012`, to one Department, independent of Branch; membership rides on `RoleAssignment` |
+| 31 | Portal sign-in uses a shared demo password, not a one-time code |
+| 39 | **A mention may only name a colleague who already holds scope.** It notifies; it grants nothing. `004 FR-009`'s granting clause is declined, because `010 FR-002` forbids per-user permission overrides |
+| 41 | The quick-reply placeholder vocabulary — six tokens, `{{dotted.path}}`, fixed for phase one |
+| 42 | Draft retention: **7 days** |
+
+**Decisions 1, 6, 9, 10 and 11 are the developer's own judgement**, not readings
+of the sources, and are annotated as such in the specs. **And a caveat over all
+of them:** the source document *Customer Support CRM · Core Features* is **not
+in this repository**, so no decision here traces to the client's own words —
+only to derived material the README itself calls *"Nothing here is
+client-approved."*
+
+---
+
+## Where the documents have drifted
+
+Recorded because a register that is quietly wrong is worse than one that is
+visibly incomplete.
+
+| Document | Drift |
+|---|---|
+| `test-cases/004` | Says *"0 automated · 17 not testable yet"*. Written before the workspace existed; most of it is now automated across six suites. **Item 2 in NEXT ACTION** |
+| `test-cases/008`, `010` | Smaller drift from the same cause — the portal conversation and `FR-011` moved under them |
+| `docs/trace.md`, `docs/story-coverage.md` | Not re-derived since spec `004` was built |
+| Browser verification scripts | Written per feature into the scratchpad and thrown away. Nothing in the repository runs them, so a regression on any screen is invisible to CI. Board card `mobile-overflow-guard` covers the 390px half of this |
+| `tools/tasks.json` | Current — 66 cards, nine added 2026-09-14. Run `node tools/sync-clickup.js` to project it onto the board |
 
 ---
 
 ## Known defects, distinct from open markers
 
-Neither is a `[CLARIFY]` marker — nobody wrote one, so the gate cannot see them.
+Nobody wrote a `[CLARIFY]` for these, so the gate cannot see them.
 
 | Defect | Status |
 |---|---|
-| **`Team` undefined** while `002`/`012` make required references to it | **OPEN, stepped around by decision 20 today — not resolved.** `decisions-pending.md` §7 |
-| **`FR-004` forbade shared contact points** | **RESOLVED** by decision 16. `decisions-pending.md` §11 |
-| **`002 FR-004` category tree deviation** | **KNOWN, accepted by instruction today.** Category is a flat string (decision 21). |
+| **`Team` undefined** while `002`/`012` make required references to it | **OPEN**, stepped around by decision 20. `decisions-pending.md` §7 |
+| `002 FR-004` category tree deviation | **KNOWN and accepted** (decision 21). Reversing it is item 4 in NEXT ACTION |
+| `004 §9` and `002 §9` disagree on who may assign an unassigned ticket | **RESOLVED by recording, not by code** — §21. The team queue's "self only" for an agent is **presentation, not enforcement**: `002 FR-010` is a MUST that an agent may self-assign any unassigned ticket in scope, so the endpoint answers to `002` |
+| `004 FR-007` vs `004 §9` on shared quick replies | **RESOLVED** — tightened to MGR+, §19 |
+| `001 FR-004`'s shared-contact-point conflict | **RESOLVED** by decision 16, §11 |
+
+---
 
 ## Do not trust these numbers yet
 
-`009`'s **reopen rate** and any metric whose denominator is *tickets closed* is
-degenerate while decision 9 (no auto-close) stands. See `trace.md`.
+`009`'s **reopen rate**, and any metric whose denominator is *tickets closed*,
+is degenerate while decision 9 (no auto-close) stands. See `trace.md`.
+
+---
+
+## Environment
+
+- **Break-glass credentials** are in `backend/.env` (`BREAKGLASS_EMAIL`,
+  `BREAKGLASS_PASSWORD`), gitignored. Demo accounts share `DEMO_PASSWORD` from
+  the same file. **No credential belongs in a tracked file** — once committed it
+  survives in history even after removal.
+- **Published documentation:** https://mosadek777.github.io/Azm-crm/ — GitHub
+  Pages serving `docs/index.html` over `docs/openapi.json`, from `main`/`docs`.
+  Regenerate with `npm run docs:build` and commit; there is no build step on the
+  Pages side.
+- **⚠ Nothing may listen on port 3000 when `npm test` runs.** The runner starts
+  its own server per suite; a hand-started `node index.js` already on the port
+  silently serves every suite instead, running whatever the source said when it
+  was launched. It cost forty minutes once. Kill it first.
