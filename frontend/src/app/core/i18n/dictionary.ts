@@ -383,6 +383,31 @@ export const DICTIONARY: Translations = {
     ar: 'لم تعد هذه التذكرة مسندة إليك. مسودتك محفوظة، والمسؤول الآن:',
     en: 'This ticket is no longer assigned to you. Your draft is kept; it now belongs to:'
   },
+  // --- tasks (spec 004 FR-004, E-09, AD-04) --------------------------------
+  'task.heading': { ar: 'المهام', en: 'Tasks' },
+  'task.new': { ar: 'مهمة جديدة', en: 'New task' },
+  'task.body': { ar: 'المهمة', en: 'Task' },
+  'task.bodyHint': { ar: 'ما الذي وعدت بمتابعته؟', en: 'What did you promise to follow up?' },
+  'task.dueAt': { ar: 'موعد الاستحقاق', en: 'Due' },
+  'task.save': { ar: 'حفظ المهمة', en: 'Save task' },
+  'task.none': { ar: 'لا توجد مهام على هذه التذكرة.', en: 'No tasks on this ticket.' },
+  'task.overdue': { ar: 'متأخرة', en: 'Overdue' },
+  'task.owner': { ar: 'المسؤول:', en: 'Owner:' },
+  'task.complete': { ar: 'إتمام', en: 'Complete' },
+  'task.cancelTask': { ar: 'إلغاء المهمة', en: 'Cancel task' },
+  'task.closed': { ar: 'مغلقة', en: 'Closed' },
+  'task.done': { ar: 'تمت', en: 'Done' },
+  'task.cancelledState': { ar: 'أُلغيت', en: 'Cancelled' },
+  'task.created': { ar: 'تم حفظ المهمة', en: 'Task saved' },
+  'task.completed': { ar: 'تمت المهمة', en: 'Task completed' },
+  'task.cancelled': { ar: 'أُلغيت المهمة', en: 'Task cancelled' },
+  // E-09: a past due date is ACCEPTED and immediately overdue, never
+  // refused. Said on the form so it does not look like a mistake nobody
+  // caught — recording a follow-up you already owe is the normal case.
+  'task.pastAllowed': {
+    ar: 'يمكن اختيار موعد مضى — ستظهر المهمة متأخرة فورًا.',
+    en: 'A past date is fine — the task simply shows as overdue straight away.'
+  },
   'common.loading': { ar: 'جارٍ التحميل…', en: 'Loading…' },
   'lang.arabic': { ar: 'العربية', en: 'Arabic' },
   'lang.english': { ar: 'الإنجليزية', en: 'English' },

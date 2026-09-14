@@ -21,6 +21,7 @@ import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { StatusTonePipe } from '../../../shared/pipes/status-tone.pipe';
 import { Tag } from '../../../shared/components/tag/tag';
 import { CustomerContext } from '../../../shared/components/customer-context/customer-context';
+import { TicketTasks } from '../../../shared/components/ticket-tasks/ticket-tasks';
 import { QuickReply } from '../../../core/models/domain.model';
 import { ActionTonePipe } from '../../../shared/pipes/action-tone.pipe';
 import { LocalizedText } from '../../../core/models/user.model';
@@ -32,7 +33,7 @@ import { MessageBubble } from '../../../shared/components/message-bubble/message
 
 @Component({
   selector: 'app-ticket-detail',
-  imports: [FormsModule, TranslatePipe, StatusTonePipe, ActionTonePipe, MessageBubble, Tag, DatePipe, CustomerContext],
+  imports: [FormsModule, TranslatePipe, StatusTonePipe, ActionTonePipe, MessageBubble, Tag, DatePipe, CustomerContext, TicketTasks],
   templateUrl: './ticket-detail.html'
 })
 export class TicketDetail implements OnDestroy {

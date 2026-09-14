@@ -15,6 +15,7 @@ import { authenticate } from '../../middlewares/auth.middleware.js'
 import { authorize } from '../../middlewares/permission.middleware.js'
 import { Router } from 'express'
 import draftcontroller from '../draft/draft.controller.js'
+import { ticketTaskRouter } from '../task/task.controller.js'
 
 const router = Router()
 
@@ -22,6 +23,10 @@ const router = Router()
 // apart from it, and the ticket is what the scope predicate is evaluated
 // against (004 section 11).
 router.use('/:ticketId/draft', draftcontroller)
+
+// spec 004 FR-004. Nested for the same reason as drafts: section 3 says a task
+// never floats free, and the ticket is what the scope predicate evaluates.
+router.use('/:ticketId/task', ticketTaskRouter)
 const STAFF = ['AGT', 'LEAD', 'MGR', 'ADM', 'AUD']
 const WRITERS = ['AGT', 'LEAD', 'MGR', 'ADM']
 

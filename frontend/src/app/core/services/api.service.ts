@@ -3,7 +3,7 @@
 
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Branch, ContactPoint, Customer, Department, HistoryEntry, Placeholder, QuickReply, Sla, Ticket, TicketMessage, TicketMeta } from '../models/domain.model';
+import { Branch, ContactPoint, Customer, Department, HistoryEntry, Placeholder, QuickReply, Sla, Task, Ticket, TicketMessage, TicketMeta } from '../models/domain.model';
 import { CreateUserRequest, LocalizedText, StaffUser } from '../models/user.model';
 
 const API = 'http://localhost:3000';
@@ -217,7 +217,36 @@ export class ApiService {
     return this.http.request<{ discarded: boolean; cause?: string }>(
       'DELETE', `${API}/ticket/${ticketId}/draft`, { body: { cause } });
   }
+  // --- tasks (spec 004 FR-004, FR-005 task half) ---
+  //
+  // ⚠ REMINDERS ARE EVALUATED ON THE REQUEST. There is no scheduler in this
+  // system, so nothing fires while nobody has the product open. The response
+  // carries `evaluation: 'on_request'` and the screens say so in words.
+  listTicketTasks(ticketId: string) {
+    return this.http.get<{ tasks: Task[] }>(`${API}/ticket/${ticketId}/task`);
+  }
+
+  /** A PAST dueAt is accepted and immediately overdue — E-09, never refused. */
+  createTask(ticketId: string, body: { body: string; dueAt: string; ownerId?: string }) {
+    return this.http.post<{ task: Task }>(`${API}/ticket/${ticketId}/task`, body);
+  }
+
+  myTasks() {
+    return this.http.get<{
+      tasks: Task[];
+      reminders: Task[];
+      overdueCount: number;
+      evaluatedAt: string;
+      evaluation: 'on_request';
+    }>(`${API}/task/mine`);
+  }
+
+  setTaskState(id: string, state: 'done' | 'cancelled') {
+    return this.http.patch<{ task: Task }>(
+      `${API}/task/${id}/${state === 'done' ? 'complete' : 'cancel'}`, {});
+  }
 }
+
 
 
 

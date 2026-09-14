@@ -1,0 +1,126 @@
+<!-- Tasks on a ticket. See ticket-tasks.ts: a past due date is accepted
+     deliberately (E-09), and who may close what is the server's to refuse. -->
+<section class="rounded-xl border border-surface-200 bg-surface-0">
+
+  <div class="flex flex-wrap items-center gap-3 border-b border-surface-200 p-4">
+    <h2 class="m-0 text-sm font-semibold text-surface-900">
+      {{ 'task.heading' | translate: i18n.lang() }}
+    </h2>
+    @if (!loading() && open().length) {
+      <span class="ltr rounded-full bg-surface-100 px-2.5 py-0.5 text-xs text-surface-600">
+        {{ open().length }}
+      </span>
+    }
+    <span class="flex-1"></span>
+    @if (canWrite()) {
+      <button type="button"
+        class="rounded-md border border-surface-300 px-2.5 py-1.5 text-sm text-surface-700
+               hover:bg-surface-100 motion-safe:transition-colors
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+        [attr.aria-expanded]="adding()"
+        (click)="adding.set(!adding())">
+        {{ (adding() ? 'action.cancel' : 'task.new') | translate: i18n.lang() }}
+      </button>
+    }
+  </div>
+
+  @if (adding() && canWrite()) {
+    <form class="flex flex-col gap-3 border-b border-surface-200 p-4" (ngSubmit)="submit()">
+      <label class="flex flex-col gap-1.5">
+        <span class="text-xs font-medium text-surface-700">{{ 'task.body' | translate: i18n.lang() }}</span>
+        <!-- User-authored, single language: no dir is forced, so the browser
+             detects it per task (§8). -->
+        <input name="taskBody" required
+          [ngModel]="body()" (ngModelChange)="body.set($event)"
+          [placeholder]="'task.bodyHint' | translate: i18n.lang()"
+          class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm text-start
+                 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25" />
+      </label>
+      <label class="flex flex-col gap-1.5">
+        <span class="text-xs font-medium text-surface-700">{{ 'task.dueAt' | translate: i18n.lang() }}</span>
+        <!-- NO `min`. E-09: a past due date is accepted and immediately
+             overdue, never refused — recording a follow-up you already owe is
+             the normal case, not a mistake to be caught. -->
+        <input type="datetime-local" name="taskDue" required
+          [ngModel]="dueAt()" (ngModelChange)="dueAt.set($event)"
+          class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm
+                 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25" />
+        <span class="text-xs text-surface-500">{{ 'task.pastAllowed' | translate: i18n.lang() }}</span>
+      </label>
+      <div>
+        <button type="submit" [disabled]="!canSubmit() || busy() === 'create'"
+          class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white
+                 hover:bg-primary-700 disabled:opacity-50
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
+          {{ 'task.save' | translate: i18n.lang() }}
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (loading()) {
+    <p class="m-0 p-4 text-sm text-surface-500">{{ 'common.loading' | translate: i18n.lang() }}</p>
+  } @else if (!tasks().length) {
+    <p class="m-0 p-4 text-sm text-surface-500">{{ 'task.none' | translate: i18n.lang() }}</p>
+  } @else {
+    <ul class="m-0 flex list-none flex-col divide-y divide-surface-100 p-0">
+      @for (t of open(); track t._id) {
+        <li class="flex flex-wrap items-start gap-3 p-4">
+          <div class="min-w-0 flex-1">
+            <p class="m-0 text-sm text-surface-900">{{ t.body }}</p>
+            <p class="m-0 mt-1 flex flex-wrap items-center gap-2 text-xs text-surface-500">
+              <!-- A timestamp is a direction-neutral value (012 FR-002). -->
+              <span class="ltr">{{ t.dueAt | date: 'short' }}</span>
+              @if (isOverdue(t)) {
+                <!-- Never colour alone: the word carries it. -->
+                <app-tag tone="bg-red-100 text-red-800">
+                  {{ 'task.overdue' | translate: i18n.lang() }}
+                </app-tag>
+              }
+              @if (t.ownerName) {
+                <span>{{ 'task.owner' | translate: i18n.lang() }} {{ t.ownerName }}</span>
+              }
+            </p>
+          </div>
+          @if (canWrite()) {
+            <div class="flex shrink-0 flex-wrap gap-2">
+              <button type="button" [disabled]="busy() === t._id"
+                class="rounded-md border border-surface-300 px-2.5 py-1 text-xs text-surface-700
+                       hover:bg-surface-100 disabled:opacity-50 motion-safe:transition-colors
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                (click)="close(t, 'done')">
+                {{ 'task.complete' | translate: i18n.lang() }}
+              </button>
+              <button type="button" [disabled]="busy() === t._id"
+                class="rounded-md border border-surface-300 px-2.5 py-1 text-xs text-surface-600
+                       hover:bg-surface-100 disabled:opacity-50 motion-safe:transition-colors
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                (click)="close(t, 'cancelled')">
+                {{ 'task.cancelTask' | translate: i18n.lang() }}
+              </button>
+            </div>
+          }
+        </li>
+      }
+
+      @if (closed().length) {
+        <li class="p-4">
+          <p class="m-0 mb-2 text-xs font-medium uppercase tracking-wide text-surface-500">
+            {{ 'task.closed' | translate: i18n.lang() }}
+          </p>
+          <ul class="m-0 flex list-none flex-col gap-1.5 p-0">
+            @for (t of closed(); track t._id) {
+              <li class="flex flex-wrap items-center gap-2 text-sm text-surface-500">
+                <!-- Closed, not deleted: the record stays. -->
+                <span class="line-through">{{ t.body }}</span>
+                <app-tag tone="bg-surface-200 text-surface-700">
+                  {{ (t.state === 'done' ? 'task.done' : 'task.cancelledState') | translate: i18n.lang() }}
+                </app-tag>
+              </li>
+            }
+          </ul>
+        </li>
+      }
+    </ul>
+  }
+</section>

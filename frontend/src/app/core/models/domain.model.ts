@@ -140,3 +140,22 @@ export interface PlaceholderFailure {
   token: string;
   reason: 'unknown_placeholder' | 'no_value';
 }
+
+// spec 004 §3 — a Task. A personal to-do with a due date, always attached to a
+// ticket. The body is user-authored and single-language (§8): direction is
+// detected per task, never forced.
+export interface Task {
+  _id: string;
+  ticketId: string;
+  ownerId: string;
+  ownerName?: string | null;
+  dueAt: string;
+  remindBeforeMinutes: number | null;
+  state: 'open' | 'done' | 'cancelled';
+  body: string;
+  closedAt: string | null;
+  /** Only on the reminder list: past dueAt, per AS-05's strict boundary. */
+  overdue?: boolean;
+  ticketReference?: string | null;
+  ticketSubject?: string | null;
+}

@@ -198,6 +198,10 @@
       </section>
     </div>
 
+    <!-- AD-04: the follow-up I promised, against the ticket it belongs to.
+         §3: "a task never floats free". -->
+    <app-ticket-tasks [ticketId]="t._id" />
+
     <!-- AD-03: the customer beside the conversation, so an answer does not
          cost a trip to another screen and a half-written reply. -->
     @if (t.customerId) {
