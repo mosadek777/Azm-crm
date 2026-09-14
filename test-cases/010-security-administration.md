@@ -3,7 +3,11 @@
 **20 cases.** Who exists, what they may see and do, what is recorded, and how
 the system is configured and recovered.
 
-**Coverage:** 5 automated · 2 partial · 1 manual · 12 not testable yet
+**Coverage:** 5 automated · 3 partial · 1 manual · 11 not testable yet
+
+**Last revised 2026-09-14.** SEC-11 said there was no interface for users,
+roles, branches or departments. All five administration screens exist now, and
+status and priority labels are configurable.
 
 ---
 
@@ -60,16 +64,30 @@ terminates sessions within the configured interval and returns assigned work.
   when its token happens to expire.
 - Step 7: their open work is visibly dealt with, not silently orphaned.
 
-**Status:** ⚠ **Partial.** Automated: creation with a role and scope, and the
-refusal when an administrator tries to grant beyond their own scope —
+**Status:** ⚠ **Partial, and better than it was.**
+
+Automated: creation with a role and scope, and the refusal when an
+administrator tries to grant beyond their own scope —
 `backend/tests/scope.test.js`, *"spec 010 AS-04: a granting admin cannot exceed
-their own scope"*.
-**Missing:** steps 4–8 entirely. **Deactivation terminating a live session is
-not asserted anywhere**, and it is a security property rather than a
-convenience. Step 7 is worse than untested — what happens to a deactivated
-person's open requests is **undefined**, deliberately: the specification does
-not say whether they go to the lead, to unassigned, or stay put, and each answer
-changes what the audit trail must record. That is a client decision.
+their own scope"*. Deactivation and reactivation are automated in
+`backend/tests/role-assignment.test.js`, which also proves the deactivated
+person's **session stops working on its next request** — step 5.
+
+**Roles can now be changed without deleting the account.** Until 2026-09-14 the
+only way to promote an agent was to delete and recreate them, which changed
+their id and orphaned every ticket and audit entry naming them. See SEC-05.
+
+**`E-01` was fixed on the same day, and it is worth knowing why.** The rule —
+*at least one active administrator must remain* — had **never actually fired**.
+The break-glass identity holds an administrator assignment and is active, so the
+population it counted was never smaller than one, in any deployment. The rule
+read as enforced and was not. It now excludes that identity and is asserted both
+for deactivation and for role revocation.
+
+**Still missing — step 7.** What happens to a deactivated person's open requests
+is **undefined**, deliberately: `002 E-12` says they return to the owning team
+queue, and there is no team. Each answer changes what the audit trail must
+record, so it stays a client decision rather than a default somebody picked.
 
 ---
 
@@ -412,17 +430,44 @@ It is written up for a non-technical reader in `docs/hosting-decision.md`.
 **Expected result**
 - All seven from a screen, by an administrator, with no developer involved.
 
-**Status:** ⛔ **Not testable yet, and it is the largest single piece of unbuilt
-work in the product.** **Everything configurable is currently a value in the
-code.** Adding a status, a category or a priority is a code change and a
-release.
+**Status:** ⚠ **Partial — two of the seven steps, and the administration
+screens all exist now.**
 
-There is no interface for users, roles, branches or departments either — all of
-it is API-only. If somebody asks how to add an agent, the honest answer today is
-"send an API request".
+**What is built (2026-09-14).** Status and priority **labels** are editable from
+*Organisation → Statuses and priorities*, in both languages, taking effect
+everywhere without a release. So is whether a status **pauses the service-level
+clock**. Automated in `backend/tests/config.test.js`.
 
-Nothing blocks this. It is unscheduled rather than gated, which is precisely why
-it needs saying.
+The administration screens themselves exist: branches, departments, users,
+roles, and this one. The previous revision of this file said *"there is no
+interface for users, roles, branches or departments — all of it is API-only"*.
+That is no longer true.
+
+**The single most important thing to check by hand** is step 7's spirit, applied
+to the one dangerous field. Changing `pauses the clock` **cannot be applied
+backwards**: the pause ledger is append-only, so time already accounted under
+the old setting stays accounted that way. The screen says so in three places —
+a standing line, a confirmation that gives the reason rather than asking "are
+you sure", and the audit entry, which records `retroactive: false` explicitly.
+Check that all three are there. Today the change affects nothing backwards
+because nothing has been computed; that stops being true the day the
+service-level engine lands, and it stops being true silently.
+
+**What is NOT built, step by step:**
+
+| Step | State |
+|---|---|
+| 1. Add a status, define its legal moves | The **label** is editable; the key set and the transition graph are not. `002 AS-03` requires a refused move to name the reachable statuses, so an editor that let somebody strand a status would break a MUST — it needs a reachability check, not a checkbox grid. Card `configurable-transitions` |
+| 2. Add a category | Not built, and **the only one carrying a data migration**: every existing ticket holds a flat category string (decision 21). Card `configurable-categories` |
+| 3. Add a priority | The **label** is editable; the key set is not. A priority carries a rank the queue ordering uses, and a new one would have none — it would sort last, silently. Card `configurable-priority-set` |
+| 4. Business hours and holidays | Blocked on spec `005` and `005 [CLARIFY-2]` |
+| 5. Notification templates | Blocked on spec `003`, which does not exist |
+| 6. Branding | Unscheduled rather than gated. Card `branding-configuration` |
+
+The requirement names **fourteen** configuration surfaces in one sentence. Two
+are built. The screen says so on the page rather than letting the word
+"Configuration" imply the rest. `decisions-pending.md` §24 records the order the
+remainder should come in, and why.
 
 ---
 

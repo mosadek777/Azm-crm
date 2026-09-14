@@ -4,31 +4,47 @@
 their counters, quick replies, tasks, notifications, drafts, and the team queue
 a lead works from.
 
-**Coverage:** 0 automated · 1 partial · 0 manual · 17 not testable yet
+**Coverage:** 3 automated · 11 partial · 0 manual · 4 not testable yet
+
+**Last revised 2026-09-14**, after the workspace was built. The previous
+revision of this file said *"this whole module is unbuilt"* and marked 17 of
+the 18 cases not testable. That was true when it was written and had stopped
+being true, which is the more dangerous of the two states for a document like
+this to be in.
 
 ---
 
 ## Before you start
 
-⚠ **This whole module is unbuilt, and until recently nothing recorded that.**
-It was found by a requirement-by-requirement audit: 26 requirements, 14 of them
-mandatory, no code, and no card on the project board. It is not a future module
-like the knowledge base — it is the agent's daily workspace, and a ticket list
-is currently standing in for it.
+**Eleven of these eighteen stories are built.** The other seven are not, and
+none of them is waiting on effort — each is blocked on something named below.
 
-**What exists today, and why it is not this.** An agent signs in and sees a
-ticket list with filters. That covers part of what an agent needs and none of
-what a **team lead** needs. The difference is the substance of AD-01, AD-02 and
-AD-16.
+**Accounts.** Sign-in details are printed by `npm run seed:demo`. You need:
 
-**One thing here has already been decided rather than merely deferred.** AD-09
-(mentioning a colleague) asked for something that could not be built as written
-— see that case.
+| Role | Who | Why they are here |
+|---|---|---|
+| Agent | Sara Ahmed | The person this whole module is for |
+| Team lead | Nadia Lead | Sees the team queue and can assign from it |
+| Administrator | Dalia Admin | Can reach the configuration screens |
+| Auditor | Yousef Auditor | Reads everything, changes nothing — several cases turn on this |
 
-**Two pieces are worth building first**, and the rest can wait: **AD-02**
-(counters) and **AD-16** (the lead's team queue). They carry nearly all the
-visible value, and a lead having the same screen as an agent is what somebody
-senior notices in ten seconds.
+The lead, the auditor and a second agent are not in the demo seed. Create them
+from the Users screen, or the lead-versus-agent cases below compare one agent
+with another and prove nothing.
+
+**Read this before judging any timing case.** Nothing in this product computes
+how long anything has taken. The service-level clock needs working hours and
+holidays per branch, which is an open client question (`005 [CLARIFY-2]`), and
+until it is answered every duration renders as **unavailable** with a line
+saying why. That is deliberate. A case below that expects "unavailable" is not
+recording a defect — it is recording the one honest answer available.
+
+**A word on "in scope".** Every member of staff is attached to one branch and
+one department and sees only records in theirs. A record elsewhere comes back
+as **not found**, exactly as if it had never existed — saying "forbidden" would
+confirm it exists.
+
+**Language.** Run every case in both Arabic and English.
 
 ---
 
@@ -57,11 +73,22 @@ personal queue ordered by urgency, with no filter selection required.
   to build their own view every morning uses whichever one they built last, and
   no two agents are looking at the same thing.
 
-**Status:** ⛔ **Not testable yet.** The ticket list requires a filter choice
-and orders by reference. **Also blocked on a decision:** what "urgency" orders
-by has not been defined. Priority, age, service-level risk and customer tier all
-have a claim, and the answer changes which request gets worked first — it cannot
-be guessed.
+**Status:** ⚠ **Partial — the queue is built, the ORDER it promises is not.**
+
+Automated: `backend/tests/workspace.test.js` proves the queue returns the
+caller's own open tickets, that it is scope-filtered, and that the server
+**states which ordering it applied** rather than leaving the screen to assume
+one.
+
+**What is NOT proven, and cannot be:** that the order reflects urgency. Nobody
+has defined what urgency means — `004 [CLARIFY-1]` asks whether a high-priority
+ticket with a distant deadline outranks a low-priority one near breach, and the
+answer changes which ticket gets worked first.
+
+So the queue runs the fallback `E-05` already specifies — priority, then age —
+**and says so on the screen**. Step 3 above should be read as "the order is
+stated and consistent", not "the order is by urgency". The day `[CLARIFY-1]` is
+answered this becomes a data change rather than a rebuild.
 
 ---
 
@@ -90,9 +117,19 @@ exactly** with that list.
   behind it destroys confidence in every other number on the screen.
 - Step 5: both the resolved-today and the open counters move.
 
-**Status:** ⛔ **Not testable yet.** No counters exist. Nothing blocks this —
-the data is all present and the scope rules already apply to the lists. It is
-unscheduled rather than gated.
+**Status:** ⚠ **Partial — three of the four counters are real.**
+
+Automated: `backend/tests/workspace.test.js` proves Open, Pending customer and
+Resolved today each agree **exactly** with the list they open, because the card
+and the list run the same server query — two implementations of "open" would
+drift and one cannot. It also proves "today" is evaluated in the branch's own
+timezone (`009 E-19`), and names the zones it used.
+
+**The Overdue counter renders "unavailable", not a number.** Overdue means past
+a target, and there is no target until `005 [CLARIFY-1]` supplies the numbers.
+A `0` there would be a factual claim that nothing is overdue, which nobody can
+make. Check that it says so rather than showing a zero — a zero is the defect,
+not the word.
 
 ---
 
@@ -123,10 +160,22 @@ unavailable.
 - Step 4 says **explicitly** that entitlement could not be determined — not a
   blank. A blank cannot be told apart from a value of nothing.
 
-**Status:** ⛔ **Not testable yet.** The request view shows the customer's name.
-Segments and entitlement **do not exist anywhere in the system** — the customer
-record references a segment type that was never built, and nothing supplies
-entitlement.
+**Status:** ⚠ **Partial — the panel is there; three of its fields cannot be
+filled.**
+
+Built: the customer's identity, contact points, preferred language and last five
+tickets appear beside the conversation, with no navigation away from a
+half-written reply.
+
+**Segments, entitlement and service-level tier each render "unavailable" with a
+reason.** Segments belong to spec `001` and are not built; entitlement comes
+from the ERP, which is out of scope for this phase; the tier depends on the same
+unanswered service-level numbers. `FR-003`'s own words are *"MUST state
+explicitly when a value is unavailable"* — so the panel saying so **is** the
+requirement being met for those three, not a gap in it.
+
+What to check: that each says *why*, not merely "unavailable". A bare
+"unavailable" reads as broken; a reason reads as deliberate.
 
 ---
 
@@ -152,8 +201,18 @@ with a due date and a body, and complete or cancel them.
 - Tasks live on the request **and** in one list the agent can work from — a task
   visible only on a request nobody opens is not a reminder.
 
-**Status:** ⛔ **Not testable yet.** No task record exists anywhere in the
-system.
+**Status:** ✅ **Automated** — `backend/tests/task.test.js`.
+
+It proves creation against a ticket, the required due date and body, completion
+and cancellation, and the permission split in `§9`: an agent may create and
+close their own, a lead may act on a colleague's, an auditor may do neither.
+
+The case worth reading the code for is **`E-09`**: a due date in the PAST is
+**accepted**, not refused, and shows as overdue immediately. Recording a
+follow-up you already owe is the normal case, and a validator added later "for
+safety" would break it silently. The test exists to stop that.
+
+Do not run this one by hand.
 
 ---
 
@@ -179,8 +238,27 @@ task due date and ahead of each service-level threshold.
 - Both reminders arrive with time to act. A notification at the moment of
   breach is a report, not a reminder.
 
-**Status:** ⛔ **Not testable yet.** Depends on tasks (AD-04), on staff
-notifications (AD-13), and on the service-level engine — none of which exists.
+**Status:** ⚠ **Partial — the task half is built; the service-level half has
+nothing to read.**
+
+Automated: `backend/tests/task.test.js` proves both boundaries of `AS-05` as a
+pure function — a task due tomorrow at 10:00 with a two-hour reminder is
+*due soon* at 08:00 and *overdue* only after 10:00. Collapsing those two is the
+mistake any check that merely asks "did a reminder appear" would miss.
+
+**Three things this does NOT do, and the screen says all three:**
+
+1. Reminders appear **in the product only**. They are not emailed or pushed —
+   both need spec `003`, which does not exist.
+2. They are **computed when you open the workspace**. There is no scheduler in
+   this system: no cron, no queue, no worker, no timer. Nothing happens while
+   nobody is looking.
+3. The **service-level threshold half of `FR-005` is not built at all**, because
+   the thresholds live in `005 FR-006` and `005` is blocked.
+
+What to check by hand: that the workspace says all three. An agent who assumes
+an email is coming, or that a reminder is waiting the moment it falls due, is
+worse off than one who knows to look.
 
 ---
 
@@ -212,9 +290,21 @@ unresolved placeholder.
   a customer is worse than no template at all.
 - Step 5 is refused — both languages, always.
 
-**Status:** ⛔ **Not testable yet.** No quick replies exist. Note this case
-carries a bilingual obligation that most unbuilt features do not: the template
-itself must exist in both languages before it can be saved.
+**Status:** ✅ **Automated** — `backend/tests/quick-reply.test.js`.
+
+It proves the bilingual title and body are both required, that insertion picks
+the body by the **customer's** preferred language, and — the case that matters —
+that an unresolved placeholder causes the insertion to be **refused naming the
+token**, rather than the raw `{{customer.name}}` reaching a customer.
+
+The placeholder vocabulary is fixed for this phase: six tokens, chosen so that
+none of them can resolve to "unavailable" (decision 41). A placeholder that
+rendered "unavailable" in a customer-facing reply would be worse than one that
+refused.
+
+Worth doing by hand once: insert a token into an Arabic sentence and check the
+result reads correctly. The token is a left-to-right identifier landing in
+right-to-left text, which is where bidirectional rendering goes wrong.
 
 ---
 
@@ -241,7 +331,20 @@ be edited by an individual agent.
 - Step 3 is refused. Shared wording that any agent can rewrite is not shared
   wording.
 
-**Status:** ⛔ **Not testable yet.** Depends on AD-06.
+**Status:** ⚠ **Partial — the wording is shared, but there is no "team".**
+
+Automated: `backend/tests/quick-reply.test.js` proves that a personal reply is
+visible only to its author, that a shared one is visible to everybody, and that
+managing a shared one requires a **manager or above** — `§9`'s row, which is
+narrower than `FR-007`'s floor of "a lead or above". Where a requirement gives a
+floor for a pair and the matrix gives a row per member, the row describes the
+individual case, and a permission takes the narrower reading.
+
+**`FR-007` asks for THREE scopes — personal, team and global — and there are
+two.** `Team` does not exist anywhere in this system (decision 20), so the
+shared library is global: visible to every member of staff, not to a team. A
+second agent should see a shared reply they did not write. That is correct
+today and will narrow when `Team` is built.
 
 ---
 
@@ -269,7 +372,12 @@ respecting the article's visibility.
 - Step 4 is refused or warns clearly. Internal procedure reaching a customer
   through a quick insert is exactly how it leaks.
 
-**Status:** ⛔ **Not testable yet.** No knowledge base exists.
+**Status:** ⛔ **Not testable yet.** No knowledge base exists — spec `006` is
+not built, and `006 [CLARIFY-1]` blocks it.
+
+Nothing in this module can stand in for it: quick replies (AD-06) are wording an
+agent keeps, not articles somebody approves and versions. Inserting "approved
+content" needs content that has been approved.
 
 ---
 
@@ -295,22 +403,32 @@ internal note; the mention notifies them and is recorded in the history.
 - Steps 1–3 work.
 - Step 4: that person **cannot be mentioned**. They do not appear as a choice.
 
-**Status:** ⛔ **Not testable yet — but the design question behind it is
-settled.**
+**Status:** ⚠ **Partial — a colleague can be mentioned and notified; nobody
+can be PULLED IN.**
 
-The requirement as originally written also said the mention should **grant** the
-colleague access to that one request. That could not be built: a separate,
-equally mandatory rule says permissions come only from roles and that per-person
-exceptions must not exist, and the way access is decided in this system has no
-way to express "this one person, this one record".
+Automated: `backend/tests/notification.test.js` proves a mention notifies the
+named colleague, that the mention is recorded in history, that a deactivated
+colleague is refused **at save time naming them** (`E-07`), and that the note is
+refused **whole** if any name in it cannot be mentioned — an author who named
+three colleagues and had one silently dropped believes all three were asked.
 
-Settled by the project owner: **a mention may only name a colleague who can
-already see the request.** It notifies; it grants nothing. Step 4 above is that
-decision.
+**The granting half of `FR-009` is declined, deliberately, and this is the one
+case in the module where the requirement as written could not be built.**
 
-What this gives up, recorded so it can be reopened deliberately: an agent cannot
-pull in a specialist from another department by mentioning them — that
-specialist must be granted access the normal, audited way first.
+`FR-009` says a mention *"MUST grant them access to that ticket only"*.
+`010 FR-002` says *"per-user permission overrides MUST NOT exist"*. A grant to
+one named person over one named record is an override on any reading, so the two
+mandatory requirements cannot both hold. Decision 39 resolves it by restricting
+**who may be named**: only a colleague who already holds scope on that ticket.
+
+So the case's step 4 — mentioning somebody outside the branch — is **refused**,
+not permitted. `E-08` ("permitted; the mention is an audited grant") is declined
+with the clause it depends on. What survives is the part that matters: a
+colleague who can already see the ticket is told their attention is wanted.
+
+**If the client says cross-scope mentions are a real need, this is the decision
+to reopen** — and it reopens into a record-level grant, which is a change to the
+scope predicate and therefore to every read and write in the system.
 
 ---
 
@@ -335,14 +453,21 @@ channel delivery.
 **Expected result**
 - Staff see it; the customer sees nothing of it anywhere on the page.
 
-**Status:** ⚠ **Partial — and this is the one thing in this module that is
-built.** Automated: `backend/tests/ticket.test.js`, *"FR-014 / AS-07: message
-visibility"*, and from the customer's side `backend/tests/portal.test.js`,
-*"FR-019 / AS-06: internal content never reaches a portal surface"*, which
-asserts the note appears in **no** portal response rather than merely not being
-displayed.
-**Missing:** *"and from every channel delivery"* cannot be tested — no channel
-exists to deliver anything on. Re-run this case with the first channel.
+**Status:** ⚠ **Partial — internal notes work; they are not a separate
+discussion.**
+
+Automated: `backend/tests/ticket.test.js` and `backend/tests/portal.test.js`
+between them prove the substance — an internal note is staff-only, its
+visibility is **immutable** so it can never be flipped customer-visible
+afterwards, and `AS-07` holds: a ticket with internal notes shows the customer
+none of them. That is enforced **in the query** on the portal, not by a filter
+in the interface, so the text never reaches the customer's browser at all.
+
+**What is not built:** a separate discussion view. Internal notes sit on the
+same thread as customer messages, distinguished by an amber rule and a chip. For
+a support tool that is arguably the better answer — the conversation and the
+commentary about it are one story — so it is carded rather than assumed to be a
+gap. Board card `internal-thread-view`.
 
 ---
 
@@ -366,7 +491,15 @@ routing honours it.
 **Expected result**
 - Presence changes what the routing does, immediately.
 
-**Status:** ⛔ **Not testable yet.** No presence, and no chat to route.
+**Status:** ⛔ **Not testable yet.** No presence, and nothing that would read
+it.
+
+Blocked on `004 [CLARIFY-3]`: is live chat in phase one? `AS-11` defines
+presence entirely in terms of chat routing — *"an agent sets presence to away →
+a chat arrives requiring their skill → it is not offered to them"*. Without
+chat, presence is a status somebody sets and nothing reads.
+
+Board card `presence-and-routing`.
 
 ---
 
@@ -394,9 +527,12 @@ assignment and search.
 - Step 3 matters more than it looks: arrow keys in a mirrored layout must move
   in the direction the reader expects.
 
-**Status:** ⛔ **Not testable yet.** Optional, and the lowest priority in this
-file — but note it overlaps the accessibility work, where full keyboard
-operability is not optional.
+**Status:** ⛔ **Not testable yet.** Not attempted.
+
+`FR-012` is a **MAY** with no acceptance scenario behind it, and the story is a
+*Could*. Worth doing once the screens it would drive have stopped moving —
+shortcuts pointing at a layout still being designed are shortcuts that get
+rebound twice. Board card `keyboard-shortcuts`.
 
 ---
 
@@ -426,11 +562,27 @@ arrive grouped.
   notifications for one conversation learns to ignore all of them.
 - An escalation is never grouped away or suppressed.
 
-**Status:** ⛔ **Not testable yet.** **Nothing notifies staff of anything
-today.** Two other mandatory requirements depend on this and are equally
-unserved: reassigning a request is required to notify both the previous and the
-new owner, and escalating one is required to notify the target. In-app
-notification does not depend on any messaging channel and could be built now.
+**Status:** ⚠ **Partial — one of the three channels, and three of the eight
+events.**
+
+Automated: `backend/tests/notification.test.js` proves the notification centre
+shows only the caller's own (`§11`'s *"user = caller only"* — an administrator
+cannot see somebody else's), that marking read touches nobody else's rows, and
+that `FR-013`'s grouping clause works both ways: several notifications about one
+ticket inside the window become one group carrying a count, and an **escalation
+is never grouped**, which the requirement states as a MUST NOT.
+
+**In-app only.** Email and push need spec `003`, which does not exist. The
+screen says so.
+
+**Three of the eight event kinds have a producer:** assignment, mention and
+customer reply. Escalation, service-level threshold, delivery failure and chat
+offer have nothing that can raise them. Task-due deliberately writes no row —
+with no scheduler, a row written when somebody opens the workspace would carry a
+timestamp claiming a delivery that never happened.
+
+What to check by hand: that the count on the navigation and the list on the
+screen agree. They read one source for exactly that reason.
 
 ---
 
@@ -454,7 +606,18 @@ and current assigned-request count when choosing a transfer target.
 - The chooser can see who is actually available before deciding.
 - Step 3: the list respects the same access rules as everything else.
 
-**Status:** ⛔ **Not testable yet.** Depends on presence.
+**Status:** ⚠ **Partial — the load half is built, the presence half is
+blocked.**
+
+Built: the team queue shows **open ticket count per colleague in scope,
+including those carrying zero**. The zero rows are the point — a count built from
+tickets alone can only produce people who already hold work, which is the
+opposite of the question a lead is asking. Proved in
+`backend/tests/team-queue.test.js`, and mutation-proved: assigning one ticket
+moves one agent's number and leaves the other's alone.
+
+**Availability is not built**, for the same reason as AD-11. So a lead can see
+who is least loaded and cannot see who is actually at their desk.
 
 ---
 
@@ -484,7 +647,22 @@ is flagged when the conversation has changed since it was written.
 - Step 5: the draft is flagged as written against an older conversation — the
   colleague may already have said what you were about to say.
 
-**Status:** ⛔ **Not testable yet.** No draft preservation of any kind.
+**Status:** ✅ **Automated** — `backend/tests/draft.test.js`.
+
+It proves a draft is saved and restored, that it is **private to its author**
+(`§11`: *"user = caller AND ticket scope"*), and `AS-09`'s second clause — a
+draft restored after the customer has replied is **flagged as possibly stale**
+rather than silently handed back.
+
+Two decisions are recorded here rather than inferred. Drafts are kept **seven
+days** (decision 42) — long enough to survive a weekend, short enough that a
+thread has usually moved on. And on reassignment (`E-02`) a draft **stays with
+its author** and the new assignee never sees it: a half-written reply in
+somebody else's voice is worse than no draft.
+
+Draft text follows the same visibility rule as an internal note — staff only,
+never reachable from the portal — and that holds by construction, because the
+portal has no endpoint that reads drafts at all.
 
 ---
 
@@ -515,10 +693,29 @@ list, scoped to the teams, branches and departments they hold.
   open twenty screens.
 - Step 7 holds in every view.
 
-**Status:** ⛔ **Not testable yet.** **A lead currently sees exactly the same
-screen as an agent.** This is the most visible gap in the module and, with
-AD-02, the piece worth building first. The at-risk view additionally needs the
-service-level engine; unassigned, oldest and per-agent do not.
+**Status:** ⚠ **Partial — three of the four views answer.**
+
+Automated: `backend/tests/team-queue.test.js` proves the unassigned and oldest
+views, the per-agent load, assignment from the list without opening each ticket
+(`AS-10`), and that the whole thing is scope-bounded — proved against a caller
+who **can** see the excluded ticket, so a queue that returned nothing to
+everybody could not pass.
+
+**The at-risk view is offered and REFUSES.** "At risk" is a statement about
+remaining time against a target, and the clock answers unavailable. It is not
+hidden and it does not show an empty list: an empty at-risk list would assert
+that no ticket is at risk, which nobody knows. `AS-08` is why faking it would be
+worse than useless — it requires this number to be *identical* to the one spec
+`009` reports for the same ticket at the same instant, and an invented one
+disagrees by construction.
+
+**"Team" here means branch and department.** `Team` does not exist, so the
+predicate runs on two of its three parts — which makes the queue **wider** than
+the spec intends, not narrower. That is not new exposure: the ticket list
+already returns exactly this set to exactly these callers. The screen says so.
+
+Also not built: **bulk assignment** (`§10` names its audit event). One row at a
+time. Board card `team-queue-bulk-assign`.
 
 ---
 
@@ -543,8 +740,15 @@ highest-urgency unassigned request in their scope.
 - Step 3: they receive **different** requests. No request is assigned twice —
   which is the whole difficulty of this feature.
 
-**Status:** ⛔ **Not testable yet.** Depends on AD-01's ordering decision, which
-is unanswered.
+**Status:** ⛔ **Not testable yet.** Blocked on the same question as AD-01.
+
+"Take the next one" is meaningless without an order to take the next *from*, and
+`004 [CLARIFY-1]` has not defined urgency. The queue's stated fallback is honest
+for a list a human reads and chooses from; it is not honest as the basis for a
+button that chooses **for** them.
+
+The concurrency half is already solved — assignment is transactional and refuses
+a ticket somebody else holds. Board card `take-next-ticket`.
 
 ---
 
@@ -572,7 +776,19 @@ from** the service-level engine. This module computes no durations of its own.
   that ignores paused clocks, weekends and holidays is wrong in a way nobody
   notices, which is worse than showing nothing.
 
-**Status:** ⛔ **Not testable yet.** The service-level engine is not built. The
-discipline this case describes **is** already in force: one shared component is
-the only thing in the system permitted to calculate a duration, and it
-deliberately reports "unavailable" today. Nothing else subtracts two dates.
+**Status:** ⚠ **Partial — the countdown renders, and what it renders is
+"unavailable".**
+
+Built: the ticket view and the queue both show the service-level state, read
+from one implementation and never computed at the call site. `AS-08` requires
+the ticket and the team queue to agree exactly, and they do — because there is
+one source, not two.
+
+**It says "unavailable", with a line explaining that timing needs the working
+calendar.** That is the requirement being met in its degraded form, not a
+missing feature: `FR-019` and the constitution both forbid computing a
+substitute, and a naive difference between two timestamps would disagree with
+every report spec `009` produces.
+
+What to check: that the reason appears beside it. A bare "unavailable" reads as
+broken.
