@@ -408,6 +408,27 @@ export const DICTIONARY: Translations = {
     ar: 'يمكن اختيار موعد مضى — ستظهر المهمة متأخرة فورًا.',
     en: 'A past date is fine — the task simply shows as overdue straight away.'
   },
+  // --- reminders (spec 004 FR-005 task half, FR-013 in-app, AD-05) ---------
+  //
+  // ⚠ `reminder.howItWorks` SAYS THREE THINGS AND ALL THREE ARE LOAD-BEARING:
+  // they appear here, they are not emailed, and they are computed when this
+  // screen is opened. Drop the third and an agent may still believe a reminder
+  // is waiting for them the moment it falls due — there is no scheduler in this
+  // system, so nothing at all happens while nobody is looking.
+  'reminder.heading': { ar: 'التذكيرات', en: 'Reminders' },
+  'reminder.none': { ar: 'لا شيء مستحق الآن.', en: 'Nothing due right now.' },
+  'reminder.overdue': { ar: 'متأخرة', en: 'Overdue' },
+  'reminder.dueSoon': { ar: 'مستحقة قريبًا', en: 'Due soon' },
+  'reminder.toastTitle': { ar: 'لديك تذكيرات مهام', en: 'You have task reminders' },
+  'reminder.howItWorks': {
+    ar: 'تظهر التذكيرات هنا. لا تُرسَل بالبريد ولا كإشعار مُنبثق، وتُحسَب عند فتح هذه الشاشة — لا شيء يعمل في غيابك.',
+    en: 'Reminders appear here. They are not emailed or pushed, and they are computed when you open this screen — nothing runs while you are away.'
+  },
+  'reminder.evaluatedAt': { ar: 'حُسبت في', en: 'Computed at' },
+  'reminder.badgeTitle': {
+    ar: 'تذكيرات المهام — تُحسب عند فتح مساحة العمل',
+    en: 'Task reminders — computed when you open the workspace'
+  },
   'common.loading': { ar: 'جارٍ التحميل…', en: 'Loading…' },
   'lang.arabic': { ar: 'العربية', en: 'Arabic' },
   'lang.english': { ar: 'الإنجليزية', en: 'English' },

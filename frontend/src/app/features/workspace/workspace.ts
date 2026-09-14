@@ -44,6 +44,7 @@
 
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/auth/services/auth.service';
@@ -51,6 +52,7 @@ import { LanguageService } from '../../core/i18n/language.service';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { StatusTonePipe } from '../../shared/pipes/status-tone.pipe';
 import { Tag } from '../../shared/components/tag/tag';
+import { ReminderService } from '../../core/notifications/reminder.service';
 import { Ticket } from '../../core/models/domain.model';
 
 /** Every status that is not terminal and not resolved — work still on my desk. */
@@ -71,7 +73,7 @@ export interface Counter {
 
 @Component({
   selector: 'app-workspace',
-  imports: [RouterLink, TranslatePipe, StatusTonePipe, Tag],
+  imports: [RouterLink, TranslatePipe, StatusTonePipe, Tag, DatePipe],
   templateUrl: './workspace.html'
 })
 export class Workspace {
@@ -79,6 +81,14 @@ export class Workspace {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   protected readonly i18n = inject(LanguageService);
+
+  // ── REMINDERS ────────────────────────────────────────────────────────────
+  //
+  // FR-013 in-app. The service is shared with the sidebar badge so both read
+  // ONE answer; two fetches would drift and show a badge of 3 beside a list of
+  // 2. Read the service's own header for why this screen is the only thing
+  // that makes reminders happen at all.
+  protected readonly reminders = inject(ReminderService);
 
   protected readonly queue = signal<Ticket[]>([]);
   protected readonly loading = signal(true);
@@ -130,7 +140,14 @@ export class Workspace {
 
   protected readonly queueEmpty = computed(() => !this.loading() && this.queue().length === 0);
 
-  constructor() { this.load(); }
+  constructor() {
+    this.load();
+    // ⚠ THIS CALL IS WHAT MAKES A REMINDER EXIST. There is no scheduler, so
+    // opening this screen is the only moment anything is evaluated — which is
+    // exactly what `reminder.howItWorks` tells the agent, in as many words.
+    // `announce` raises ONE toast for reminders not yet seen this session.
+    this.reminders.refresh({ announce: true });
+  }
 
   protected load(): void {
     const mine = this.me();

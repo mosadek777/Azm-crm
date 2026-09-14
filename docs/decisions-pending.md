@@ -1632,3 +1632,73 @@ same LEAD may still create a personal one.
 **No decision is requested.** If the client wants leads to own the shared
 library, that is a change to `§9` and it should be made there rather than by
 loosening the code back.
+
+---
+
+## 20. `004 FR-005` and `FR-013` — what a reminder can honestly be, with no scheduler and no spec 003
+
+**No decision is requested.** This records what was built, what was refused, and
+the three named cards that carry the rest — because "reminders" shipped and a
+reader is entitled to know exactly how much of the requirement that is.
+
+### The two requirements
+
+`FR-005`: *"The system MUST notify the assigned agent ahead of a **task due
+date** and ahead of **each SLA threshold** defined in `005 FR-006`."*
+
+`FR-013`: *"Notifications MUST be deliverable **in-app, by email and by push**."*
+
+Between them they name **two producers** (tasks, SLA thresholds) and **three
+channels** (in-app, email, push). One producer and one channel are built. The
+other three are blocked on things outside spec `004`, and none of them is
+blocked on effort.
+
+### Built
+
+**The task producer, evaluated on request.** `dueReminders(tasks, now)` in
+`task.service.js` is a pure function over the caller's open tasks; `myTasks`
+calls it and answers `{ reminders, overdueCount, evaluatedAt, evaluation:
+'on_request' }`. `AS-05`'s boundary is strict: `now > dueAt` is overdue, `now ==
+dueAt` is not.
+
+**The in-app channel.** A card on the workspace listing what is due, a single
+summary toast on arrival, and a count on the sidebar's Workspace item. The
+count and the card read ONE service, so a badge of 3 beside a list of 2 is not
+reachable.
+
+### Blocked, and why each is not an effort question
+
+| Card | What is missing | Why it cannot be invented here |
+|---|---|---|
+| `reminder-sla-thresholds` | The second producer of `FR-005` | The thresholds are `005 FR-006`, and `005` is blocked on `[CLARIFY-1]`, the SLA numbers themselves. A reminder fired against a made-up target trains an agent to act on a deadline nobody agreed — worse than no reminder, because it looks authoritative. |
+| `reminder-channels-email-push` | Two of the three channels of `FR-013` | Spec `003` does not exist. There is no transport, no provider, no template store and no push-token store. This is the same category as `R5` in `remaining.md`: nothing was shortcut, because nothing could be built. |
+| `reminder-scheduler` | Anything that runs when nobody is looking | **This project has no scheduler: no cron, no queue, no worker, no timer.** See below. |
+
+### Why a scheduler was deliberately NOT added
+
+A reminder that "fires" needs something running while the agent is away. The
+tempting shortcut is a client-side timer, and it is a lie: it only runs while a
+tab happens to be open, so it makes the promise it cannot keep, in the one case
+that matters.
+
+`005 §11` already names one — *"run scheduled automation (internal) | Scheduler
+entry | system; idempotent per ticket per occurrence"* — so the scheduler
+belongs to the SLA and automation engine. Standing up a second one inside `004`
+would pre-empt a design `005` owns, and would then have to be unpicked.
+
+Because `dueReminders` is a pure function of `(tasks, now)`, that engine arrives
+as a **caller** rather than as a rewrite, and the in-app surface becomes its
+first consumer unchanged.
+
+### The consequence is SAID, not hidden
+
+`reminder.howItWorks` renders on the workspace whether or not anything is due,
+and says three things:
+
+> Reminders appear here. They are not emailed or pushed, and they are computed
+> when you open this screen — nothing runs while you are away.
+
+The third clause is the one that reads badly, and it stays. "Not emailed" alone
+is accurate and incomplete: an agent could read it and still believe a reminder
+is waiting for them the moment it falls due. An agent who knows to look is
+better off than one who is waiting for something that will never arrive.

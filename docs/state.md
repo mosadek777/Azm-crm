@@ -262,24 +262,21 @@ client's own words — only to derived material the README itself calls
 
 ---
 
-## ⚠ There is no `frontend-design` skill. Stop asking for one.
+## The `frontend-design` skill — it exists now, in this repository
 
-**Checked 2026-09-09.** The assistant's available skills are `design`,
-`dataviz`, `artifact-design`, `artifact-diagramming`, `artifact-capabilities`,
-`update-config`, `keybindings-help`, `code-review`, `simplify`,
-`fewer-permission-prompts`, `loop`, `schedule`, `claude-api`,
-`workflow-authoring`, `run`, `init` and `security-review`. **None of them
-covers in-app frontend design.** It was asked for repeatedly across 2026-09-09
-and was never there.
+**Created 2026-09-14, after several sessions spent looking for one that did not
+exist.** It lives at `.claude/skills/frontend-design/SKILL.md`, alongside
+`.claude/skills/testing/SKILL.md`, and it is derived from THIS codebase rather
+than from general advice. Read it before touching `frontend/src`.
 
+The assistant's own bundled skills do not cover in-app frontend design.
 `artifact-design` is the near miss and is the wrong tool: it governs published
 Artifacts — standalone HTML pages hosted on claude.ai — not an Angular
 application. Following it here would import conventions from a different medium.
 
-**What to use instead, which is the better answer anyway:** this application's
-own design tokens, in `frontend/src/styles.css`. They are the authority because
-they are what the seven existing screens already use.
-
+The authority underneath the skill is this application's own design tokens, in
+`frontend/src/styles.css`, because they are what the existing screens already
+use.
 | Concern | Where it is defined |
 |---|---|
 | Colour | `@theme` — violet `--color-primary-*`, warm stone `--color-surface-*`. Deliberately not blue-on-white, and the neutrals are warm so the background does not reintroduce it |

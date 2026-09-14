@@ -29,6 +29,7 @@ import { AuthService } from '../../../core/auth/services/auth.service';
 import { LanguageService } from '../../../core/i18n/language.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { ToastService } from '../../../core/notifications/toast.service';
+import { ReminderService } from '../../../core/notifications/reminder.service';
 import { Tag } from '../tag/tag';
 import { Task } from '../../../core/models/domain.model';
 
@@ -43,6 +44,10 @@ export class TicketTasks {
   private readonly api = inject(ApiService);
   private readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
+  // Changing a task here changes what is due, and the sidebar badge is the same
+  // service's count. Without this, completing a task from a ticket leaves a
+  // reminder badge standing for work that is finished.
+  private readonly reminders = inject(ReminderService);
   protected readonly i18n = inject(LanguageService);
 
   protected readonly tasks = signal<Task[]>([]);
@@ -98,6 +103,9 @@ export class TicketTasks {
         this.body.set(''); this.dueAt.set('');
         this.toast.success('task.created');
         this.load();
+        // `announce: false` — the agent just created this task; a toast telling
+        // them it exists would be the same news twice.
+        this.reminders.refresh({ announce: false });
       },
       error: (e: HttpErrorResponse) => {
         this.busy.set(null);
@@ -113,6 +121,7 @@ export class TicketTasks {
         this.busy.set(null);
         this.toast.success(state === 'done' ? 'task.completed' : 'task.cancelled');
         this.load();
+        this.reminders.refresh({ announce: false });
       },
       error: (e: HttpErrorResponse) => {
         this.busy.set(null);

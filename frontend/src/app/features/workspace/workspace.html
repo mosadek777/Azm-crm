@@ -54,6 +54,82 @@
     {{ 'sla.unavailableWhy' | translate: i18n.lang() }}
   </p>
 
+  <!-- ── REMINDERS ────────────────────────────────────────────────────────
+       spec 004 FR-005 (task half), FR-013 (in-app), AD-05.
+
+       ⚠ THE NOTE AT THE FOOT IS PART OF THE FEATURE, NOT DECORATION, and it
+       renders whether or not there is anything due — an agent has to learn the
+       rule on a quiet day, not discover it on a busy one. It says three
+       things: they appear here, they are not emailed, and they are computed
+       when this screen opens. There is no scheduler in this system, so the
+       third is the one that stops an agent waiting for a reminder that will
+       never arrive on its own. -->
+  <section class="rounded-xl border border-surface-200 bg-surface-0">
+    <div class="flex flex-wrap items-center gap-3 border-b border-surface-200 p-4">
+      <h2 class="m-0 text-sm font-semibold text-surface-900">
+        {{ 'reminder.heading' | translate: i18n.lang() }}
+      </h2>
+      @if (reminders.count() > 0) {
+        <span class="ltr rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-900">
+          {{ reminders.count() }}
+        </span>
+      }
+    </div>
+
+    @if (reminders.count() === 0) {
+      <p class="m-0 p-4 text-sm text-surface-600">
+        {{ 'reminder.none' | translate: i18n.lang() }}
+      </p>
+    } @else {
+      <ul class="m-0 list-none p-0">
+        @for (r of reminders.reminders(); track r._id) {
+          <li class="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-surface-100
+                     px-4 py-3 last:border-0">
+            <!-- Never colour alone: the word carries it, and the overdue one
+                 differs from the due-soon one in text as well as tone. -->
+            <app-tag [tone]="r.overdue ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-900'">
+              {{ (r.overdue ? 'reminder.overdue' : 'reminder.dueSoon') | translate: i18n.lang() }}
+            </app-tag>
+
+            <span class="min-w-0 flex-1 text-sm text-surface-900">{{ r.body }}</span>
+
+            <!-- A timestamp, not a duration. Constitution III forbids computing
+                 elapsed time outside spec 005; this prints the instant the
+                 server stored and subtracts nothing. -->
+            <span class="ltr shrink-0 text-xs text-surface-600">
+              {{ r.dueAt | date: 'short' }}
+            </span>
+
+            <!-- A reminder nobody can act on is noise, so it carries its
+                 ticket. `reference` is an admin-visible identifier and stays
+                 LTR per 012 §3. -->
+            @if (r.ticketReference) {
+              <a [routerLink]="['/tickets', r.ticketId]"
+                 class="ltr shrink-0 rounded-lg border border-surface-200 px-2.5 py-1 font-mono
+                        text-xs text-primary-700 no-underline hover:bg-primary-50
+                        motion-safe:transition-colors
+                        focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
+                {{ r.ticketReference }}
+              </a>
+            }
+          </li>
+        }
+      </ul>
+    }
+
+    <!-- `rounded-b-xl` because this paragraph is the LAST child and carries a
+         background: without it the tinted strip squares off the card's own
+         rounded corners. Symmetric, so it needs no mirroring. -->
+    <p class="m-0 rounded-b-xl border-t border-surface-100 bg-surface-50 px-4 py-3
+              text-xs text-surface-600">
+      {{ 'reminder.howItWorks' | translate: i18n.lang() }}
+      @if (reminders.evaluatedAt(); as at) {
+        <span class="ms-1">{{ 'reminder.evaluatedAt' | translate: i18n.lang() }}
+          <span class="ltr">{{ at | date: 'shortTime' }}</span></span>
+      }
+    </p>
+  </section>
+
   <!-- ── THE QUEUE ────────────────────────────────────────────────────────
        AD-01: opens on my assigned tickets, in an order I did not choose. -->
   <section class="rounded-xl border border-surface-200 bg-surface-0">

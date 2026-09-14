@@ -44,6 +44,7 @@ import { LanguageService } from '../../core/i18n/language.service';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { CapabilityHints } from '../../core/models/user.model';
 import { SidebarState } from './sidebar-state';
+import { ReminderService } from '../../core/notifications/reminder.service';
 
 export interface NavChild { labelKey: string; route: string }
 
@@ -54,7 +55,7 @@ export interface NavItem {
   icon: string;
   children?: NavChild[];
   /** Which live count, if any, this item carries. */
-  badge?: 'unassignedTickets';
+  badge?: 'unassignedTickets' | 'taskReminders';
   /**
    * The rendering hint this item depends on. Absent means always shown.
    *
@@ -120,7 +121,11 @@ export class Sidebar {
     {
       labelKey: 'nav.section.navigation',
       items: [
-        { labelKey: 'nav.workspace', route: '/workspace', icon: 'workspace' },
+        // The reminder badge hangs on WORKSPACE and nowhere else, because the
+        // workspace is where reminders are computed and where they are read.
+        // A badge on a screen that does not hold the list would be a number
+        // with no destination.
+        { labelKey: 'nav.workspace', route: '/workspace', icon: 'workspace', badge: 'taskReminders' },
         { labelKey: 'nav.tickets', route: '/tickets', icon: 'tickets', badge: 'unassignedTickets' },
         { labelKey: 'nav.customers', route: '/customers', icon: 'customers' },
         { labelKey: 'nav.quickReplies', route: '/quick-replies', icon: 'quickReplies' }
@@ -185,6 +190,13 @@ export class Sidebar {
   // badge is hidden for it; "not known yet" must not render as that.
   protected readonly unassignedTickets = signal<number | null>(null);
 
+  // TASK REMINDERS. ⚠ NOT FETCHED HERE. The badge READS the same service the
+  // workspace writes, so the number on the rail and the list on the screen are
+  // one answer and cannot disagree. It also keeps the promise the workspace
+  // makes in words: reminders are computed when that screen is opened, not
+  // quietly re-evaluated on every navigation by the navigation itself.
+  private readonly reminders = inject(ReminderService);
+
   private readonly url = signal(this.router.url.split('?')[0]);
 
   constructor() {
@@ -208,9 +220,24 @@ export class Sidebar {
   }
 
   protected badgeFor(item: NavItem): number | null {
-    if (item.badge !== 'unassignedTickets') return null;
-    const n = this.unassignedTickets();
+    const n = item.badge === 'unassignedTickets' ? this.unassignedTickets()
+      : item.badge === 'taskReminders' ? this.reminders.count()
+      : null;
     return n && n > 0 ? n : null;
+  }
+
+  /** What the badge is a count OF — read aloud, never left to the colour. */
+  protected badgeLabelKey(item: NavItem): string {
+    return item.badge === 'taskReminders' ? 'reminder.heading' : 'nav.unassigned';
+  }
+
+  /**
+   * The reminder badge carries the rule on hover: it is computed when the
+   * workspace opens. Nothing on the rail should imply a number that keeps
+   * itself up to date, because none of them do.
+   */
+  protected badgeTitle(item: NavItem): string | null {
+    return item.badge === 'taskReminders' ? this.i18n.translate('reminder.badgeTitle') : null;
   }
 
   // --- active state ---------------------------------------------------------

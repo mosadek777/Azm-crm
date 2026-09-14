@@ -124,9 +124,10 @@
                        the label anyway. -->
                   @if (badgeFor(item); as count) {
                     <span [class]="badgeClasses(item.route)"
-                          [class.lg:hidden]="state.collapsed()">
+                          [class.lg:hidden]="state.collapsed()"
+                          [attr.title]="badgeTitle(item)">
                       <span class="ltr">{{ count }}</span>
-                      <span class="sr-only"> {{ 'nav.unassigned' | translate: i18n.lang() }}</span>
+                      <span class="sr-only"> {{ badgeLabelKey(item) | translate: i18n.lang() }}</span>
                     </span>
                     <!-- COLLAPSED, the number becomes a dot. A two-digit count
                          on a 20px icon is unreadable, but losing the signal
@@ -136,7 +137,7 @@
                     @if (state.collapsed()) {
                       <span class="absolute end-2.5 top-2 hidden h-2 w-2 rounded-full
                                    bg-primary-600 ring-2 ring-surface-0 lg:block">
-                        <span class="sr-only">{{ count }} {{ 'nav.unassigned' | translate: i18n.lang() }}</span>
+                        <span class="sr-only">{{ count }} {{ badgeLabelKey(item) | translate: i18n.lang() }}</span>
                       </span>
                     }
                   }
