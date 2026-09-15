@@ -1,11 +1,12 @@
 ---
 name: testing
-description: How to write a check in this repo that can actually fail, and the five specific faults that have already cost us a passing suite that proved nothing. Read this BEFORE writing or changing anything under backend/tests, any *.spec.ts, any CI workflow, or any browser-verification script. Triggers on: test, check, assert, suite, npm test, ng test, CI, verify, prove, coverage, regression, scope test, audit check, mutation.
+description: How to write a check in this repo that can actually fail, and the specific faults that have already cost us a passing suite that proved nothing — including a rule that read as enforced for months and had never once fired. Read this BEFORE writing or changing anything under backend/tests, any *.spec.ts, any CI workflow, or any browser-verification script. Triggers on: test, check, assert, suite, npm test, ng test, CI, verify, prove, coverage, regression, scope test, audit check, mutation.
 ---
 
 # Testing — azm-crm
 
-One rule, and four ways we have already broken it.
+One rule, and every way this project has already broken it. Each section below
+is a real failure with a real cost, not a general principle.
 
 ## A check that cannot fail is not a check
 
@@ -20,8 +21,9 @@ It proved nothing whatever about whether the controls worked. That is why
 `backend/tests/security.test.js` exists separately, and why its header says every
 check in it fails if its control is removed.
 
-The same shape appeared as the `AS-03` tautology and as the four faults below.
-They are all one fault: the check had no way to come out wrong.
+The same shape appears in every section below. They are all one fault: **the
+check had no way to come out wrong.** The worst instance is two sections down —
+a rule that was never asserted at all, and so was never reachable.
 
 ## Never compare two restricted users and call it a scope test
 
@@ -52,6 +54,54 @@ create in the same run is what proves the endpoint works at all.
 Corollary: after asserting a refusal, assert the **state did not change**. "The
 branch was not deactivated behind those refusals" is the check that would catch
 a 403 returned after the write.
+
+## Assert the refusal ITSELF, not only the paths around it
+
+A rule that reads as enforced and is not is **worse than an absent one**: the
+absent one gets noticed.
+
+`010 E-01` — *"at least one active administrator must remain"* — was in the code
+from the start, reviewed, and cited in three documents. It had **never fired**.
+The break-glass root holds an `ADM` assignment and is active, so the population
+the rule counted was never smaller than one, in any deployment that has a root —
+which is all of them. The condition was unreachable.
+
+Nothing caught it for months of test runs, because the suites asserted
+everything **around** the refusal and never the refusal:
+
+- that a user can be created with a role ✓
+- that deactivation works ✓
+- that deactivating yourself is refused (`E-02`) ✓
+- that a non-administrator cannot deactivate anybody ✓
+- that the last administrator is refused ✗ — **never written**
+
+Every one of those passes with `E-01` deleted.
+
+**The test to write is the one where the rule is the ONLY thing standing between
+the call and success.** That is harder than it sounds, and the difficulty is the
+point — reaching the state costs setup, which is exactly why nobody had done it.
+When `E-01` was finally asserted it took three attempts, and each failure was
+informative:
+
+1. A different refusal fired first (decision 43's "a user cannot be left with no
+   role"), so the check passed on the **wrong** refusal. Give the subject a
+   second role so only the rule under test remains.
+2. The population is **system-wide**, so an administrator in another branch kept
+   the count above one. Remove them, deliberately, and assert that removing them
+   was what changed the answer.
+3. Only then does the rule refuse.
+
+**Checklist for any "must always remain" or "cannot be the last" rule:**
+
+- Is there a check that asserts the **refusal**, not only the success beside it?
+- Can you reach the state the rule guards? If the setup is awkward, that is a
+  signal the rule may be unreachable in production too.
+- When it refuses, is it refusing **for the reason under test**? Assert the
+  message, not just the status — two rules returning 409 are indistinguishable
+  by code alone.
+- Does the population the rule counts include something that should not be in
+  it? Service accounts, break-glass identities and system users are the usual
+  culprits, and they are invisible in a fixture that does not create them.
 
 ## In the browser, `innerText` is TRANSFORMED text — match case-insensitively
 
