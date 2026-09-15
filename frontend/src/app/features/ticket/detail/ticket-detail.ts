@@ -29,6 +29,7 @@ import {
   Ticket, Customer, TicketMessage, HistoryEntry, Sla, Visibility, TicketMeta
 } from '../../../core/models/domain.model';
 import { ToastService } from '../../../core/notifications/toast.service';
+import { PollingService } from '../../../core/polling/polling.service';
 import { Conversation, ConversationMessage } from '../../../shared/components/conversation/conversation';
 
 @Component({
@@ -180,8 +181,17 @@ export class TicketDetail implements OnDestroy {
     // into their own sentence would mangle it; what changes is who is notified.
   }
 
+  private readonly polling = inject(PollingService);
+  private stopPolling: (() => void) | null = null;
+
   constructor() {
     this.loadDraft();
+
+    // FR-021 / AD-19 at the NFR-003 interval: a message on an OPEN conversation
+    // is the case the story names — an agent typing a reply to somebody who has
+    // already written again. The form is deliberately not reset; see
+    // pollRefresh().
+    this.stopPolling = this.polling.register(() => this.pollRefresh(), this.polling.intervals.realtimeMs);
 
     // On blur is the other half of NFR-004, and the important half: a tab
     // closing is exactly the case FR-015 exists for.
@@ -201,7 +211,21 @@ export class TicketDetail implements OnDestroy {
     this.load();
   }
 
-  protected load(): void {
+  protected load(): void { this.fetch(true); }
+
+  /**
+   * FR-021 / AD-19 — the poll.
+   *
+   * ⚠ IT DOES NOT RESET THE FORM, and that is the whole difference between
+   * this and `load()`. An agent half-way through choosing a status, typing an
+   * assignment reason or writing a reply is exactly the person this screen is
+   * for, and clearing their work every five seconds would make the feature a
+   * net loss. The draft textarea is untouched for the same reason — it is also
+   * autosaved (FR-015), and the two must not fight.
+   */
+  protected pollRefresh(): void { this.fetch(false); }
+
+  private fetch(resetForm: boolean): void {
     this.api.getTicket(this.id).subscribe({
       next: r => {
         this.ticket.set(r.ticket);
@@ -211,9 +235,11 @@ export class TicketDetail implements OnDestroy {
         this.history.set(r.history);
         this.reachable.set(r.reachableStatuses);
         this.sla.set(r.sla);
-        this.nextStatus.set('');
-        this.statusReason.set('');
-        this.followUpAt.set('');
+        if (resetForm) {
+          this.nextStatus.set('');
+          this.statusReason.set('');
+          this.followUpAt.set('');
+        }
       },
       error: (e: HttpErrorResponse) => {
         // AS-03: out of scope and non-existent are indistinguishable, on
@@ -412,6 +438,8 @@ export class TicketDetail implements OnDestroy {
   ngOnDestroy(): void {
     window.removeEventListener('blur', this.flushDraft);
     if (this.autosaveTimer) clearTimeout(this.autosaveTimer);
+    // The poll outlives the screen unless it is unregistered here.
+    this.stopPolling?.();
   }
 
 }

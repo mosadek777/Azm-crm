@@ -72,8 +72,13 @@ and a support CRM that agents work around produces no data, which makes epics
 | `AD-16` | LEAD | the team queue by unassigned, oldest, at-risk and agent | I rebalance load while it still matters | Must |
 | `AD-17` | AGT | take the next ticket from one button | the queue is worked in order, not cherry-picked | Could |
 | `AD-18` | AGT | the SLA countdown on the ticket itself | urgency is impossible to miss | Must |
+| `AD-19` | AGT | the list I am looking at and the conversation I am reading to update themselves | I am not answering a customer who already replied, or working a ticket somebody took two minutes ago | Should |
 
-**18 stories** — 11 Must · 4 Should · 3 Could
+**19 stories** — 11 Must · 5 Should · 3 Could
+
+`AD-19` was added 2026-09-15 by the project owner, after the counters and the
+notification badge were found to satisfy `NFR-002` and `NFR-003` only at the
+moment a screen is opened. See `docs/decisions-pending.md` §26.
 
 ## How we will know it worked
 

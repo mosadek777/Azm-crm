@@ -25,14 +25,11 @@ Four items, in this order. The first is not a feature and is the most valuable.
    now carry an accurate status per case and a revision date. `004` was the
    worst: it said *"this whole module is unbuilt"* and marked 17 of 18 cases
    not testable, when 11 are built and 3 fully automated.
-3. **Live updates** — the list and the thread changing without a reload.
-   **Wording proposed, not added:** `decisions-pending.md` §26 carries a story
-   (`AD-19`) and a requirement (`FR-021`) awaiting the project owner. ⚠ Three
-   quarters of this is **already required and simply unbuilt** — `004 NFR-002`
-   (counters and queue, 30s, *"without manual reload"*), `AS-02`, and
-   `NFR-003` (in-app notification, 5s). Recommended mechanism: **polling on
-   conditional requests, not sockets** — a poll stays on the path that enforces
-   scope; a socket emit needs a second implementation of it.
+3. ~~Live updates~~ — **BUILT 2026-09-15 on polling.** `AD-19` and `FR-021`
+   are in the spec as worded. Held to the RATIFIED intervals, not chosen ones:
+   `NFR-003`'s 5s for a conversation and the notification count, `NFR-002`'s
+   30s for lists. Conditional requests answer **304 with no body** when nothing
+   changed. `decisions-pending.md` §26.
 4. ~~The category tree~~ — **NOT STARTED, DELIBERATELY. Blocked on the
    client**, and the question is written for them: `docs/category-values.md`.
    One value in use is `Billing / Refund` — somebody wanted a hierarchy and made

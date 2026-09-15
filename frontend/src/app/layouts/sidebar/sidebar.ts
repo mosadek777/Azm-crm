@@ -44,8 +44,10 @@ import { LanguageService } from '../../core/i18n/language.service';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { CapabilityHints } from '../../core/models/user.model';
 import { SidebarState } from './sidebar-state';
+import { POLLING } from '../../core/polling/polling.config';
 import { ReminderService } from '../../core/notifications/reminder.service';
 import { NotificationCountService } from '../../core/notifications/notification-count.service';
+import { PollingService } from '../../core/polling/polling.service';
 
 export interface NavChild { labelKey: string; route: string }
 
@@ -224,6 +226,12 @@ export class Sidebar {
       }
     });
     this.refreshBadges();
+
+    // FR-021 / AD-19 — NFR-003's five seconds, which is the RATIFIED figure for
+    // in-app notification delivery, not a chosen one. The request answers 304
+    // with no body when the count has not moved, which is what makes a five
+    // second interval affordable. See core/polling/polling.config.ts.
+    inject(PollingService).register(() => this.refreshBadges(), POLLING.realtimeMs);
   }
 
   private refreshBadges(): void {

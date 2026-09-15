@@ -5,7 +5,7 @@
 // filters for convenience only — never for security, and removing a client
 // filter must not make anything visible that the server would refuse.
 
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -15,6 +15,7 @@ import { LanguageService } from '../../../core/i18n/language.service';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { StatusTonePipe } from '../../../shared/pipes/status-tone.pipe';
 import { Tag } from '../../../shared/components/tag/tag';
+import { PollingService } from '../../../core/polling/polling.service';
 import { Ticket, TicketMeta } from '../../../core/models/domain.model';
 import { LocalizedText } from '../../../core/models/user.model';
 
@@ -24,6 +25,8 @@ import { LocalizedText } from '../../../core/models/user.model';
   templateUrl: './ticket-list.html'
 })
 export class TicketList {
+  private readonly polling = inject(PollingService);
+
   private readonly api = inject(ApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -88,6 +91,12 @@ export class TicketList {
     if (this.urlStatus()) this.status.set(this.urlStatus());
     this.api.ticketMeta().subscribe({ next: m => this.meta.set(m) });
     this.load();
+
+    // FR-021 / AD-19 at the NFR-002 interval. Slower than the conversation on
+    // purpose: a list redrawing every five seconds under somebody's cursor is
+    // worse than one that is thirty seconds old.
+    const stop = this.polling.register(() => this.load(), this.polling.intervals.listMs);
+    inject(DestroyRef).onDestroy(stop);
   }
 
   protected load(): void {

@@ -188,6 +188,7 @@ renders it and MUST apply the viewer's scope, never the author's.
 | `FR-018` | The ticket view MUST display remaining or elapsed SLA time and the at-risk or breached state persistently, read from spec `005`. | MUST | `AD-18`, constitution III |
 | `FR-019` | This spec MUST NOT compute any duration, threshold or breach state. Every such value MUST be read from spec `005`. | MUST | constitution III |
 | `FR-020` | Every list, counter and queue MUST apply the caller's scope server-side; a shared saved view MUST apply the viewer's scope. | MUST | constitution IV |
+| `FR-021` | An open list or conversation MUST reflect a change to its contents without the user reloading, within the `NFR-002` interval for lists and the `NFR-003` interval for a message on an open conversation. An update MUST be delivered **only to a recipient who could have read that record through an ordinary request at the moment of delivery**, and the scope predicate MUST be evaluated per recipient at that moment, never once per event. An update MUST NOT carry any field the recipient's own read of that record would withhold. | SHOULD | `AD-19`, constitution IV |
 
 ## 6. Edge cases and failure behaviour
 

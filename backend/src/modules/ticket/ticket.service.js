@@ -28,6 +28,7 @@ import { elapsedBusinessMinutes } from '../../utils/elapsed-time.js'
 import { validateMentions } from './mention.service.js'
 import { notify } from '../notification/notification.service.js'
 import { labelMap } from '../config/label.service.js'
+import { conditionalJson } from '../../utils/conditional.js'
 import { STATUSES, STATUS_KEYS, PRIORITIES, canTransition, reachableFrom, isTerminal } from '../../utils/ticket-status.js'
 
 const bad = (res, ar, en, fields) =>
@@ -305,7 +306,9 @@ export const listTickets = async (req, res, next) => {
     const agents = await User.find({ _id: { $in: tickets.map(t => t.assignedAgentId).filter(Boolean) } })
     const nameOf = (list, id) => list.find(x => String(x._id) === String(id))?.displayName ?? null
 
-    return res.json({
+    // FR-021: polled, so it answers 304 when this caller's own scope-filtered
+    // result is unchanged. The scoped query runs on every poll regardless.
+    return conditionalJson(req, res, {
       tickets: tickets.map(t => ({
         ...redact(t),
         customerName: nameOf(customers, t.customerId),
@@ -356,7 +359,11 @@ export const getTicket = async (req, res, next) => {
 
     const historyWithActors = await withActors(history)
 
-    return res.json({
+    // FR-021: an open conversation is polled at the NFR-003 interval, so this
+    // answers 304 when nothing about it has changed for THIS caller. The ticket
+    // is still loaded through `findInScope` on every poll — losing access to it
+    // produces a 404 on the very next one, not a stale 304.
+    return conditionalJson(req, res, {
       ticket: redact(ticket),
       customer: customer ? redact(customer) : null,
       assignedAgent: agent ? { id: agent._id, displayName: agent.displayName } : null,

@@ -204,6 +204,52 @@ export const DICTIONARY: Translations = {
   'action.auth.locked_out': { ar: 'أُقفل الحساب', en: 'Account locked' },
   'action.session.opened': { ar: 'فُتحت جلسة', en: 'Session opened' },
   'action.session.revoked': { ar: 'أُنهيت جلسة', en: 'Session ended' },
+  // --- audit action labels added 2026-09-14/15 -----------------------------
+  //
+  // ⚠ EVERY ACTION `recordAudit` CAN WRITE NEEDS A LABEL HERE, and several did
+  // not. `ticket.mentioned` was the one that surfaced — it reached the ticket
+  // history and rendered as ⟦missing key: action.ticket.mentioned⟧ in front of
+  // a reader, caught by a browser check rather than by anything in the backend.
+  //
+  // The rest were invisible only because no screen reads the full audit log
+  // yet. `010 FR-009`'s audit viewer would have shown all of them at once.
+  //
+  // The list is kept in step with the backend by:
+  //   cd backend && grep -rho "action: '[a-z_.]*'" src/ | sort -u
+  'action.ticket.mentioned': { ar: 'ذُكر زميل', en: 'Colleague mentioned' },
+  'action.ticket.unassigned': { ar: 'أُلغي تعيين المسؤول', en: 'Unassigned' },
+  'action.task.created': { ar: 'أُنشئت مهمة', en: 'Task created' },
+  'action.task.completed': { ar: 'تمت مهمة', en: 'Task completed' },
+  'action.task.cancelled': { ar: 'أُلغيت مهمة', en: 'Task cancelled' },
+  'action.draft.discarded': { ar: 'حُذفت مسودة', en: 'Draft discarded' },
+  'action.notification.generated': { ar: 'أُرسل إشعار', en: 'Notification sent' },
+  'action.notification.read': { ar: 'قُرئ إشعار', en: 'Notification read' },
+  'action.notification.read_all': { ar: 'قُرئت كل الإشعارات', en: 'All notifications read' },
+  'action.quick_reply.created': { ar: 'أُنشئ رد سريع', en: 'Quick reply created' },
+  'action.quick_reply.active_changed': { ar: 'تغيّرت حالة رد سريع', en: 'Quick reply state changed' },
+  'action.config.label_changed': { ar: 'تغيّرت تسمية في الإعدادات', en: 'Configuration label changed' },
+  'action.customer.field_changed': { ar: 'تغيّر حقل للعميل', en: 'Customer field changed' },
+  'action.customer.duplicate_warning_overridden': {
+    ar: 'تم تجاوز تحذير التكرار', en: 'Duplicate warning overridden'
+  },
+  'action.user.password_changed': { ar: 'غُيّرت كلمة المرور', en: 'Password changed' },
+  // Security events. They belong in the same vocabulary rather than a second
+  // one — an auditor reading the log should not have to know which list a given
+  // action came from.
+  'action.audit.edit_attempted': {
+    ar: 'محاولة تعديل سجل التدقيق', en: 'Attempt to edit the audit log'
+  },
+  'action.scope.out_of_scope_access_attempted': {
+    ar: 'محاولة وصول خارج النطاق', en: 'Out-of-scope access attempted'
+  },
+  'action.portal.cross_customer_access_attempted': {
+    ar: 'محاولة وصول إلى طلب عميل آخر', en: 'Cross-customer access attempted'
+  },
+  'action.portal.signin_succeeded': { ar: 'دخول عميل إلى البوابة', en: 'Customer signed in' },
+  'action.portal.signin_failed': { ar: 'فشل دخول عميل', en: 'Customer sign-in failed' },
+  'action.portal.signin_refused_ambiguous': {
+    ar: 'رُفض الدخول — بيانات تطابق أكثر من عميل', en: 'Sign-in refused — details matched more than one customer'
+  },
 
   // --- who did it ----------------------------------------------------------
   //

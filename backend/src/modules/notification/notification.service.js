@@ -50,6 +50,7 @@ import { Ticket } from '../../DB/models/ticket.model.js'
 import { recordAudit, redact } from '../../utils/audit.js'
 import { resolveActors } from '../../utils/actor.js'
 import { NOTIFICATION_POLICY } from '../../config/notification-policy.js'
+import { conditionalJson } from '../../utils/conditional.js'
 
 const bilingual = (ar, en) => ({ ar, en })
 const NOT_FOUND = bilingual('الإشعار غير موجود', 'Notification not found')
@@ -230,7 +231,12 @@ export const listNotifications = async (req, res, next) => {
 /** The unread count on its own — what the navigation badge reads. */
 export const unreadCount = async (req, res, next) => {
   try {
-    return res.json({ unread: await Notification.countDocuments({ userId: req.user._id, readAt: null }) })
+    // FR-021: polled every few seconds, so it answers 304 when unchanged. The
+    // count is still QUERIED on every poll — see utils/conditional.js for why
+    // the cheaper version-token design was rejected.
+    return conditionalJson(req, res, {
+      unread: await Notification.countDocuments({ userId: req.user._id, readAt: null })
+    })
   } catch (err) { return next(err) }
 }
 
