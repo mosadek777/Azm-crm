@@ -33,13 +33,13 @@ Four items, in this order. The first is not a feature and is the most valuable.
    `NFR-003` (in-app notification, 5s). Recommended mechanism: **polling on
    conditional requests, not sockets** — a poll stays on the path that enforces
    scope; a socket emit needs a second implementation of it.
-4. **The category tree** (`002 FR-004`), reversing decision 21.
-   **Analysed, not started:** `decisions-pending.md` §27. The migration must be
-   **additive** — keep the original string as provenance — and the first step is
-   not code: the distinct values have to go to the client, because choosing a
-   taxonomy without the people who use it is the one part that cannot be
-   recovered from. `FR-005`'s inheritance is only one third buildable: default
-   priority yes, owning team and SLA policy blocked.
+4. ~~The category tree~~ — **NOT STARTED, DELIBERATELY. Blocked on the
+   client**, and the question is written for them: `docs/category-values.md`.
+   One value in use is `Billing / Refund` — somebody wanted a hierarchy and made
+   one out of a slash — so a distinct-value migration would produce nonsense
+   nodes. The taxonomy has to be agreed once, with the real values in hand.
+   Regenerate the list with `node src/utils/category-values.js`. Analysis:
+   `decisions-pending.md` §27.
 
 ---
 
