@@ -2281,3 +2281,94 @@ claiming otherwise later would be worse than saying it here.
 Everything else here is a day or two of ordinary work against a shape decision 4
 already ratified. The part that cannot be recovered from is choosing the taxonomy
 without the people who use it, and that is a question, not a task.
+
+---
+
+## 28. Spec 009 — which reports are buildable today, requirement by requirement
+
+**The rule this split serves**, from the project owner: *"A report showing
+'unavailable' where the number should be looks broken rather than blocked —
+don't ship those."*
+
+That is a sharper test than "is it blocked", and it changes the answer in two
+places. A report whose **headline figure** cannot be computed is not shipped
+even if half its dimensions work. A report whose **one missing dimension** sits
+beside working ones is shipped without that dimension, not with an empty column.
+
+### The twenty-five requirements
+
+**BUILDABLE — nothing in them is a duration, and nothing they need is missing.**
+
+| | What | Note |
+|---|---|---|
+| `FR-001` | Ticket volume by period, category, department, branch, priority | **Two dimensions are absent, not empty:** channel needs spec `003` and ticket type does not exist. They are omitted from the picker rather than offered and blank |
+| `FR-002` (part) | Backlog as a **point-in-time count** | The count is buildable. **The other two clauses are not** — see below |
+| `FR-010` (part) | Top **categories** with period-on-period change | Root causes do not exist (decision 23). A separate dimension, so its absence is not a hole in a figure |
+| `FR-011` | Filtering, and every metric reflecting every filter | For the dimensions that exist |
+| `FR-012` | Drill-down to the exact ticket list that reproduces the aggregate | Same construction `004 FR-002`'s counters already use: the aggregate and the list run the same query |
+| `FR-013` (part) | Export to **CSV** | Excel and PDF are effort, not blockage |
+| `FR-019` | Branch and department side by side | On volume metrics |
+| `FR-021` | Every metric carries a bilingual name and a prose definition | A **MUST**, and it applies to whatever is built |
+| `FR-023` | A retired dimension value still appears, marked retired | Deactivated branches and departments are the live case |
+| `FR-024` | Data freshness shown; the caller's scope on every aggregate | A **MUST** |
+
+**NOT BUILDABLE — the headline number cannot be computed.**
+
+| | Blocked on |
+|---|---|
+| `FR-003` SLA compliance | The clock. `005 [CLARIFY-1]`, `[CLARIFY-2]` |
+| `FR-004` per-agent performance | Four of its five columns: mean first response and mean resolution are durations, satisfaction does not exist, reopen rate is degenerate under decision 9. `FR-004` says "together as one view" — one filled column of five is exactly what not to ship |
+| `FR-005` satisfaction | No feedback capture. `009 [CLARIFY-2]` |
+| `FR-006` executive dashboard | `009 [CLARIFY-3]` — nobody has said which metrics |
+| `FR-007` first-contact resolution, reopen rate | `009 [CLARIFY-1]` — resolved versus closed is undefined |
+| `FR-008` channel comparison | No channels, and mean resolution is a duration |
+| `FR-009` knowledge deflection | Spec `006` |
+| `FR-014` scheduled reports | **No scheduler**, and no email |
+| `FR-015` report builder | `009 [CLARIFY-6]` decides how much is needed |
+| `FR-016` threshold alerts | No scheduler |
+| `FR-017` wallboard | Its headline is at-risk tickets and waiting chats. The polling now exists to make it update; the numbers do not |
+| `FR-018` forecast | A `MAY`, and it needs history |
+| `FR-020` per-customer SLA report | The clock |
+| `FR-025` pause proportion per agent | The clock, explicitly: `FR-025` says durations are read from `005` |
+
+**A constraint rather than a feature:** `FR-022` — *"This spec MUST NOT compute
+any duration or breach state."* Honoured by not building the fourteen above.
+
+### The three judgement calls, argued
+
+**1. `FR-002`'s ageing buckets are NOT built, and that is a constitution call
+rather than a blockage.** A bucket boundary ("0–2 days, 3–7 days") is a
+**duration**, and constitution III puts every duration in `elapsed-time.js`,
+which answers `unavailable`. The counter-argument is that calendar age is not
+business-hours elapsed time and could be subtracted safely — and it is the same
+argument that would justify every other shortcut the constitution exists to
+refuse. Two further reasons settle it: the buckets must be *configurable*, and
+no configuration surface holds them; and `FR-002` also requires **periodic
+snapshots** "so that historical backlog trends are drawn from recorded
+measurements, never interpolated" — which needs a scheduler this system does not
+have. So backlog ships as **today's count**, which is exactly what it says it
+is.
+
+**2. No per-agent breakdown anywhere, deliberately.** `009 [CLARIFY-5]` — *"Do
+agents see their own figures, and do they see their colleagues'?"* — is an
+employment and culture question that **blocks the `§9` permission matrix**.
+Building a per-agent volume report would mean inventing an answer to it. Every
+report here aggregates by branch, department, category, priority and status, and
+none of them by person. That also keeps clear of `FR-004` entirely.
+
+**3. Volume is a count, and a count is not a duration.** Nothing in the built
+half subtracts two dates to produce a number. Period boundaries use
+`startOfDayIn`, which produces an *instant* and is already the mechanism behind
+`004`'s "resolved today" counter — and periods are evaluated in the branch's own
+timezone, which is `009 E-19`'s own requirement.
+
+### What ships
+
+**One report: volume and backlog.** Ticket volume over a period, broken down by
+a dimension the user chooses; today's backlog beside it; the top categories with
+their change against the previous period; and a branch/department comparison.
+Every figure drillable to the list that produced it, every metric carrying its
+bilingual definition, the caller's scope applied server-side, and a CSV export
+carrying the filters, the timestamp and the definitions.
+
+**No cell in it reads "unavailable".**
