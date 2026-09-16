@@ -5,6 +5,9 @@ fully-audited customer support CRM. Angular 22 + Node/Express 5 + MongoDB.
 
 ## Read first, in this order
 
+0. **`docs/handover.md`** — read once if you are new to this project:
+   what works, what is blocked on whom, and the five things that will cost you
+   a morning if nobody tells you.
 1. **`docs/state.md`** — the session-start briefing. Read it instead of the
    constitution and all thirteen specs. It carries the current state, the next
    action, and any standing warnings. Updated at the end of every step.

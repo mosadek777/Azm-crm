@@ -3,6 +3,10 @@
 The session-start briefing. Read this **instead of** the constitution and all
 thirteen specs. Updated at the end of every step.
 
+**New to the project? Read [`handover.md`](handover.md) once first** — it
+carries the things that are not discoverable from the code, and the five that
+have each cost somebody a morning.
+
 **Last updated:** 2026-09-14 · **after:** spec `004` closed as far as it goes,
 the conversation unified across staff and portal, `010 FR-011`'s first two
 configuration surfaces, and role changes in place · **43 ratified decisions** ·
