@@ -1,4 +1,5 @@
-// A headline that types itself, holds, deletes itself and types again.
+// A headline that types itself, holds, deletes itself, and does that three
+// times before settling on the finished line for good.
 //
 // ⚠ IT NEVER CHANGES THE TEXT. The whole string is in the DOM, shaped, from the
 // first frame; each grapheme sits in its own span and the animation moves
@@ -39,13 +40,11 @@
 // frame and never changes — it is not built up, and it is not torn down again
 // on each delete.
 //
-// ⚠ WCAG 2.2.2 (Pause, Stop, Hide) IS NOT SATISFIED BY THIS COMPONENT.
-// The loop starts automatically, runs well past five seconds and sits beside
-// the sign-in form, which is exactly what that criterion is about, and there is
-// no control to stop it. prefers-reduced-motion below removes the animation for
-// the readers most affected, but it is a user preference, not the mechanism
-// 2.2.2 asks for. Recorded in decisions-pending §30 with the two ways to close
-// it, because it is a known gap rather than an oversight.
+// WCAG 2.2.2 (Pause, Stop, Hide). The animation STOPS ON ITS OWN after three
+// passes, which is why there is no pause control beside the sign-in form. See
+// CYCLES below and decisions-pending §30, including the part where three
+// passes does not get under the criterion's five-second threshold and two
+// would have.
 //
 // REDUCED MOTION. No loop at all — the whole headline, at once, forever. This
 // is a JS-driven reveal rather than a CSS transition, so it cannot use the
@@ -76,6 +75,21 @@ const DELETE_STEP_MS = 18;
 const DELETE_CAP_MS = 700;
 /** The beat on an empty line before it starts again. */
 const REST_MS = 500;
+/**
+ * How many times it types before settling on the finished line.
+ *
+ * THREE, then it stops for good — the product owner's decision, recorded in
+ * decisions-pending §30. It is the answer to WCAG 2.2.2 (Pause, Stop, Hide):
+ * a perpetual loop beside a sign-in form needs a control to stop it, and a
+ * stop button on a sign-in screen is more clutter than the effect is worth.
+ * Stopping on its own removes the need for the control.
+ *
+ * ⚠ It does NOT bring the motion under 2.2.2's five-second threshold. Three
+ * passes is about 8.8 seconds. Two would be about 4.8 and would satisfy the
+ * criterion by duration; that trade was considered and declined. §30 carries
+ * the numbers and the reasoning.
+ */
+const CYCLES = 3;
 
 type Phase = 'typing' | 'holding' | 'deleting' | 'resting';
 
@@ -157,6 +171,7 @@ export class Typewriter implements OnDestroy {
 
       let phase: Phase = 'typing';
       let phaseStart = performance.now();
+      let pass = 1;
       this.revealed.set(0);
 
       // rAF rather than setInterval: it stays on the frame clock, it does not
@@ -169,7 +184,13 @@ export class Typewriter implements OnDestroy {
           case 'typing': {
             const n = Math.min(total, Math.floor(elapsed / typeStep));
             this.revealed.set(n);
-            if (n >= total) { phase = 'holding'; phaseStart = now; }
+            if (n >= total) {
+              // The last pass settles here and never schedules another frame,
+              // so the page is genuinely static afterwards rather than running
+              // an idle loop nobody can see.
+              if (pass >= CYCLES) { this.frame = 0; return; }
+              phase = 'holding'; phaseStart = now;
+            }
             break;
           }
           case 'holding':
@@ -182,7 +203,7 @@ export class Typewriter implements OnDestroy {
             break;
           }
           case 'resting':
-            if (elapsed >= REST_MS) { phase = 'typing'; phaseStart = now; }
+            if (elapsed >= REST_MS) { pass++; phase = 'typing'; phaseStart = now; }
             break;
         }
 

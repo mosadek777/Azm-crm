@@ -80,7 +80,7 @@ are not fills and are not budgeted.
 | Shared easing | `cubic-bezier(0.16, 1, 0.3, 1)` |
 | Toast entry | 220ms — `--animate-toast-in` in `styles.css` |
 | Colour and opacity transitions | Tailwind default, 150ms |
-| Sign-in headline loop | type 28ms/grapheme (cap 1000ms) → hold 2200ms → delete 18ms/grapheme (cap 700ms) → rest 500ms |
+| Sign-in headline | type 28ms/grapheme (cap 1000ms) → hold 2200ms → delete 18ms/grapheme (cap 700ms) → rest 500ms, **× 3 then stop** |
 | Everything else | none |
 
 - **Every transition goes through `motion-safe:`**, which compiles to
@@ -108,6 +108,11 @@ are not fills and are not budgeted.
   right failure, a skipped character is not.
 - **On the dark sign-in surface the text accent is `text-primary-400`.**
   `primary-700` is the accent for text on light surfaces and disappears here.
+- **Motion that starts on its own must end on its own.** WCAG 2.2.2 wants a
+  pause control for anything that starts automatically, runs past five seconds
+  and sits beside other content. A bounded animation that settles needs no
+  control. If you add one that cannot settle, it needs the control — say so
+  rather than shipping it quietly.
 - **No animation library.** `@angular/animations` and `@angular/cdk` were both
   declared dependencies imported nowhere in `src`; both are removed. If an
   enter/exit genuinely needs one, Angular 22 ships `animate.enter` /

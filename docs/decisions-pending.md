@@ -2584,9 +2584,9 @@ At 18ms exactly one grapheme leaves per frame and the sequence is unbroken
 skipping a character, which is the right failure of the two.
 
 **The loop supersedes the earlier "runs once on load" rule.** The two cannot
-both hold — a loop that is always running cannot also be gated on having
-played — so the module-scope `played` set is gone. Returning to the route
-starts the loop again, which is what a loop does.
+both hold — a loop cannot also be gated on having played — so the module-scope
+`played` set is gone. Returning to the route runs the three passes again, which
+is what an on-arrival effect does.
 
 Three things about it are load-bearing.
 
@@ -2638,24 +2638,38 @@ verified by sampling at +1.5s and again four seconds later and finding the same
 full, static line. This is a JS-driven reveal, so it cannot use the
 `motion-safe:` variant and checks `matchMedia` instead.
 
-### ⚠ OPEN: the loop does not satisfy WCAG 2.2.2 (Pause, Stop, Hide)
+### CLOSED: three passes, then it stops — and the residual, stated
 
-The criterion applies to motion that starts automatically, runs longer than
-five seconds, and is presented alongside other content. The headline loop meets
-all three and there is no control to stop it.
+**Decision: the product owner's.** The headline types, holds and deletes
+**three times**, then settles on the finished line and schedules no further
+frames. There is no pause control.
 
-`prefers-reduced-motion` removes the animation for the readers most affected,
-and the information itself is duplicated statically in the visually-hidden
-copy, but neither is the mechanism 2.2.2 asks for — that preference is a user
-setting, not a control on the page.
+The reasoning, as given: the effect lands when someone arrives, the page is
+static well before anyone is typing a password into the form, and a stop button
+beside a sign-in form is more clutter than the animation is worth. Stopping on
+its own removes the need for the control.
 
-This is a **known gap, accepted for now**, not an oversight. Two ways to close
-it, in the order I would try them:
+Measured, over a 20-second in-page trace:
 
-1. **Stop after N cycles** and leave the headline complete. The effect still
-   reads on arrival, and the page is static by the time anyone is typing a
-   password into it. One constant.
-2. **A pause control.** Correct, and visible clutter on a sign-in screen.
+| | reaches full at | motion ends | static thereafter |
+|---|---|---|---|
+| Arabic (22 graphemes) | 0.20s, 3.94s, 7.67s | **7.67s** | 12.3s of the 20 |
+| English (28 graphemes) | 0.33s, 4.34s, 8.38s | **8.38s** | 11.6s of the 20 |
+
+**The residual, stated plainly rather than papered over: this does not bring
+the motion under WCAG 2.2.2's five-second threshold.** The criterion asks for a
+pause mechanism when motion starts automatically, lasts more than five seconds
+and sits alongside other content. At 7.67–8.38s it still does. **Two passes
+would be about 4.8s and would satisfy it by duration** — that trade was put on
+the table and declined, because two passes reads as a glitch rather than as an
+effect.
+
+So the item is closed as an **accepted, bounded risk with a known cost**, not
+as conformance. What it buys over the perpetual loop is the thing the criterion
+is actually protecting: nothing is moving beside the form while anybody uses
+it. If this product is ever held to a formal WCAG 2.1 AA audit, `CYCLES = 2` in
+`shared/components/typewriter/typewriter.ts` is the one-character change that
+settles it.
 
 ### The headlines are length-constrained to one line
 
