@@ -62,7 +62,7 @@
 
     <!-- CONTACT POINTS -->
     <div class="p-4">
-      <h3 class="m-0 mb-2 text-xs font-medium uppercase tracking-wide text-surface-500">
+      <h3 class="m-0 mb-2 text-xs font-medium text-surface-500">
         {{ 'customer.contactPoints' | translate: i18n.lang() }}
       </h3>
       @if (contactPoints().length) {
@@ -92,7 +92,7 @@
          untrue of two of them. -->
     <div class="flex flex-col gap-3 p-4">
       <div>
-        <h3 class="m-0 text-xs font-medium uppercase tracking-wide text-surface-500">
+        <h3 class="m-0 text-xs font-medium text-surface-500">
           {{ 'customer.segments' | translate: i18n.lang() }}
         </h3>
         <p class="m-0 text-sm text-surface-400">{{ 'common.unavailable' | translate: i18n.lang() }}</p>
@@ -100,7 +100,7 @@
       </div>
 
       <div>
-        <h3 class="m-0 text-xs font-medium uppercase tracking-wide text-surface-500">
+        <h3 class="m-0 text-xs font-medium text-surface-500">
           {{ 'customer.entitlement' | translate: i18n.lang() }}
         </h3>
         @if (entitlement()?.status === 'unavailable') {
@@ -112,7 +112,7 @@
       </div>
 
       <div>
-        <h3 class="m-0 text-xs font-medium uppercase tracking-wide text-surface-500">
+        <h3 class="m-0 text-xs font-medium text-surface-500">
           {{ 'customer.slaTier' | translate: i18n.lang() }}
         </h3>
         <p class="m-0 text-sm text-surface-400">{{ 'common.unavailable' | translate: i18n.lang() }}</p>
@@ -123,7 +123,7 @@
     <!-- RECENT TICKETS. The same scope-filtered query as every other list, so
          a ticket this caller may not see is absent here too. -->
     <div class="p-4">
-      <h3 class="m-0 mb-2 text-xs font-medium uppercase tracking-wide text-surface-500">
+      <h3 class="m-0 mb-2 text-xs font-medium text-surface-500">
         {{ 'customer.recentTickets' | translate: i18n.lang() }}
       </h3>
       @if (otherTickets().length) {

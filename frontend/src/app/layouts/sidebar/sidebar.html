@@ -53,11 +53,19 @@
   <nav class="flex-1 space-y-7 overflow-y-auto px-3 pb-4">
     @for (section of visibleSections(); track section.labelKey) {
       <div>
-        <!-- A QUIET heading: small, uppercase, muted, and deliberately NOT the
-             weight of the items beneath it. Hidden when collapsed, where there
-             is no room for it and the icons speak for themselves. -->
+        <!-- A QUIET heading: small, muted, and deliberately NOT the weight of
+             the items beneath it. Hidden when collapsed, where there is no room
+             for it and the icons speak for themselves.
+
+             It carried `uppercase tracking-wider` until that was measured in
+             Arabic and found to do nothing at all: "التنقل" rendered 27.67px
+             wide with the classes and 27.67px without them. `uppercase` has no
+             capital form to map to in a unicameral script, and Blink applies
+             letter-spacing only at the spaces, never between joined letters —
+             this label has no spaces. Size, weight and colour carry the heading
+             in both languages. constitution I; decisions-pending §29. -->
         <h2 [class.lg:hidden]="state.collapsed()"
-            class="m-0 mb-2 px-3 text-[0.6875rem] font-medium uppercase tracking-wider text-surface-400">
+            class="m-0 mb-2 px-3 text-[0.6875rem] font-medium text-surface-400">
           {{ section.labelKey | translate: i18n.lang() }}
         </h2>
 

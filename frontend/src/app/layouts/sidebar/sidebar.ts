@@ -15,8 +15,8 @@
 // by accident. Hence the width discipline in the template and a measurement at
 // 390px as part of accepting this.
 //
-// THE SHAPE. Built to a supplied reference: a brand block, quiet uppercase
-// section headings, collapsible groups with chevrons and indented children,
+// THE SHAPE. Built to a supplied reference: a brand block, quiet section
+// headings, collapsible groups with chevrons and indented children,
 // count badges, and the signed-in user pinned at the foot with the sign-out and
 // language controls — which have MOVED OUT of the page header, so there is one
 // place to look for "me" rather than two.

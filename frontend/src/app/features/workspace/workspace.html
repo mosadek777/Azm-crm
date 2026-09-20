@@ -21,7 +21,7 @@
                  hover:border-primary-300 hover:bg-primary-50
                  focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           (click)="openCounter(c)">
-          <span class="text-xs font-medium uppercase tracking-wide text-surface-500">
+          <span class="text-xs font-medium text-surface-500">
             {{ c.labelKey | translate: i18n.lang() }}
           </span>
           <!-- A count is a direction-neutral value. `—` while it is still
@@ -38,7 +38,7 @@
              Rendering 0 here would assert that nothing is overdue. -->
         <div class="flex flex-col items-start gap-1 rounded-xl border border-dashed
                     border-surface-300 bg-surface-50 p-4">
-          <span class="text-xs font-medium uppercase tracking-wide text-surface-500">
+          <span class="text-xs font-medium text-surface-500">
             {{ c.labelKey | translate: i18n.lang() }}
           </span>
           <span class="text-2xl font-semibold text-surface-400">

@@ -204,6 +204,34 @@ the `before:` utilities entirely when inactive leaves nothing to arbitrate.
 sidebar sitting outside the viewport at desktop RTL, where `lg:translate-x-0`
 lost to `rtl:translate-x-full`.
 
+## Typography that only works in one script
+
+**Never** put any of these on an element whose text can render in Arabic —
+which is every translated string and every user-authored value:
+
+| Never | Why it is a one-language device |
+|---|---|
+| `uppercase` `lowercase` `capitalize` | Arabic is unicameral. There is no capital form to map to, so the utility does nothing. |
+| `tracking-tight` `tracking-wide` `tracking-wider` … | Blink applies `letter-spacing` to Arabic only at the spaces, never between joined letters. Six of ten measured labels moved by **exactly 0px**. |
+| `font-variant: small-caps` | Same reason as `uppercase`, with a second face involved. |
+
+Carry the hierarchy with **size, weight and colour**, which work identically in
+both scripts.
+
+**Why, and it is not legibility.** Twenty-one sites carried these until the
+rendering was measured in Arabic: `التنقل` was 27.67px wide with
+`uppercase tracking-wider` and 27.67px without it. Nothing was broken and
+nothing was illegible — the treatment simply was not there. Meanwhile in
+English the same class list is doing real work. One string, one class, two
+languages, and the signal reaches one of them. That is constitution I's
+typography clause. A class list that only makes sense for Latin script is an
+assertion that the string is Latin, and it is wrong about half this product's
+content, silently. Full measurements: `docs/decisions-pending.md` §29.
+
+**This is the shape of the trap, not just this instance.** Before reaching for
+a typographic utility, ask what it does to Arabic. If the answer is "nothing",
+it is decoration for one language and it does not belong in a shared class.
+
 ## Bilingual rules
 
 - Admin-authored labels carry `{ar, en}`, **both required**. The server refuses

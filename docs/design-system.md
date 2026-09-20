@@ -5,8 +5,9 @@ appointment scheduler. Tailwind CSS v4, shadcn/ui (Radix), lucide-react,
 framer-motion, Geist Variable. Dark only, by its own statement: `<html class="dark">`,
 `color-scheme: dark`, no light theme.
 
-**Status:** analysed, not adopted wholesale. Three items applied; five sequenced;
-two rejected with reasons. One decision open — see the end.
+**Status:** analysed, not adopted wholesale. Passes 1 and 2 applied; four items
+sequenced for pass 3 and one for pass 4; the palette, the glass panel and the
+component library rejected with reasons. Nothing open.
 
 **Why this document exists.** The interesting part of the exercise was not what we
 took but what we refused and why. A later reader who finds that document and
@@ -143,29 +144,38 @@ not.
 ## Typography: the item that exposed a defect of ours
 
 `.label-caps` — 10px, uppercase, `letter-spacing: 0.12em` — was rejected, and
-tracing why turned up something already in our tree.
+tracing why turned up twenty-one sites already in our tree applying a Latin
+typographic treatment to strings that render in Arabic: ten on
+`uppercase tracking-wide/wider`, eleven on `tracking-tight`, two of the latter
+rendering user-authored values (`customer-detail.html:24`,
+`ticket-detail.html:19`) that are Arabic whenever the customer is.
 
-**`uppercase` is a no-op in Arabic.** The script is unicameral; there is no
-capital form to map to. So the small-caps treatment that tells an English reader
-"this is a quiet section heading" conveys nothing to an Arabic reader. One visual
-device, present in one language. That is constitution I's typography clause —
-though not its formal Test, which concerns string values and is satisfied.
+**What the measurement found, including where it corrected us.** Before and
+after, in Arabic, at 1440×900, against seeded data, the inked width of each
+string was measured with a `Range`. All twenty-one moved by less than 1.7px, and
+275 untouched strings on the same pages moved by less than 0.5px. More
+precisely: six of the ten `uppercase` labels moved by **exactly zero**, and the
+observed delta equals (number of spaces × tracking) in all ten cases, to within
+0.01px.
 
-**`letter-spacing` is worse than a no-op in Arabic.** Arabic is cursive. Spacing
-is applied between glyphs after shaping, so the letters keep their correct joining
-forms but gain gaps between them, and the connecting stroke does not stretch to
-fill. `012 AS-06` requires "correct joining" in those words.
+That disproves something this analysis originally asserted. The first draft
+claimed the tracking was breaking Arabic's cursive joins, and cited `012 AS-06`
+("correct joining"). It was not: **Blink applies letter-spacing to Arabic only
+where the run already breaks, never between joined letters.** The joins were
+never disturbed and AS-06 was never violated. The citation was withdrawn on the
+evidence.
 
-**Our own inventory:** twenty-one sites apply letter-spacing to text that renders
-in Arabic — ten on `uppercase tracking-wide/wider` (all ten rendering translated
-strings), eleven on `tracking-tight`, two of which render user-authored values
-(`customer-detail.html:24`, `ticket-detail.html:19`) that are Arabic whenever the
-customer is.
+**The reason the change was made anyway** is the one that survives measurement.
+`uppercase` cannot act on a unicameral script, and the tracking acted on almost
+nothing — so the device that tells an English reader "this is a quiet section
+heading, not a content heading" is, in Arabic, absent. One class list, two
+languages, one of them served. That is constitution I's typography clause —
+not its formal Test, which concerns string values and is satisfied here. A class
+list that only makes sense for Latin script asserts that the string is Latin,
+and it is wrong about half this product's content, silently.
 
-This is a correctness fix, not a design change, and is sequenced on its own for
-that reason. The `uppercase` half has no requirement behind it and needs an entry
-in `docs/decisions-pending.md` attributed to a reading of constitution I rather
-than invented at the keyboard.
+Full workings, including the table that separates the per-space model from the
+per-character one: `docs/decisions-pending.md` §29.
 
 ---
 
@@ -180,7 +190,7 @@ Twenty routed screens across twenty-four templates (twenty feature, four layout)
 | 2 | Motion values table; drop two dependencies | skill, `package.json` | zero | **1 — done** |
 | 5 | Loud colour as a closed list of four | skill only; tree already complies | zero | **1 — done** |
 | — | Skill restructured to values-in-tables, causes-as-footnotes | skill only | zero | **1 — done** |
-| — | Letter-spacing on Arabic | 10–21 sites, 7 files | small | 2 |
+| — | Latin case and tracking on Arabic text | 21 sites, 16 files | small | **2 — done** |
 | 3 | Radius assignment table | skill; 22 call sites if enforced | small | 3 |
 | 4 | "1px border, no shadow" | 3 sites, 2 files, plus a judgement call on the auth cards | small | 3 |
 | 6 | Row hierarchy as values | list and table templates | medium | 3 |
@@ -217,11 +227,8 @@ became tables and the remaining prose is all causal.
 
 ## Open
 
-**The scope of the letter-spacing fix.** Ten `uppercase` sites are unambiguous.
-The eleven `tracking-tight` sites are less certain: whether `-0.025em` is visible
-on Cairo at 20–28px is empirical, and the recommendation is to change the two
-rendering user-authored values now and hold the nine headings pending a screenshot
-of Arabic at a real viewport. The sidebar heading at `tracking-wider` (0.05em,
-11px) is the worst case and the one to capture.
+Nothing. The letter-spacing scope question is closed: all twenty-one sites
+were changed together, on the argument that splitting them would let a reader of
+the smaller commit assume the rest were fine.
 
-Awaiting a decision before pass 2 proceeds.
+Next is pass 3 — items 3, 4, 6 and 7 in the table above.

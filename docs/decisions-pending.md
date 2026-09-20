@@ -2372,3 +2372,88 @@ bilingual definition, the caller's scope applied server-side, and a CSV export
 carrying the filters, the timestamp and the definitions.
 
 **No cell in it reads "unavailable".**
+
+---
+
+## 29. Latin case and tracking on text that renders in Arabic
+
+**Attribution: a reading of constitution I, by the developer.** No requirement
+was violated. Recorded rather than fixed silently, because "the screen looks
+the same afterwards" is the kind of change that gets reverted by someone who
+cannot see why it was made.
+
+### What was there
+
+Twenty-one sites applied a Latin typographic treatment to strings that render
+in Arabic:
+
+- **Ten** carried `uppercase` with `tracking-wide` or `tracking-wider` — the
+  sidebar section heading, two workspace counter labels, five headings in the
+  customer context panel, the closed-tasks heading, and the toast kind. All ten
+  render through the translate pipe, so all ten are Arabic half the time.
+- **Eleven** carried `tracking-tight` — seven page headings, the brand wordmark
+  in all three shells, and two headings rendering a **user-authored** value
+  (`customer-detail.html`, `ticket-detail.html`), which are Arabic whenever the
+  customer is.
+
+### What was measured, and what it disproved
+
+Before and after, Chrome 1440×900, `dir="rtl"`, `lang="ar"`, seeded data, the
+inked text width of each string measured with a `Range`:
+
+| String | Treatment | Before | After | Delta |
+|---|---|---|---|---|
+| التنقل | `uppercase tracking-wider` 0.55px | 27.67 | 27.67 | **0** |
+| مفتوحة | `uppercase tracking-wide` 0.3px | 39.91 | 39.91 | **0** |
+| الشرائح | `uppercase tracking-wide` 0.3px | 34.77 | 34.77 | **0** |
+| الاستحقاق | `uppercase tracking-wide` 0.3px | 53.94 | 53.94 | **0** |
+| بانتظار العميل | `uppercase tracking-wide` 0.3px | 67.45 | 67.14 | −0.31 |
+| فئة مستوى الخدمة | `uppercase tracking-wide` 0.3px | 98.75 | 98.14 | −0.61 |
+| تسجيل الدخول | `tracking-tight` −0.7px | 166.61 | 167.31 | +0.70 |
+| استفسار عن عقد الصيانة | `tracking-tight` −0.55px | 223.50 | 225.16 | +1.66 |
+
+275 untouched strings were measured on the same pages: **none moved by more
+than 0.5px.**
+
+**The delta is exactly (number of spaces × tracking), in all ten cases.** A
+per-character model predicts −1.8px to −4.8px and is wrong by an order of
+magnitude every time; a per-space model predicts the observed value to within
+0.01px every time.
+
+So **Blink applies `letter-spacing` to Arabic only where the cursive run already
+breaks, and never between joined letters.** An earlier draft of this analysis
+claimed the tracking was breaking the joins and cited `012 AS-06` ("correct
+joining"). That claim is withdrawn: the joins were never disturbed, and AS-06
+was not being violated. The measurement is the reason the citation changed.
+
+### Why it was changed anyway
+
+Because the treatment does nothing in Arabic and something in English.
+
+`uppercase` has no effect on a unicameral script — there is no capital form to
+map to. `tracking` moved six of the ten labels by exactly zero pixels. So the
+device that tells an English reader "this is a quiet section heading, not a
+content heading" is, in Arabic, absent. One string, one class, two languages,
+and the typographic signal reaches only one of them.
+
+That is constitution I — *"Arabic typography are acceptance criteria on every
+UI story, not a later theme"* — though not its formal Test, which concerns
+string values and is satisfied here. The strings have both values. What differs
+is what the stylesheet does with them.
+
+Put the other way round: a class list that only makes sense for Latin script is
+an assertion that the string is Latin. It is wrong about half this product's
+content, and it is wrong silently.
+
+### What replaced it
+
+Nothing. Size, weight and colour were already on every one of those elements and
+already carry the hierarchy. The English rendering loses a little refinement;
+the Arabic rendering is unchanged, which the measurements above are the proof of.
+
+### The rule that came out of it
+
+Recorded in `.claude/skills/frontend-design/SKILL.md` under **Typography that
+only works in one script**: no `uppercase`, `lowercase`, `capitalize`,
+`tracking-*` or `font-variant: small-caps` on any element whose text can render
+in Arabic — which is every translated string and every user-authored value.

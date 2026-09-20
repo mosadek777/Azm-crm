@@ -21,7 +21,7 @@
 
   @if (customer(); as c) {
     <div class="flex flex-wrap items-center gap-3">
-      <h1 class="m-0 text-xl font-semibold tracking-tight text-surface-900">{{ c.displayName }}</h1>
+      <h1 class="m-0 text-xl font-semibold text-surface-900">{{ c.displayName }}</h1>
       @if (c.sensitiveFlag) {
         <span class="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800">
           {{ 'customer.sensitive' | translate: i18n.lang() }}
