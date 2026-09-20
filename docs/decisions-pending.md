@@ -2563,28 +2563,69 @@ photograph it stopped reading as the edge of a bar and started reading as a
 stray violet element lying on the image. 60% keeps the signature and lets the
 picture through it. Everywhere else it is unchanged.
 
-### The headline reveals itself, and the reveal is not a typewriter
+### The headline types, holds, deletes and types again
 
-The sign-in headline appears one character at a time on load —
-`shared/components/typewriter`. Three things about it are load-bearing.
+The sign-in headline runs a continuous loop —
+`shared/components/typewriter`. Measured cadence:
+
+| Phase | Value | Measured |
+|---|---|---|
+| Type | 28ms per grapheme, capped at 1000ms | 27.3–28.0ms |
+| Hold | 2200ms | — |
+| Delete | 18ms per grapheme, capped at 700ms | 17.4–17.9ms |
+| Rest | 500ms | — |
+
+**The delete step is 18ms, not half of 28.** 14ms was tried and is correctly
+progressive — 23 graphemes over 333ms through 20 distinct counts — but a 14ms
+step against a 16.7ms frame removes ~1.2 characters per frame, so the trace
+skips (`…18 16 15 14 13 12 10…`) and reads as a flick rather than a countdown.
+At 18ms exactly one grapheme leaves per frame and the sequence is unbroken
+(`…12 11 10 10 9 8…`); where it cannot keep up it repeats a frame rather than
+skipping a character, which is the right failure of the two.
+
+**The loop supersedes the earlier "runs once on load" rule.** The two cannot
+both hold — a loop that is always running cannot also be gated on having
+played — so the module-scope `played` set is gone. Returning to the route
+starts the loop again, which is what a loop does.
+
+Three things about it are load-bearing.
 
 **It never changes the text.** The whole string is in the DOM, shaped, from the
 first frame; each grapheme sits in its own span and only `opacity` moves.
-Growing a string re-shapes Arabic on every step, because a letter's glyph
-depends on its neighbours: in Cairo at 48px, `كل` is 64.52px joined and
-70.86px as two separate letters — 9.8% apart, so the line visibly jumps on
-each step. English moves 0.8% over the same test, which is kerning. **Appending
-a character at a time is a Latin technique**, and the word-by-word fallback
-this was expected to need is not needed: per-character spans render the Arabic
-headline at 524.34px against 524.14px as plain text, a 0.04% difference, so
-Chrome shapes across the inline boundaries and the joined forms are the ones
-drawn. The `<h1>` box measured 512×120 at every frame of the reveal, so nothing
-beside it moves either.
+Growing *or shrinking* a string re-shapes Arabic on every step, because a
+letter's glyph depends on its neighbours: in Cairo at 48px, `كل` is 64.52px
+joined and 70.86px as two separate letters — 9.8% apart, so the line visibly
+jumps on the way in and again on the way out. English moves 0.8% over the same
+test, which is kerning. **Typing and deleting a substring is a Latin
+technique**, and the word-by-word Arabic fallback this was expected to need is
+not needed: per-character spans render the Arabic headline at 524.34px against
+524.14px as plain text, a 0.04% difference, so Chrome shapes across the inline
+boundaries and the joined forms are the ones drawn.
+
+That also settles the deletion worry. **Deleting backwards through a joined
+Arabic word cannot revert a letter to its isolated form, because the glyphs
+never changed** — shaping was computed once, for the complete string. The
+mid-delete screenshot at 21 of 22 shows `كل محادثة في مكان وا` with the `وا`
+still correctly joined.
+
+**Height is reserved by construction, not by a guess.** Opacity is a
+paint-time property, so every grapheme occupies its shaped advance at every
+phase including zero revealed. Across 541 sampled frames the `<h1>` measured a
+constant height, a constant top, and the sub-line beneath it never moved. There
+is no `min-height` to get wrong.
 
 **Split by grapheme, not by code point.** `[...string]` puts a shadda or a
 fatha in a span of its own, so a diacritic could be revealed before the letter
-it belongs to. Three of the four headline strings carry diacritics.
-`Intl.Segmenter` keeps each mark with its base.
+it belongs to, or outlive it on the way out. As currently worded the four
+headlines carry no marks — the sub-lines do (`سجّل`) — so this is correct by
+construction rather than by luck, and it stays right the first time somebody
+rewrites a headline with one.
+
+**The first word is `text-primary-400`, the rest white.** The accent length is
+derived from where the first whitespace falls in the string, so it is a
+property of the text rather than a number to keep in step, and it is unaffected
+by the phase of the loop. Constant at 2 graphemes in Arabic and 3 in English
+across every sampled frame.
 
 **The accessibility tree never types.** The animated copy is `aria-hidden`
 throughout and a visually-hidden copy of the whole string sits beside it.
@@ -2592,8 +2633,57 @@ Verified from the tree rather than from the DOM: the accessible name of the
 `<h1>` is the finished sentence, once, from the first frame. (`innerText` is
 not a check — it ignores `aria-hidden` and reports the string twice.)
 
-Reduced motion shows the whole headline at once. This is a JS-driven reveal, so
-it cannot use the `motion-safe:` variant and checks `matchMedia` instead. It
-runs once per page load, keyed by translation key in module scope, so returning
-to the route does not replay it and neither does toggling the language — the
-reveal is a load affordance, not a transition effect.
+Reduced motion shows the whole headline at once and **runs no loop at all** —
+verified by sampling at +1.5s and again four seconds later and finding the same
+full, static line. This is a JS-driven reveal, so it cannot use the
+`motion-safe:` variant and checks `matchMedia` instead.
+
+### ⚠ OPEN: the loop does not satisfy WCAG 2.2.2 (Pause, Stop, Hide)
+
+The criterion applies to motion that starts automatically, runs longer than
+five seconds, and is presented alongside other content. The headline loop meets
+all three and there is no control to stop it.
+
+`prefers-reduced-motion` removes the animation for the readers most affected,
+and the information itself is duplicated statically in the visually-hidden
+copy, but neither is the mechanism 2.2.2 asks for — that preference is a user
+setting, not a control on the page.
+
+This is a **known gap, accepted for now**, not an oversight. Two ways to close
+it, in the order I would try them:
+
+1. **Stop after N cycles** and leave the headline complete. The effect still
+   reads on arrival, and the page is static by the time anyone is typing a
+   password into it. One constant.
+2. **A pause control.** Correct, and visible clutter on a sign-in screen.
+
+### The headlines are length-constrained to one line
+
+`text-2xl` (28px) at 390px and `text-3xl` (36px) from `sm`. Both are inside the
+declared `--text-*` scale; the previous `text-3xl sm:text-4xl lg:text-5xl` was
+not — `text-4xl` and `text-5xl` are Tailwind defaults this project never
+declared, and `sm:text-4xl` was a no-op anyway because `--text-3xl` (2.25rem)
+already equals Tailwind's default `text-4xl`.
+
+**Arabic is the binding constraint** and was checked first: it runs longer than
+English for the same meaning, so a size that fits the English proves nothing.
+Three of the four strings had to be shortened to hold one line at 390px, where
+350px is available:
+
+| String | Was | Now | Width at 28px |
+|---|---|---|---|
+| `auth.headline` ar | `كل محادثة في مكان واحد.` | `كل محادثة في مكان واحد` | 306 → 300 |
+| `auth.headline` en | `Every conversation, in one place.` | `All conversations, one place` | 385 → 328 |
+| `portal.headline` ar | `طلباتك، متابَعة من البداية إلى النهاية.` | `طلباتك من البداية إلى النهاية` | 424 → 328 |
+| `portal.headline` en | `Your requests, tracked from start to finish.` | `Your requests, start to finish` | 499 → 335 |
+
+`portal.headline` en was the one that fitted at **no** size on a phone — 499px
+against 350px available, and still 392px even at 22px. Terminal full stops were
+dropped from all four, which is ordinary for display copy and buys ~8px.
+
+**Where it gives out:** one line holds at 390px and 414px. At 375px the English
+portal headline takes two lines; at 360px three of the four do. **No width
+produces horizontal scroll** — it degrades by wrapping, and because height is
+computed from the complete string the wrap does not destabilise anything. 390px
+is this project's stated floor, so this is on spec; shortening further to hold
+360px is available if the floor moves.

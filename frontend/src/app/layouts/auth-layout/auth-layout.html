@@ -63,10 +63,9 @@
          No `tracking-tight`: see decisions-pending §29. Latin tracking on a
          string that renders in Arabic is a one-language device. -->
     <div class="w-full max-w-xl text-start lg:max-w-lg">
-      <h1 class="m-0 text-3xl font-semibold leading-tight text-white drop-shadow-md
-                 sm:text-4xl lg:text-5xl">
-        <app-typewriter once="auth.headline"
-                        [text]="'auth.headline' | translate: i18n.lang()" />
+      <h1 class="m-0 text-2xl font-semibold leading-tight text-white drop-shadow-md
+                 sm:text-3xl">
+        <app-typewriter [text]="'auth.headline' | translate: i18n.lang()" />
       </h1>
       <p class="mt-4 mb-0 text-base text-white/70 drop-shadow-sm sm:text-lg">
         {{ 'auth.headlineSub' | translate: i18n.lang() }}

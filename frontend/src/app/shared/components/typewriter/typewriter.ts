@@ -1,80 +1,97 @@
-// A headline that reveals itself on load, one character at a time.
+// A headline that types itself, holds, deletes itself and types again.
 //
-// ⚠ IT DOES NOT TYPE THE TEXT. The whole string is in the DOM, shaped, from the
-// first frame; each character sits in its own span and the animation moves
+// ⚠ IT NEVER CHANGES THE TEXT. The whole string is in the DOM, shaped, from the
+// first frame; each grapheme sits in its own span and the animation moves
 // nothing but `opacity`. That is not a detail — it is the entire reason this
-// works in Arabic.
+// works in Arabic, in both directions of the loop.
 //
 // WHY, MEASURED. Arabic is cursive and a letter's glyph depends on its
-// neighbours. Appending a character at a time means every letter already on
-// screen is re-shaped the moment the next one lands. In Cairo at 48px the word
+// neighbours. Growing or shrinking a string means every letter still on screen
+// is re-shaped as its neighbour arrives or leaves. In Cairo at 48px the word
 // "كل" is 64.52px joined and 70.86px as two separate letters — 9.8% apart, so
-// the line visibly jumps on each keystroke. English moves 0.8% over the same
-// test, which is kerning and invisible. Appending is a Latin technique.
+// the line visibly jumps on every step, and jumps again on the way back out.
+// English moves 0.8% over the same test, which is kerning and invisible.
+// Typing and deleting a substring is a Latin technique.
 //
-// Wrapping every character in a span and animating opacity was measured too,
-// because inline boxes can break a shaping run: the Arabic headline is 524.34px
-// in per-character spans against 524.14px as plain text. 0.04%. Chrome shapes
-// across inline boundaries, so the joined forms are the ones drawn, and a
-// hidden letter still occupies its shaped advance. Layout is final before the
-// animation starts and the card beside it never moves.
-//
-// A consequence worth knowing: because the glyphs are the JOINED forms, the
-// leading edge of a half-revealed Arabic word shows a connecting stroke running
-// into the dark. That is correct — it is the letter's real shape — and it reads
-// as the word being drawn rather than as a defect. Verified in the
-// mid-animation screenshots.
+// Per-character spans were measured too, because inline boxes can break a
+// shaping run: the Arabic headline is 524.34px in per-character spans against
+// 524.14px as plain text. 0.04%. Chrome shapes across inline boundaries, so
+// the joined forms are the ones drawn — and because shaping is settled once,
+// for the complete string, DELETING cannot revert a letter to its isolated
+// form. There is nothing to revert; the glyphs never changed.
 //
 // SPLIT BY GRAPHEME, NOT BY CODE POINT. `[...string]` would put a shadda or a
 // fatha in a span of its own, so a diacritic could be revealed before the
-// letter it sits on, or the letter could appear bare and gain its mark a frame
-// later. `auth.headlineSub` and both portal strings carry diacritics.
-// Intl.Segmenter keeps each mark with its base.
+// letter it sits on, or outlive it on the way out. The four headline strings
+// carry no marks as currently worded — the SUB-lines do ("سجّل") — so this is
+// correct by construction rather than by luck, and it stays right the first
+// time somebody rewrites a headline with one.
 //
-// ACCESSIBILITY. The animated copy is aria-hidden throughout; a visually-hidden
-// copy of the whole string sits beside it and is what gets announced. The
-// accessibility tree holds the finished sentence from the first frame and never
-// changes — it is never built up character by character.
+// HEIGHT IS RESERVED BY CONSTRUCTION. Every span is laid out at every phase,
+// including at zero revealed — opacity is a paint-time property and takes no
+// space away. The <h1> box is its full wrapped size before the first frame and
+// stays there, so the card beside it and the line beneath it never move. There
+// is no min-height guess to get wrong.
 //
-// REDUCED MOTION. The whole headline appears at once. This is a JS-driven
-// reveal rather than a CSS transition, so it cannot use the `motion-safe:`
-// variant the rest of the app uses; matchMedia is the equivalent, checked once
-// at construction.
+// ACCESSIBILITY. The animated copy is aria-hidden for its whole life; a
+// visually-hidden copy of the complete string sits beside it and is what gets
+// announced. The accessibility tree holds the finished sentence from the first
+// frame and never changes — it is not built up, and it is not torn down again
+// on each delete.
+//
+// ⚠ WCAG 2.2.2 (Pause, Stop, Hide) IS NOT SATISFIED BY THIS COMPONENT.
+// The loop starts automatically, runs well past five seconds and sits beside
+// the sign-in form, which is exactly what that criterion is about, and there is
+// no control to stop it. prefers-reduced-motion below removes the animation for
+// the readers most affected, but it is a user preference, not the mechanism
+// 2.2.2 asks for. Recorded in decisions-pending §30 with the two ways to close
+// it, because it is a known gap rather than an oversight.
+//
+// REDUCED MOTION. No loop at all — the whole headline, at once, forever. This
+// is a JS-driven reveal rather than a CSS transition, so it cannot use the
+// `motion-safe:` variant the rest of the app uses; matchMedia is the
+// equivalent, checked when the effect runs.
 
 import {
-  Component, ElementRef, computed, effect, inject, input, signal, OnDestroy
+  Component, computed, effect, input, signal, OnDestroy
 } from '@angular/core';
 
-/** Per-character step, and the ceiling on the whole reveal. */
-const STEP_MS = 28;
-const TOTAL_CAP_MS = 1000;
-
+/** Typing. Per grapheme, and the ceiling on one pass. */
+const TYPE_STEP_MS = 28;
+const TYPE_CAP_MS = 1000;
+/** How long the finished line stands before it starts clearing. */
+const HOLD_MS = 2200;
 /**
- * Which headlines have already played, for this page load.
+ * Deleting, faster than typing — it is not the part anybody reads.
  *
- * Module scope, so it survives leaving the route and coming back — "once on
- * load" means once, not once per visit. A full reload starts over, which is
- * the only time the animation is telling the reader anything new.
- *
- * Keyed by the translation key rather than by the rendered text, so toggling
- * the language does not replay it. The reveal is a load affordance, not a
- * transition effect.
+ * ⚠ 18ms, NOT 14. Half of 28 is the right ratio and 14 was measured doing
+ * exactly that — 23 graphemes cleared over 333ms, 20 distinct counts, properly
+ * progressive. But a 14ms step against a 16.7ms frame removes ~1.2 characters
+ * per frame, so the trace stutters (…18 16 15 14 13 12 10…) and it reads as a
+ * flick rather than as a countdown. 18ms is longer than one frame, so exactly
+ * one grapheme leaves per frame and nothing is skipped. Still roughly half the
+ * typing interval; the cadence was the problem, not the ratio.
  */
-const played = new Set<string>();
+const DELETE_STEP_MS = 18;
+const DELETE_CAP_MS = 700;
+/** The beat on an empty line before it starts again. */
+const REST_MS = 500;
+
+type Phase = 'typing' | 'holding' | 'deleting' | 'resting';
 
 @Component({
   selector: 'app-typewriter',
   host: { class: 'inline' },
   template: `
     <!-- The string as it will be announced: present, complete and unchanging
-         from the first frame. -->
+         through every phase of the loop. -->
     <span class="sr-only">{{ text() }}</span>
 
     <!-- The decorative copy. whitespace-pre-wrap so a space in a span of its
          own is not collapsed away. -->
     <span aria-hidden="true" class="whitespace-pre-wrap">
       @for (unit of units(); track $index) {
-        <span [class]="$index < revealed() ? 'opacity-100' : 'opacity-0'">{{ unit }}</span>
+        <span [class]="spanClasses()[$index]">{{ unit }}</span>
       }
     </span>
   `
@@ -82,8 +99,6 @@ const played = new Set<string>();
 export class Typewriter implements OnDestroy {
   /** The text to reveal. */
   readonly text = input.required<string>();
-  /** A stable id — the translation key. Decides whether this has played. */
-  readonly once = input.required<string>();
 
   /** Grapheme clusters, so a combining mark is never separated from its base. */
   protected readonly units = computed(() => {
@@ -95,39 +110,83 @@ export class Typewriter implements OnDestroy {
     return [...t];
   });
 
+  /**
+   * How many leading graphemes are the first word.
+   *
+   * Derived from where the first whitespace falls, so it is a property of the
+   * TEXT and not a number anybody has to keep in step. It is recomputed when
+   * the language changes and it is unaffected by the loop — the colour belongs
+   * to the word, not to a position the animation happens to be passing through.
+   */
+  protected readonly firstWordLength = computed(() => {
+    const i = this.units().findIndex(u => /\s/u.test(u));
+    return i === -1 ? this.units().length : i;
+  });
+
   protected readonly revealed = signal(0);
+
+  /** One complete class string per grapheme — never a static class plus a
+   *  bound override, which would tie at equal specificity. */
+  protected readonly spanClasses = computed(() => {
+    const shown = this.revealed();
+    const accent = this.firstWordLength();
+    return this.units().map((_, i) =>
+      (i < shown ? 'opacity-100' : 'opacity-0')
+      + ' '
+      + (i < accent ? 'text-primary-400' : 'text-white')
+    );
+  });
 
   private frame = 0;
 
   constructor() {
     effect(() => {
-      const units = this.units();
-      const key = this.once();
-
+      const total = this.units().length;
       this.stop();
 
       const reduced = typeof matchMedia === 'function'
         && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      if (reduced || played.has(key) || units.length === 0) {
-        this.revealed.set(units.length);
-        played.add(key);
+      if (reduced || total === 0) {
+        this.revealed.set(total);
         return;
       }
 
-      played.add(key);
+      const typeStep = Math.min(TYPE_STEP_MS, TYPE_CAP_MS / total);
+      const deleteStep = Math.min(DELETE_STEP_MS, DELETE_CAP_MS / total);
+
+      let phase: Phase = 'typing';
+      let phaseStart = performance.now();
       this.revealed.set(0);
 
-      const step = Math.min(STEP_MS, TOTAL_CAP_MS / units.length);
-      const start = performance.now();
-
       // rAF rather than setInterval: it stays on the frame clock, it does not
-      // drift, and it stops while the tab is in the background instead of
-      // finishing the reveal where nobody is looking.
+      // drift over a loop that may run for minutes, and it stops while the tab
+      // is in the background instead of cycling where nobody is looking.
       const tick = (now: number) => {
-        const n = Math.min(units.length, Math.floor((now - start) / step));
-        this.revealed.set(n);
-        if (n < units.length) this.frame = requestAnimationFrame(tick);
+        const elapsed = now - phaseStart;
+
+        switch (phase) {
+          case 'typing': {
+            const n = Math.min(total, Math.floor(elapsed / typeStep));
+            this.revealed.set(n);
+            if (n >= total) { phase = 'holding'; phaseStart = now; }
+            break;
+          }
+          case 'holding':
+            if (elapsed >= HOLD_MS) { phase = 'deleting'; phaseStart = now; }
+            break;
+          case 'deleting': {
+            const n = Math.max(0, total - Math.floor(elapsed / deleteStep));
+            this.revealed.set(n);
+            if (n <= 0) { phase = 'resting'; phaseStart = now; }
+            break;
+          }
+          case 'resting':
+            if (elapsed >= REST_MS) { phase = 'typing'; phaseStart = now; }
+            break;
+        }
+
+        this.frame = requestAnimationFrame(tick);
       };
       this.frame = requestAnimationFrame(tick);
     });

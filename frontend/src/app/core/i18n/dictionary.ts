@@ -24,9 +24,14 @@ export const DICTIONARY: Translations = {
   // copy, so this is drafted to be true and plain rather than to sell
   // anything — it says what the product does and nothing it cannot do. It is
   // recorded as an open question in §30 rather than left to look decided.
+  // ⚠ THESE FOUR HEADLINES ARE LENGTH-CONSTRAINED. They must hold ONE line at
+  // 390px in `text-2xl` (28px), which leaves 350px of gutter-free width. The
+  // ARABIC is the binding constraint — it runs longer than English for the same
+  // meaning, so a string that fits in English proves nothing. Measured widths
+  // at 28px are in the comment beside each. Re-measure before lengthening one.
   'auth.headline': {
-    ar: 'كل محادثة في مكان واحد.',
-    en: 'Every conversation, in one place.'
+    ar: 'كل محادثة في مكان واحد',          // 299px
+    en: 'All conversations, one place'      // 328px
   },
   'auth.headlineSub': {
     ar: 'سجّل الدخول لمتابعة عمل الفريق من حيث انتهى.',
@@ -769,9 +774,10 @@ export const DICTIONARY: Translations = {
   'portal.customerArea': { ar: 'العملاء', en: 'Customer' },
   // The headline on the portal sign-in photograph. Unratified wording, for the
   // same reason as auth.headline — see decisions-pending §30.
+  // Length-constrained — see the note on auth.headline.
   'portal.headline': {
-    ar: 'طلباتك، متابَعة من البداية إلى النهاية.',
-    en: 'Your requests, tracked from start to finish.'
+    ar: 'طلباتك من البداية إلى النهاية',      // 327px
+    en: 'Your requests, start to finish'      // 335px
   },
   'portal.headlineSub': {
     ar: 'سجّل الدخول لترى كل طلب قدّمته وللرد على أيٍّ منها.',

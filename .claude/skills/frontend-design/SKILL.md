@@ -80,7 +80,7 @@ are not fills and are not budgeted.
 | Shared easing | `cubic-bezier(0.16, 1, 0.3, 1)` |
 | Toast entry | 220ms — `--animate-toast-in` in `styles.css` |
 | Colour and opacity transitions | Tailwind default, 150ms |
-| Sign-in headline reveal | 28ms per grapheme, whole reveal capped at 1000ms |
+| Sign-in headline loop | type 28ms/grapheme (cap 1000ms) → hold 2200ms → delete 18ms/grapheme (cap 700ms) → rest 500ms |
 | Everything else | none |
 
 - **Every transition goes through `motion-safe:`**, which compiles to
@@ -92,14 +92,22 @@ are not fills and are not budgeted.
   `matchMedia('(prefers-reduced-motion: reduce)')` instead**, because there is
   no class for it to hang on. Same rule, same answer: the end state, at once.
   See `shared/components/typewriter/typewriter.ts`.
-- **A reveal animates `opacity`, never text content.** Growing a string
-  re-shapes Arabic on every step: `كل` is 64.52px joined and 70.86px as
-  separate letters, 9.8% apart, so the line jumps. Put the whole string in the
-  DOM, split it by **grapheme** (`Intl.Segmenter` — `[...str]` separates a
-  shadda from its letter), wrap each unit in a span and animate opacity.
-  Measured: per-character spans render Arabic at 524.34px against 524.14px for
-  plain text, so shaping survives the inline boundaries and layout is final
-  before the first frame.
+- **A reveal animates `opacity`, never text content.** Growing *or shrinking* a
+  string re-shapes Arabic on every step: `كل` is 64.52px joined and 70.86px as
+  separate letters, 9.8% apart, so the line jumps on the way in and again on
+  the way out. Put the whole string in the DOM, split it by **grapheme**
+  (`Intl.Segmenter` — `[...str]` separates a shadda from its letter), wrap each
+  unit in a span and animate opacity. Measured: per-character spans render
+  Arabic at 524.34px against 524.14px for plain text, so shaping survives the
+  inline boundaries, layout is final before the first frame, and deleting
+  cannot revert a letter to its isolated form because the glyphs never changed.
+- **A per-frame step must be longer than a frame.** A 14ms delete step against
+  a 16.7ms frame removes ~1.2 characters per frame, so the sequence skips
+  (`…18 16 15…`) and reads as a flick rather than a countdown. 18ms removes
+  exactly one per frame and repeats a frame when it must — a held frame is the
+  right failure, a skipped character is not.
+- **On the dark sign-in surface the text accent is `text-primary-400`.**
+  `primary-700` is the accent for text on light surfaces and disappears here.
 - **No animation library.** `@angular/animations` and `@angular/cdk` were both
   declared dependencies imported nowhere in `src`; both are removed. If an
   enter/exit genuinely needs one, Angular 22 ships `animate.enter` /
