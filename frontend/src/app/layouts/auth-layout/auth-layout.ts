@@ -17,10 +17,11 @@ import { LanguageService } from '../../core/i18n/language.service';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { ToastHost } from '../../shared/components/toast-host/toast-host';
 import { AuthBackdrop } from '../../shared/components/auth-backdrop/auth-backdrop';
+import { Typewriter } from '../../shared/components/typewriter/typewriter';
 
 @Component({
   selector: 'app-auth-layout',
-  imports: [RouterOutlet, TranslatePipe, ToastHost, AuthBackdrop],
+  imports: [RouterOutlet, TranslatePipe, ToastHost, AuthBackdrop, Typewriter],
   templateUrl: './auth-layout.html'
 })
 export class AuthLayout {

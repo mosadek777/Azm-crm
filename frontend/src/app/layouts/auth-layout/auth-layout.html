@@ -16,7 +16,13 @@
 
   <!-- `relative` lifts the content above the absolutely-positioned backdrop
        without a z-index race. -->
-  <header class="relative border-b border-white/10 border-t-4 border-t-primary-600">
+  <!-- THE TOP RULE IS TRANSLUCENT HERE, and at full strength on every other
+       shell. It was drawn for a white bar on a light page; at full saturation
+       over a photograph it reads as a stray UI element sitting on the image
+       rather than as the edge of a bar. primary-500 at 60% lets the picture
+       through it while keeping the signature. See the loud-colour list in the
+       frontend-design skill, item 4. -->
+  <header class="relative border-b border-white/10 border-t-4 border-t-primary-500/60">
     <div class="mx-auto flex w-full max-w-6xl items-center gap-3 px-5 py-3 lg:px-8">
       <!-- The product name and the area pill are what tell staff and portal
            apart, and they have to do it BEFORE anyone signs in. They are the
@@ -59,7 +65,8 @@
     <div class="w-full max-w-xl text-start lg:max-w-lg">
       <h1 class="m-0 text-3xl font-semibold leading-tight text-white drop-shadow-md
                  sm:text-4xl lg:text-5xl">
-        {{ 'auth.headline' | translate: i18n.lang() }}
+        <app-typewriter once="auth.headline"
+                        [text]="'auth.headline' | translate: i18n.lang()" />
       </h1>
       <p class="mt-4 mb-0 text-base text-white/70 drop-shadow-sm sm:text-lg">
         {{ 'auth.headlineSub' | translate: i18n.lang() }}

@@ -25,10 +25,11 @@ import { PortalAuthService } from '../../core/auth/services/portal-auth.service'
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { ToastHost } from '../../shared/components/toast-host/toast-host';
 import { AuthBackdrop } from '../../shared/components/auth-backdrop/auth-backdrop';
+import { Typewriter } from '../../shared/components/typewriter/typewriter';
 
 @Component({
   selector: 'app-portal-layout',
-  imports: [RouterOutlet, RouterLink, TranslatePipe, ToastHost, AuthBackdrop],
+  imports: [RouterOutlet, RouterLink, TranslatePipe, ToastHost, AuthBackdrop, Typewriter],
   templateUrl: './portal-layout.html'
 })
 export class PortalLayout {
@@ -56,9 +57,13 @@ export class PortalLayout {
       ? 'relative flex min-h-svh flex-col overflow-hidden bg-surface-950'
       : 'flex min-h-svh flex-col bg-surface-100');
 
+  // Signed out the top rule is TRANSLUCENT, for the reason given in
+  // auth-layout.html: at full saturation over a photograph it reads as a stray
+  // UI element on the image. Signed in it is the same full-strength rule every
+  // other shell carries.
   protected readonly headerClasses = computed(() =>
     this.signedOut()
-      ? 'relative border-b border-white/10 border-t-4 border-t-primary-600'
+      ? 'relative border-b border-white/10 border-t-4 border-t-primary-500/60'
       : 'border-b border-surface-200 border-t-4 border-t-primary-600 bg-surface-0');
 
   protected readonly brandClasses = computed(() =>

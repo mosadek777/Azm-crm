@@ -2537,10 +2537,63 @@ to clip.
 **No `tracking-tight` on the headline.** §29: Latin tracking on a string that
 renders in Arabic is a one-language device.
 
-### Open: the headline wording
+### The headline wording — ratified as provisional
 
 **`auth.headline`, `auth.headlineSub`, `portal.headline` and
-`portal.headlineSub` are UNRATIFIED.** The client has not been asked for
-sign-in copy. They are drafted to be plain and true — they describe what the
-product does and claim nothing it cannot do — but they are marketing surface
-and the client owns that. Flagged here rather than left looking decided.
+`portal.headlineSub` are the DEVELOPER'S WORDS, ratified as placeholder copy by
+the product owner.** The client has still not been asked for sign-in copy and
+does not owe us any: these four strings are drafted to be plain and true —
+they describe what the product does and claim nothing it cannot do — and that
+was accepted as the right standard for placeholder copy.
+
+They are replaceable without touching a template. Change the four entries in
+`core/i18n/dictionary.ts`, both languages each, and nothing else moves.
+
+**They are not client copy and must not be presented as such** in a demo or a
+review. If the client offers wording, it wins.
+
+### The top rule is translucent here, and only here
+
+`border-t-4 border-t-primary-600` is the shell signature on every other screen
+and item 4 of the loud-colour list. On the sign-in screens it is
+`border-t-primary-500/60`.
+
+It was drawn for a white bar on a light page. At full saturation over a
+photograph it stopped reading as the edge of a bar and started reading as a
+stray violet element lying on the image. 60% keeps the signature and lets the
+picture through it. Everywhere else it is unchanged.
+
+### The headline reveals itself, and the reveal is not a typewriter
+
+The sign-in headline appears one character at a time on load —
+`shared/components/typewriter`. Three things about it are load-bearing.
+
+**It never changes the text.** The whole string is in the DOM, shaped, from the
+first frame; each grapheme sits in its own span and only `opacity` moves.
+Growing a string re-shapes Arabic on every step, because a letter's glyph
+depends on its neighbours: in Cairo at 48px, `كل` is 64.52px joined and
+70.86px as two separate letters — 9.8% apart, so the line visibly jumps on
+each step. English moves 0.8% over the same test, which is kerning. **Appending
+a character at a time is a Latin technique**, and the word-by-word fallback
+this was expected to need is not needed: per-character spans render the Arabic
+headline at 524.34px against 524.14px as plain text, a 0.04% difference, so
+Chrome shapes across the inline boundaries and the joined forms are the ones
+drawn. The `<h1>` box measured 512×120 at every frame of the reveal, so nothing
+beside it moves either.
+
+**Split by grapheme, not by code point.** `[...string]` puts a shadda or a
+fatha in a span of its own, so a diacritic could be revealed before the letter
+it belongs to. Three of the four headline strings carry diacritics.
+`Intl.Segmenter` keeps each mark with its base.
+
+**The accessibility tree never types.** The animated copy is `aria-hidden`
+throughout and a visually-hidden copy of the whole string sits beside it.
+Verified from the tree rather than from the DOM: the accessible name of the
+`<h1>` is the finished sentence, once, from the first frame. (`innerText` is
+not a check — it ignores `aria-hidden` and reports the string twice.)
+
+Reduced motion shows the whole headline at once. This is a JS-driven reveal, so
+it cannot use the `motion-safe:` variant and checks `matchMedia` instead. It
+runs once per page load, keyed by translation key in module scope, so returning
+to the route does not replay it and neither does toggling the language — the
+reveal is a load affordance, not a transition effect.

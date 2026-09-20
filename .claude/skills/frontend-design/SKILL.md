@@ -51,11 +51,16 @@ four places, and the tree currently holds to this:
 | 1 | The primary action of a view — button or link | `bg-primary-600 hover:bg-primary-700 text-white` | 29 |
 | 2 | The brand mark | `bg-primary-600 text-white` | `layouts/sidebar/sidebar.html:29` |
 | 3 | The collapsed-sidebar badge dot | `bg-primary-600 ring-2 ring-surface-0` | `layouts/sidebar/sidebar.html:160` |
-| 4 | The shell's top rule | `border-t-4 border-t-primary-600` | the three layouts |
+| 4 | The shell's top rule | `border-t-4 border-t-primary-600`, or `border-t-primary-500/60` on the two sign-in screens | the three layouts |
 
 Anything else wanting emphasis takes `primary-50`/`primary-100` as a tint, or
 `primary-700` as text. **A fifth place is a decision to record in
 `docs/decisions-pending.md`, not a class to add.**
+
+**Why the top rule is translucent on the sign-in screens.** It was drawn for a
+white bar on a light page. At full saturation over a photograph it reads as a
+stray UI element sitting on the image rather than as the edge of a bar. 60%
+keeps the signature and lets the picture through it.
 
 **Why a budget at all.** One emphasis colour used in four places reads as
 emphasis. Used in twenty it reads as decoration, and the primary action on a
@@ -75,6 +80,7 @@ are not fills and are not budgeted.
 | Shared easing | `cubic-bezier(0.16, 1, 0.3, 1)` |
 | Toast entry | 220ms — `--animate-toast-in` in `styles.css` |
 | Colour and opacity transitions | Tailwind default, 150ms |
+| Sign-in headline reveal | 28ms per grapheme, whole reveal capped at 1000ms |
 | Everything else | none |
 
 - **Every transition goes through `motion-safe:`**, which compiles to
@@ -82,6 +88,18 @@ are not fills and are not budgeted.
   reduced motion gets *no* transition, not a shortened one. Never write a
   global `!important` reduced-motion override — that produces 0.01ms
   animations rather than none.
+- **Motion driven from TypeScript checks
+  `matchMedia('(prefers-reduced-motion: reduce)')` instead**, because there is
+  no class for it to hang on. Same rule, same answer: the end state, at once.
+  See `shared/components/typewriter/typewriter.ts`.
+- **A reveal animates `opacity`, never text content.** Growing a string
+  re-shapes Arabic on every step: `كل` is 64.52px joined and 70.86px as
+  separate letters, 9.8% apart, so the line jumps. Put the whole string in the
+  DOM, split it by **grapheme** (`Intl.Segmenter` — `[...str]` separates a
+  shadda from its letter), wrap each unit in a span and animate opacity.
+  Measured: per-character spans render Arabic at 524.34px against 524.14px for
+  plain text, so shaping survives the inline boundaries and layout is final
+  before the first frame.
 - **No animation library.** `@angular/animations` and `@angular/cdk` were both
   declared dependencies imported nowhere in `src`; both are removed. If an
   enter/exit genuinely needs one, Angular 22 ships `animate.enter` /
