@@ -1,18 +1,25 @@
-<!-- Tailwind only. Every directional utility is logical (ms-/me-/ps-/pe-,
-     start/end, border-s-), so the whole card mirrors under dir="rtl" with no
-     override sheet — spec 012 FR-002. -->
-<div class="w-[26rem] max-w-[92vw] rounded-xl bg-surface-0 shadow-xl shadow-surface-900/5
-            ring-1 ring-surface-200 p-8">
+<!-- THE FROSTED CARD. Values verbatim from the borrowed system's section 4:
+     bg-white/[0.07], border-white/15, backdrop-blur-xl, rounded-2xl,
+     shadow-2xl shadow-black/40, p-6 rising to p-8 from sm.
+
+     THE BORDER MUST BE LIGHTER THAN THE FILL. 15% over 7% is what makes the
+     panel read as a pane of glass rather than as a hole cut in the photograph.
+     This is the one place the "separation is a border, never a shadow" rule is
+     set aside — the card floats over an image, which is exactly the case a
+     shadow is for, and the source specifies one.
+
+     Every directional utility is logical (ms-/me-/ps-/pe-, start/end,
+     border-s-), so the card mirrors under dir="rtl" — spec 012 FR-002. -->
+<div class="w-full rounded-2xl border border-white/15 bg-white/[0.07] p-6
+            shadow-2xl shadow-black/40 backdrop-blur-xl sm:p-8">
   <form class="flex flex-col gap-6" (ngSubmit)="submit()">
 
-    <div class="flex items-baseline justify-between gap-3">
-      <h1 class="m-0 text-2xl font-semibold text-surface-900">
-        {{ 'login.title' | translate: i18n.lang() }}
-      </h1>
-    </div>
+    <h1 class="m-0 text-2xl font-semibold text-white">
+      {{ 'login.title' | translate: i18n.lang() }}
+    </h1>
 
     <label class="flex flex-col gap-1.5">
-      <span class="text-sm font-medium text-surface-700">
+      <span class="text-sm font-medium text-white/80">
         {{ 'login.email' | translate: i18n.lang() }}
       </span>
       <!-- dir="ltr" and text-start: an email address is a direction-neutral
@@ -26,14 +33,14 @@
         required
         [ngModel]="email()"
         (ngModelChange)="email.set($event)"
-        class="w-full rounded-lg border border-surface-300 bg-surface-0 px-3 py-2 text-start
-               text-surface-900 placeholder:text-surface-400
-               focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25
-               transition-colors" />
+        class="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-start
+               text-white placeholder:text-white/35
+               focus:border-white/25 focus:outline-none focus:ring-2 focus:ring-primary-500/50
+               motion-safe:transition-colors" />
     </label>
 
     <label class="flex flex-col gap-1.5">
-      <span class="text-sm font-medium text-surface-700">
+      <span class="text-sm font-medium text-white/80">
         {{ 'login.password' | translate: i18n.lang() }}
       </span>
       <app-password-field
@@ -43,22 +50,27 @@
     </label>
 
     @if (refusal(); as message) {
-      <p class="m-0 rounded-lg border-s-4 border-red-600 bg-red-50 px-3 py-2 text-sm text-red-800"
+      <!-- Rendered as the server sent it. Dark-surface reds rather than the
+           light-page reds used elsewhere: on glass, bg-red-50 was a bright slab
+           that read as the loudest thing on the screen. -->
+      <p class="m-0 rounded-lg border-s-4 border-red-400 bg-red-950/60 px-3 py-2 text-sm text-red-100"
          role="alert">
         {{ message[i18n.lang()] }}
       </p>
     }
 
+    <!-- The primary action of the view — item 1 of the loud-colour list, and it
+         keeps its violet on the dark card rather than turning white. -->
     <button
       type="submit"
       [disabled]="submitting()"
       class="w-full rounded-lg bg-primary-600 px-4 py-2.5 text-base font-semibold text-white
-             hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500/40
-             disabled:opacity-60 disabled:cursor-default transition-colors">
+             hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400
+             disabled:cursor-default disabled:opacity-60 motion-safe:transition-colors">
       {{ (submitting() ? 'login.submitting' : 'login.submit') | translate: i18n.lang() }}
     </button>
 
-    <p class="m-0 text-center text-sm text-surface-500">
+    <p class="m-0 text-center text-sm text-white/60">
       {{ 'login.noAccount' | translate: i18n.lang() }}
     </p>
   </form>

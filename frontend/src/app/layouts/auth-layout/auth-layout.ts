@@ -16,10 +16,11 @@ import { RouterOutlet } from '@angular/router';
 import { LanguageService } from '../../core/i18n/language.service';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { ToastHost } from '../../shared/components/toast-host/toast-host';
+import { AuthBackdrop } from '../../shared/components/auth-backdrop/auth-backdrop';
 
 @Component({
   selector: 'app-auth-layout',
-  imports: [RouterOutlet, TranslatePipe, ToastHost],
+  imports: [RouterOutlet, TranslatePipe, ToastHost, AuthBackdrop],
   templateUrl: './auth-layout.html'
 })
 export class AuthLayout {

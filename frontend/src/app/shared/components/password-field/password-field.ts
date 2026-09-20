@@ -1,6 +1,12 @@
 // A password input with an eye toggle. One implementation, used by both the
 // staff sign-in and the customer portal.
 //
+// ⚠ IT IS STYLED FOR THE GLASS CARD, and both of its call sites are sign-in
+// screens sitting on the dark auth backdrop (decisions-pending §30). White text
+// on a translucent white fill is unreadable on a light surface, so a third call
+// site on a normal page needs the colours lifted into an input rather than
+// pasted — there is no variant here yet because there is no third call site.
+//
 // It replaces a "Show"/"Hide" text button that sat inside the input's padding
 // and overlapped the typed characters — unreadable in both languages, and worse
 // in Arabic where the text ran into the value from the other side.

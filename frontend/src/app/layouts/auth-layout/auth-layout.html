@@ -1,13 +1,30 @@
-<div class="min-h-screen flex flex-col bg-surface-100">
-  <!-- Same treatment as the signed-in staff header: primary top rule, pale bar,
-       "Staff" chip. Contents share the max-w-6xl measure used everywhere else
-       so the product name lines up with the content column below. -->
-  <header class="border-b border-surface-200 border-t-4 border-t-primary-600 bg-surface-0">
-    <div class="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3">
-      <span class="text-lg font-semibold text-primary-700">
+<!-- THE STAFF SIGN-IN SHELL. A full-bleed photograph, a headline on the image,
+     and a frosted card holding the form.
+
+     DARK, DELIBERATELY, AND ONLY HERE. The rest of the product is light and a
+     dark sidebar was rejected for putting two visual languages on one screen.
+     A sign-in screen is not one screen among many — it is the whole viewport,
+     with nothing beside it to disagree with. decisions-pending §30 records the
+     decision so nobody later "fixes" the inconsistency.
+
+     DIRECTION. Every utility here is logical (ms-/me-/ps-/pe-, start/end), so
+     the two columns swap on their own in Arabic. The one thing that cannot
+     mirror by itself is the gradient — see auth-backdrop.ts, which owns it. -->
+<div class="relative flex min-h-svh flex-col overflow-hidden bg-surface-950">
+
+  <app-auth-backdrop />
+
+  <!-- `relative` lifts the content above the absolutely-positioned backdrop
+       without a z-index race. -->
+  <header class="relative border-b border-white/10 border-t-4 border-t-primary-600">
+    <div class="mx-auto flex w-full max-w-6xl items-center gap-3 px-5 py-3 lg:px-8">
+      <!-- The product name and the area pill are what tell staff and portal
+           apart, and they have to do it BEFORE anyone signs in. They are the
+           reason this header exists at all. -->
+      <span class="text-lg font-semibold text-white drop-shadow-sm">
         {{ 'app.name' | translate: i18n.lang() }}
       </span>
-      <span class="rounded-full bg-surface-100 px-2 py-0.5 text-xs font-medium text-surface-600">
+      <span class="rounded-full bg-white/15 px-2 py-0.5 text-xs font-medium text-white">
         {{ 'nav.staffArea' | translate: i18n.lang() }}
       </span>
 
@@ -15,16 +32,45 @@
 
       <!-- The only language toggle on this page. -->
       <button type="button"
-        class="rounded-md px-2.5 py-1.5 text-sm font-medium text-primary-600
-               hover:bg-primary-50 hover:text-primary-700 transition-colors"
+        class="rounded-md px-2.5 py-1.5 text-sm font-medium text-white/80
+               hover:bg-white/10 hover:text-white motion-safe:transition-colors
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
         (click)="i18n.toggle()">
         {{ 'lang.switchTo' | translate: i18n.lang() }}
       </button>
     </div>
   </header>
 
-  <main class="flex flex-1 items-center justify-center p-4">
-    <router-outlet />
+  <main class="relative mx-auto flex w-full max-w-6xl flex-1 flex-col items-center
+               justify-center gap-12 px-5 py-14
+               lg:flex-row lg:justify-between lg:gap-20 lg:px-8">
+
+    <!-- THE HEADLINE, on the photograph rather than in the card. text-white and
+         text-white/70 rather than the theme's surface tokens: this text sits on
+         an image, not on a surface, so it is not the token scale's business.
+
+         `leading-tight` (1.25), NOT the source's `leading-[1.1]`. 012 AS-06
+         wants line height that clears ascenders and descenders, and Arabic sets
+         diacritics above the line and descenders below it — 1.1 on a 48px
+         headline is where that starts to clip. Deliberate deviation.
+
+         No `tracking-tight`: see decisions-pending §29. Latin tracking on a
+         string that renders in Arabic is a one-language device. -->
+    <div class="w-full max-w-xl text-start lg:max-w-lg">
+      <h1 class="m-0 text-3xl font-semibold leading-tight text-white drop-shadow-md
+                 sm:text-4xl lg:text-5xl">
+        {{ 'auth.headline' | translate: i18n.lang() }}
+      </h1>
+      <p class="mt-4 mb-0 text-base text-white/70 drop-shadow-sm sm:text-lg">
+        {{ 'auth.headlineSub' | translate: i18n.lang() }}
+      </p>
+    </div>
+
+    <!-- The routed sign-in card. Wrapped so the outlet's own empty element is
+         not a flex item competing for the row's gap. -->
+    <div class="w-full max-w-md">
+      <router-outlet />
+    </div>
   </main>
 </div>
 

@@ -19,6 +19,20 @@ export const DICTIONARY: Translations = {
   'app.name': { ar: 'عزم — دعم العملاء', en: 'AZM — Customer Support' },
   'nav.staffArea': { ar: 'الموظفون', en: 'Staff' },
 
+  // The headline on the sign-in photograph (decisions-pending §30).
+  // ⚠ THE WORDING IS UNRATIFIED. The client has not been asked for sign-in
+  // copy, so this is drafted to be true and plain rather than to sell
+  // anything — it says what the product does and nothing it cannot do. It is
+  // recorded as an open question in §30 rather than left to look decided.
+  'auth.headline': {
+    ar: 'كل محادثة في مكان واحد.',
+    en: 'Every conversation, in one place.'
+  },
+  'auth.headlineSub': {
+    ar: 'سجّل الدخول لمتابعة عمل الفريق من حيث انتهى.',
+    en: 'Sign in to pick up where the team left off.'
+  },
+
   'login.title': { ar: 'تسجيل الدخول', en: 'Sign in' },
   'login.email': { ar: 'البريد الإلكتروني', en: 'Email address' },
   'login.password': { ar: 'كلمة المرور', en: 'Password' },
@@ -753,6 +767,16 @@ export const DICTIONARY: Translations = {
   // A word carrying the same meaning as the header colour, so telling the two
   // interfaces apart never depends on seeing a hue.
   'portal.customerArea': { ar: 'العملاء', en: 'Customer' },
+  // The headline on the portal sign-in photograph. Unratified wording, for the
+  // same reason as auth.headline — see decisions-pending §30.
+  'portal.headline': {
+    ar: 'طلباتك، متابَعة من البداية إلى النهاية.',
+    en: 'Your requests, tracked from start to finish.'
+  },
+  'portal.headlineSub': {
+    ar: 'سجّل الدخول لترى كل طلب قدّمته وللرد على أيٍّ منها.',
+    en: 'Sign in to see every request you have raised, and reply to any of them.'
+  },
   'portal.signIn': { ar: 'تسجيل الدخول', en: 'Sign in' },
   'portal.email': { ar: 'البريد الإلكتروني', en: 'Email address' },
   'portal.password': { ar: 'كلمة المرور', en: 'Password' },

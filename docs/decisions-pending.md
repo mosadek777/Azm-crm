@@ -2457,3 +2457,90 @@ Recorded in `.claude/skills/frontend-design/SKILL.md` under **Typography that
 only works in one script**: no `uppercase`, `lowercase`, `capitalize`,
 `tracking-*` or `font-variant: small-caps` on any element whose text can render
 in Arabic — which is every translated string and every user-authored value.
+
+---
+
+## 30. The sign-in screens are dark, and the rest of the product is not
+
+**Attribution: the client-side product owner, explicitly and in advance.**
+Recorded so that nobody later reads the inconsistency as an oversight and
+"fixes" it.
+
+### The decision
+
+Both sign-in screens — staff (`/auth/login`) and customer portal
+(`/portal/signin`) — are a full-bleed photograph under two dark overlay layers,
+with the form in a frosted-glass card and a headline on the image beside it.
+Every other screen in the product stays light.
+
+This is **the one place the borrowed dark-only design system is adopted rather
+than adapted.** `docs/design-system.md` records that its palette was rejected
+and its glass panel was rejected as un-portable, both because the product is
+light and because the glass needs a photograph under it to read as glass. On
+this screen there IS a photograph, so the panel works and the palette applies.
+
+### Why it is not the inconsistency it looks like
+
+The reason a dark sidebar was refused was "two visual languages in one screen":
+a dark panel beside light content, disagreeing with each other in the same
+viewport. A sign-in screen has nothing beside it. It is the whole viewport, it
+is seen before the product proper, and it is the one screen whose job is to
+look like a front door rather than like a tool. The objection does not apply.
+
+### The exact values, and where they live
+
+From section 7 and section 4 of the source, unchanged:
+
+| Layer | Value |
+|---|---|
+| Ground behind the image | `bg-surface-950` on the backdrop host |
+| Base wash, top to bottom | `from-surface-950/75 via-surface-950/55 to-surface-950/85` |
+| Directional layer | `from-transparent via-transparent to-surface-950/80` |
+| Glass card | `bg-white/[0.07]`, `border-white/15`, `backdrop-blur-xl`, `rounded-2xl`, `shadow-2xl shadow-black/40`, `p-6 sm:p-8` |
+| Inputs on glass | `bg-white/5`, `border-white/15`, `text-white`, `placeholder:text-white/35` |
+
+They live in exactly one component — `shared/components/auth-backdrop` — so the
+two interfaces cannot drift apart.
+
+### Three things the source does not handle
+
+**1. Direction.** Every direction in the source's section 7 is physical. A CSS
+gradient has no logical form, so this is the second thing in the codebase
+needing an explicit direction rather than a logical property; the first is the
+toast keyframe. The three rules are mutually exclusive rather than layered:
+`max-lg:bg-linear-to-b`, `ltr:lg:bg-linear-to-r`, `rtl:lg:bg-linear-to-l`.
+
+The obvious formulation — `lg:bg-linear-to-r` plus `lg:rtl:bg-linear-to-l` —
+was rejected after compiling it: Tailwind emits `rtl:` as a **zero-specificity**
+`:where(:dir(rtl), [dir="rtl"], [dir="rtl"] *)` clause, so the two rules tie at
+(0,1,0) and the winner is whichever Tailwind happened to emit last. That is the
+same fault as the 155px sidebar and the `routerLinkActive` state that never
+appeared. Exclusive rules leave nothing to arbitrate.
+
+**2. Degradation.** The ground colour sits on the backdrop host, behind the
+`<img>`, and both gradients sit above it. A slow or missing photograph shows
+the gradient over near-black — never a white flash.
+
+**3. Two interfaces.** Both get the identical treatment. The product name and
+the one-word area pill in the shell header are what tell them apart, and they
+keep doing it on the photograph: white name, `bg-white/15` pill. A customer
+should not have to wonder whether they are on a staff screen, and the answer
+must be present before anyone signs in.
+
+### Two deliberate deviations from the source
+
+**`leading-tight` (1.25), not `leading-[1.1]`.** `012 AS-06` requires line
+height that clears ascenders and descenders, and Arabic sets diacritics above
+the line and descenders below it. 1.1 on a 48px headline is where that begins
+to clip.
+
+**No `tracking-tight` on the headline.** §29: Latin tracking on a string that
+renders in Arabic is a one-language device.
+
+### Open: the headline wording
+
+**`auth.headline`, `auth.headlineSub`, `portal.headline` and
+`portal.headlineSub` are UNRATIFIED.** The client has not been asked for
+sign-in copy. They are drafted to be plain and true — they describe what the
+product does and claim nothing it cannot do — but they are marketing surface
+and the client owns that. Flagged here rather than left looking decided.

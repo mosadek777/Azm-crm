@@ -204,6 +204,26 @@ the `before:` utilities entirely when inactive leaves nothing to arbitrate.
 sidebar sitting outside the viewport at desktop RTL, where `lg:translate-x-0`
 lost to `rtl:translate-x-full`.
 
+### 6. Two things have no logical form: transforms and gradients
+
+`translateX` and `linear-gradient(to right, …)` are physical and stay physical.
+
+**Transforms:** flip a custom property, don't duplicate the keyframe —
+`--toast-enter-x` in `styles.css`.
+
+**Gradients:** write one rule per direction, mutually exclusive.
+
+| Never | Always |
+|---|---|
+| `lg:bg-linear-to-r lg:rtl:bg-linear-to-l` | `max-lg:bg-linear-to-b` `ltr:lg:bg-linear-to-r` `rtl:lg:bg-linear-to-l` |
+
+**Why `rtl:` cannot override.** Tailwind compiles it to a **zero-specificity**
+`:where(:dir(rtl), [dir="rtl"], [dir="rtl"] *)` clause. So `lg:rtl:…` and
+`lg:…` both weigh (0,1,0), they tie, and the winner is whichever Tailwind
+emitted last — rule 4's trap wearing a third hat. Giving each direction its own
+exclusive rule leaves nothing to arbitrate. Verified by compiling it; see
+`shared/components/auth-backdrop/auth-backdrop.ts`.
+
 ## Typography that only works in one script
 
 **Never** put any of these on an element whose text can render in Arabic —

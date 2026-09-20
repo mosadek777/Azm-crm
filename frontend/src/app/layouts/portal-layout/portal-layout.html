@@ -1,26 +1,36 @@
 <!-- Logical properties only (ms-/me-/ps-/pe-/start/end). Direction is set once
      on the root element, so this whole shell mirrors in Arabic with no override
-     sheet — 008 FR-011, AS-10. -->
-<div class="min-h-screen bg-surface-100 flex flex-col">
-  <!-- Same treatment as the staff header: white bar, primary top rule, content
-       on the shared max-w-6xl measure. The two interfaces are told apart by the
-       product name and the area pill, not by chrome — a filled bar here was
-       heavier than the difference needed to be. -->
-  <header class="border-b border-surface-200 border-t-4 border-t-primary-600 bg-surface-0">
-    <div class="mx-auto w-full max-w-6xl px-4 py-3 flex items-center gap-3">
+     sheet — 008 FR-011, AS-10.
+
+     ONE SHELL, TWO STATES. Signed out it is the dark sign-in composition —
+     photograph, headline, glass card — matching the staff screen exactly
+     (decisions-pending §30). Signed in it is the light content column every
+     other portal screen uses. The class strings are computed in the component,
+     one per decision; see the note there for why they are not static classes
+     with bound overrides. -->
+<div [class]="shellClasses()">
+
+  @if (!portalAuth.isSignedIn()) {
+    <app-auth-backdrop />
+  }
+
+  <header [class]="headerClasses()">
+    <div class="mx-auto flex w-full max-w-6xl items-center gap-3 px-5 py-3 lg:px-8">
       <!-- Not a link when signed out: it would lead to a guarded route. -->
       @if (portalAuth.isSignedIn()) {
-        <a routerLink="/portal/tickets" class="text-lg font-semibold text-primary-700 no-underline">
+        <a routerLink="/portal/tickets" [class]="brandClasses()">
           {{ 'portal.name' | translate: i18n.lang() }}
         </a>
       } @else {
-        <span class="text-lg font-semibold text-primary-700">
+        <span [class]="brandClasses()">
           {{ 'portal.name' | translate: i18n.lang() }}
         </span>
       }
       <!-- Carries the same meaning as the product name, in one word, so telling
-           the two interfaces apart never depends on reading the whole title. -->
-      <span class="rounded-full bg-surface-100 px-2 py-0.5 text-xs font-medium text-surface-600">
+           the two interfaces apart never depends on reading the whole title.
+           This is the thing that must survive the photograph: a customer should
+           never have to wonder whether they are on a staff screen. -->
+      <span [class]="pillClasses()">
         {{ 'portal.customerArea' | translate: i18n.lang() }}
       </span>
 
@@ -28,19 +38,18 @@
         <!-- The only language toggle in the portal. Present signed out too,
              because FR-011 says switchable at any time and the sign-in screen
              is one of the times. -->
-        <button type="button"
-          class="rounded-md px-2.5 py-1.5 font-medium text-primary-600
-                 hover:bg-primary-50 hover:text-primary-700 transition-colors"
-          (click)="i18n.toggle()">
+        <button type="button" [class]="langClasses()" (click)="i18n.toggle()">
           {{ 'lang.switchTo' | translate: i18n.lang() }}
         </button>
 
         <!-- Nothing below appears until a session exists. -->
         @if (portalAuth.isSignedIn()) {
           @if (portalAuth.customer(); as customer) {
-            <span class="text-surface-600 hidden sm:inline">{{ customer.displayName }}</span>
+            <span class="hidden text-surface-600 sm:inline">{{ customer.displayName }}</span>
           }
-          <button type="button" class="text-surface-600 hover:text-surface-900 hover:underline"
+          <button type="button"
+            class="rounded-md text-surface-600 hover:text-surface-900 hover:underline
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
             (click)="portalAuth.signOut()">
             {{ 'portal.signOut' | translate: i18n.lang() }}
           </button>
@@ -49,21 +58,29 @@
     </div>
   </header>
 
-  <!-- TWO CONTAINERS, ONE SHELL — and this is where the portal differed from
-       staff. Staff has two layout components: AuthLayout centres a lone card in
-       the whole remaining viewport, MainLayout gives signed-in screens a
-       max-w-6xl column. The portal has one shell, because unlike staff its
-       header is identical before and after sign-in (staff's gains navigation
-       and a user menu), so a second component would have duplicated the header
-       to change one class.
-       The consequence, until now, was that the sign-in card inherited the
-       CONTENT column and sat hard against the header while the staff card
-       floated in the middle. The two branches below are exactly the two staff
-       mains, so both sign-in screens now centre identically. -->
-  <main [class]="portalAuth.isSignedIn()
-                   ? 'flex-1 mx-auto w-full max-w-6xl px-4 py-6'
-                   : 'flex flex-1 items-center justify-center p-4'">
-    <router-outlet />
+  <main [class]="mainClasses()">
+
+    <!-- The headline, signed out only. See auth-layout.html for why
+         `leading-tight` rather than the source's 1.1, and why no tracking. -->
+    @if (!portalAuth.isSignedIn()) {
+      <div class="w-full max-w-xl text-start lg:max-w-lg">
+        <h1 class="m-0 text-3xl font-semibold leading-tight text-white drop-shadow-md
+                   sm:text-4xl lg:text-5xl">
+          {{ 'portal.headline' | translate: i18n.lang() }}
+        </h1>
+        <p class="mt-4 mb-0 text-base text-white/70 drop-shadow-sm sm:text-lg">
+          {{ 'portal.headlineSub' | translate: i18n.lang() }}
+        </p>
+      </div>
+    }
+
+    <!-- ONE router-outlet, not one per branch: two outlets in two @if arms are
+         destroyed and recreated as the session flips, which re-runs the routed
+         component for no reason. `contents` makes the wrapper disappear from
+         layout when signed in, so the content column is unchanged. -->
+    <div [class]="outletClasses()">
+      <router-outlet />
+    </div>
   </main>
 </div>
 

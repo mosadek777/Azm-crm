@@ -1,27 +1,33 @@
-<!-- Same measure and the same card treatment as the staff sign-in card, so the
-     two screens are recognisably one product: w-[26rem], max-w-[92vw] for small
-     screens, and the same radius, surface and shadow. Only the header name and
-     the area pill differ. -->
-<div class="w-[26rem] max-w-[92vw] rounded-xl bg-surface-0 shadow-xl shadow-surface-900/5
-            ring-1 ring-surface-200 p-8">
+<!-- The same card as the staff sign-in, to the same values — section 4 of the
+     borrowed system: bg-white/[0.07], border-white/15, backdrop-blur-xl,
+     rounded-2xl, shadow-2xl shadow-black/40, p-6 rising to p-8 from sm.
+
+     The two interfaces are told apart by the product name and the area pill in
+     the shell header, not by the card. That is deliberate: a customer looking
+     at this screen should recognise it as the same product, and read one word
+     to know which half of it they are in. -->
+<div class="w-full rounded-2xl border border-white/15 bg-white/[0.07] p-6
+            shadow-2xl shadow-black/40 backdrop-blur-xl sm:p-8">
   <!-- No language toggle here: the shell header carries the only one, so the
        two are not competing for the same job on the same screen. -->
-  <h1 class="text-2xl font-semibold text-surface-900 mb-6">
+  <h1 class="m-0 mb-6 text-2xl font-semibold text-white">
     {{ 'portal.signIn' | translate: i18n.lang() }}
   </h1>
 
   <form (ngSubmit)="submit()">
-    <label for="portal-email" class="block text-sm text-surface-700 mb-1">
+    <label for="portal-email" class="mb-1 block text-sm font-medium text-white/80">
       {{ 'portal.email' | translate: i18n.lang() }}
     </label>
     <!-- dir="ltr" on the input itself: an email address does not reverse, even
          inside a mirrored layout (spec 012 AS-04, 008 §8). -->
     <input id="portal-email" type="email" name="email" dir="ltr" autocomplete="username"
-      class="w-full border border-surface-300 rounded-lg px-3 py-2 mb-4
-             focus:outline-none focus:ring-2 focus:ring-primary-500"
+      class="mb-4 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-start
+             text-white placeholder:text-white/35
+             focus:border-white/25 focus:outline-none focus:ring-2 focus:ring-primary-500/50
+             motion-safe:transition-colors"
       [ngModel]="email()" (ngModelChange)="email.set($event)" />
 
-    <label for="portal-password" class="block text-sm text-surface-700 mb-1">
+    <label for="portal-password" class="mb-1 block text-sm font-medium text-white/80">
       {{ 'portal.password' | translate: i18n.lang() }}
     </label>
     <div class="mb-5">
@@ -32,19 +38,23 @@
     </div>
 
     @if (refusal(); as message) {
-      <p role="alert" class="mb-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+      <!-- Rendered as the server sent it, in dark-surface reds — see the note
+           on the staff card. -->
+      <p role="alert"
+         class="mb-4 rounded-lg border-s-4 border-red-400 bg-red-950/60 px-3 py-2 text-sm text-red-100">
         {{ i18n.lang() === 'ar' ? message.ar : message.en }}
       </p>
     }
 
     <button type="submit" [disabled]="submitting()"
-      class="w-full bg-primary-600 hover:bg-primary-700 disabled:opacity-60
-             text-white rounded-lg py-2.5 font-medium">
+      class="w-full rounded-lg bg-primary-600 py-2.5 font-semibold text-white
+             hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400
+             disabled:cursor-default disabled:opacity-60 motion-safe:transition-colors">
       {{ (submitting() ? 'portal.submitting' : 'portal.signIn') | translate: i18n.lang() }}
     </button>
   </form>
 
-  <p class="mt-5 text-xs text-surface-500 text-center">
+  <p class="mt-5 mb-0 text-center text-xs text-white/60">
     {{ 'portal.noAccount' | translate: i18n.lang() }}
   </p>
 </div>
