@@ -1,5 +1,5 @@
-// A headline that types itself, holds, deletes itself, and does that three
-// times before settling on the finished line for good.
+// A headline that types itself, holds, deletes itself and types again, for as
+// long as the screen is open.
 //
 // ⚠ IT NEVER CHANGES THE TEXT. The whole string is in the DOM, shaped, from the
 // first frame; each grapheme sits in its own span and the animation moves
@@ -40,15 +40,21 @@
 // frame and never changes — it is not built up, and it is not torn down again
 // on each delete.
 //
-// WCAG 2.2.2 (Pause, Stop, Hide). The animation STOPS ON ITS OWN after three
-// passes, which is why there is no pause control beside the sign-in form. See
-// CYCLES below and decisions-pending §30, including the part where three
-// passes does not get under the criterion's five-second threshold and two
-// would have.
+// ⚠ WCAG 2.2.2 (Pause, Stop, Hide) IS KNOWINGLY UNMET HERE. The loop runs
+// continuously, beside the sign-in form, with no control to stop it. That is a
+// recorded product decision and not an oversight: the criterion's mechanism was
+// built as a pause/play toggle, verified stopping every moving part, and then
+// removed as clutter. decisions-pending §30 carries the decision in the
+// product owner's own words, and the history of the three reversals that led
+// to it. Do not "fix" this by adding a control back without reading §30.
 //
-// REDUCED MOTION. No loop at all — the whole headline, at once, forever. This
-// is a JS-driven reveal rather than a CSS transition, so it cannot use the
-// `motion-safe:` variant the rest of the app uses; matchMedia is the
+// prefers-reduced-motion below is the one part of this that is NOT negotiable:
+// it stops the animation entirely and removes the caret, which is what keeps
+// the readers most affected covered while the page-level control is absent.
+//
+// REDUCED MOTION. No loop and no caret at all — the whole headline, at once.
+// This is a JS-driven reveal rather than a CSS transition, so it cannot use
+// the `motion-safe:` variant the rest of the app uses; matchMedia is the
 // equivalent, checked when the effect runs.
 
 import {
@@ -75,23 +81,10 @@ const DELETE_STEP_MS = 18;
 const DELETE_CAP_MS = 700;
 /** The beat on an empty line before it starts again. */
 const REST_MS = 500;
-/**
- * How many times it types before settling on the finished line.
- *
- * THREE, then it stops for good — the product owner's decision, recorded in
- * decisions-pending §30. It is the answer to WCAG 2.2.2 (Pause, Stop, Hide):
- * a perpetual loop beside a sign-in form needs a control to stop it, and a
- * stop button on a sign-in screen is more clutter than the effect is worth.
- * Stopping on its own removes the need for the control.
- *
- * ⚠ It does NOT bring the motion under 2.2.2's five-second threshold. Three
- * passes is about 8.8 seconds. Two would be about 4.8 and would satisfy the
- * criterion by duration; that trade was considered and declined. §30 carries
- * the numbers and the reasoning.
- */
-const CYCLES = 3;
 
 type Phase = 'typing' | 'holding' | 'deleting' | 'resting';
+/** The only non-looping state left: reduced motion, where nothing moves. */
+type Rest = 'stopped';
 
 @Component({
   selector: 'app-typewriter',
@@ -105,7 +98,18 @@ type Phase = 'typing' | 'holding' | 'deleting' | 'resting';
          own is not collapsed away. -->
     <span aria-hidden="true" class="whitespace-pre-wrap">
       @for (unit of units(); track $index) {
+        <!-- The caret goes BEFORE the first hidden grapheme, which is the
+             position just after the last visible one. Inline, so it needs no
+             direction: it is at the end of the revealed text in English and in
+             Arabic alike. aria-hidden again here as well as on the wrapper —
+             redundant, and worth saying out loud on a decorative box. -->
+        @if (showCaret() && $index === revealed()) {
+          <span aria-hidden="true" [class]="caretClasses()"></span>
+        }
         <span [class]="spanClasses()[$index]">{{ unit }}</span>
+      }
+      @if (showCaret() && revealed() >= units().length) {
+        <span aria-hidden="true" [class]="caretClasses()"></span>
       }
     </span>
   `
@@ -139,6 +143,28 @@ export class Typewriter implements OnDestroy {
 
   protected readonly revealed = signal(0);
 
+  /**
+   * The caret.
+   *
+   * Solid while characters are arriving or leaving — a real cursor does not
+   * blink mid-keystroke — and blinking at 530ms on, 530ms off while the line
+   * stands or waits. Since the loop is continuous, that means it blinks for as
+   * long as the screen is open, which is the point: the line is decorative but
+   * the cursor says the thing is live.
+   *
+   * Absent entirely under prefers-reduced-motion: a blinking box is the exact
+   * thing that preference exists to stop, and a static caret on a static line
+   * says nothing a reader needs.
+   */
+  private readonly phase = signal<Phase | Rest>('typing');
+  protected readonly showCaret = signal(true);
+  protected readonly caretClasses = computed(() => {
+    const p = this.phase();
+    return p === 'holding' || p === 'resting'
+      ? 'caret motion-safe:animate-caret-blink'
+      : 'caret';
+  });
+
   /** One complete class string per grapheme — never a static class plus a
    *  bound override, which would tie at equal specificity. */
   protected readonly spanClasses = computed(() => {
@@ -163,15 +189,20 @@ export class Typewriter implements OnDestroy {
 
       if (reduced || total === 0) {
         this.revealed.set(total);
+        this.showCaret.set(false);
+        this.phase.set('stopped');
         return;
       }
+
+
+      this.showCaret.set(true);
+      this.phase.set('typing');
 
       const typeStep = Math.min(TYPE_STEP_MS, TYPE_CAP_MS / total);
       const deleteStep = Math.min(DELETE_STEP_MS, DELETE_CAP_MS / total);
 
       let phase: Phase = 'typing';
       let phaseStart = performance.now();
-      let pass = 1;
       this.revealed.set(0);
 
       // rAF rather than setInterval: it stays on the frame clock, it does not
@@ -184,26 +215,20 @@ export class Typewriter implements OnDestroy {
           case 'typing': {
             const n = Math.min(total, Math.floor(elapsed / typeStep));
             this.revealed.set(n);
-            if (n >= total) {
-              // The last pass settles here and never schedules another frame,
-              // so the page is genuinely static afterwards rather than running
-              // an idle loop nobody can see.
-              if (pass >= CYCLES) { this.frame = 0; return; }
-              phase = 'holding'; phaseStart = now;
-            }
+            if (n >= total) { phase = 'holding'; phaseStart = now; this.phase.set(phase); }
             break;
           }
           case 'holding':
-            if (elapsed >= HOLD_MS) { phase = 'deleting'; phaseStart = now; }
+            if (elapsed >= HOLD_MS) { phase = 'deleting'; phaseStart = now; this.phase.set(phase); }
             break;
           case 'deleting': {
             const n = Math.max(0, total - Math.floor(elapsed / deleteStep));
             this.revealed.set(n);
-            if (n <= 0) { phase = 'resting'; phaseStart = now; }
+            if (n <= 0) { phase = 'resting'; phaseStart = now; this.phase.set(phase); }
             break;
           }
           case 'resting':
-            if (elapsed >= REST_MS) { pass++; phase = 'typing'; phaseStart = now; }
+            if (elapsed >= REST_MS) { phase = 'typing'; phaseStart = now; this.phase.set(phase); }
             break;
         }
 
