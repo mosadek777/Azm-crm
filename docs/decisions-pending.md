@@ -2701,3 +2701,82 @@ produces horizontal scroll** — it degrades by wrapping, and because height is
 computed from the complete string the wrap does not destabilise anything. 390px
 is this project's stated floor, so this is on spec; shortening further to hold
 360px is available if the floor moves.
+
+
+---
+
+## 31. Spec defect — `008 E-08` and `002 FR-022` disagree about when the reopen window starts
+
+**Found 2026-09-27 while building `002 FR-031` (the customer confirms closure).
+Reported, NOT resolved.** Recorded here beside §7 (`Team` defined nowhere) and
+§11 (the shared contact point), because it is the same kind of thing: two
+sources that cannot both be right, where the code today does a third thing that
+neither describes.
+
+### The two statements
+
+| Source | Says |
+|---|---|
+| `008 §6 E-08` | *"Customer replies to a `resolved` ticket within the reopen window \| The ticket reopens per `FR-009`."* — the window is open while the ticket is **`resolved`** |
+| `002 FR-022` | *"A customer reply within the configured reopen window MUST transition the ticket **out of closure** retaining its reference."* |
+| `002 AS-11` | *"Given a ticket **`closed` 5 days ago** with a 14-day window…"* |
+| `002 [CLARIFY-4]`, resolved 2026-09-07 (decision 10) | *"**Runs from `closed`**, resolving an internal contradiction… §3 has been amended to agree with `FR-022` and `AS-11`."* |
+
+So `002` was already internally inconsistent once, and decision 10 fixed it **in
+`002` only**. `008 E-08` was never revisited and still describes the behaviour
+`002 §3` was amended away from. The 2026-09-07 amendment closed a contradiction
+inside one spec and opened one between two.
+
+### Why it matters rather than being a wording nit
+
+The two readings give a customer a different product:
+
+- **Under `E-08`**, a resolved ticket is reopenable, so replying to one is a
+  lifecycle action and the reply route has to decide whether to transition.
+- **Under `002`/decision 10**, a resolved ticket is just an open ticket in a
+  late status; replying is an ordinary reply, and reopening only ever applies
+  to a `closed` one.
+
+They also disagree about how long the customer has. Under `002` the total is
+*confirmation-to-closure plus 14 days*; under `E-08` the clock is already
+running while the ticket sits `resolved`, which on this product is indefinite,
+because **decision 9 removed automatic closure** — nothing moves a ticket from
+`resolved` to `closed` except the customer confirming. So `E-08` read literally
+gives an unbounded reopen window, which is certainly not what either spec meant.
+
+### ⚠ What the code does today, which is neither
+
+**A reply to a `resolved` ticket is accepted and nothing else happens.** It is
+not terminal, so `portal-ticket.service.js` appends the message and returns; the
+ticket stays `resolved`, no reopen occurs, and the customer is told nothing.
+
+That is worth saying out loud: it is not "the `002` behaviour" and it is not
+"the `E-08` behaviour". It is the absence of both, and it looks like working
+software from the outside. A customer who replies to a resolved request to say
+*"this is not fixed"* gets a thread entry, no status change and no
+acknowledgement that anything is now different.
+
+`002 FR-031`'s confirmation path (built 2026-09-27) **narrows the exposure
+without closing it**: a customer who is satisfied now has an action, so the
+common case reaches `closed` deliberately. The dissatisfied case — reply on a
+resolved ticket — is still the third behaviour above.
+
+### Not resolved here, and why
+
+Either answer is a real product decision, not a reading:
+
+- **Amend `008 E-08`** to say `closed`, making it agree with decision 10. Cheap,
+  and consistent with the rest of both specs — but it is `008`'s own edge-case
+  table being overruled by another spec's clarification, which is exactly the
+  sort of silent resolution the constitution's Governance section forbids doing
+  without recording who decided.
+- **Amend `002`** so the window runs from `resolved`. Reverses a ratified
+  decision (10), and with no auto-close it needs a bound of its own.
+
+Both need the client, because the question underneath is *how long after we say
+it is fixed may a customer say it is not* — a support-policy question, not a
+technical one. It joins `008 [CLARIFY-3]` and the category tree as a question
+written for them rather than answered here.
+
+**Blocks:** `008 FR-009`, `008 E-08`, `002 FR-022`, and the reply-to-resolved
+behaviour above. Board card: `reopen-window-start-contradiction`.

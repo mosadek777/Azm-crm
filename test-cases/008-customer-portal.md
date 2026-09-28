@@ -360,6 +360,28 @@ currently **refuses** a reply to a closed request with an explanation rather
 than guessing which behaviour was intended — the refusal is deliberate and
 tested.
 
+⚠ **Two corrections to the preconditions above, recorded 2026-09-27.**
+
+**First, the window starts at CLOSURE, not at resolution**, so "a request
+resolved within the reopen window" is not a state this product can produce on
+its own — a resolved request has no window running yet. Reaching the
+precondition now takes a step that did not exist before: the **customer
+confirms closure** (`002 FR-031`, built 2026-09-27), which is the only path to
+`closed` anywhere in the product.
+
+**Second, the two specifications disagree about exactly that**, and this case
+cannot be written correctly until they are reconciled. `008 E-08` says a reply
+to a **`resolved`** request reopens it; `002 FR-022`, `AS-11` and decision 10
+all run the window from **`closed`**. Recorded as a spec defect in
+`decisions-pending.md` §31 and **not resolved** — it is a support-policy
+question for the client.
+
+⚠ **And the behaviour today is a third thing neither describes:** a reply to a
+`resolved` request is accepted, changes nothing, and tells the customer nothing.
+That is the gap worth knowing about, because from the outside it looks like it
+worked.
+
+
 ---
 
 ## CP-10 — Informed without being spammed
