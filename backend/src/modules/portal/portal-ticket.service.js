@@ -29,7 +29,8 @@ import { nextTicketReference } from '../../DB/models/counter.model.js'
 import { recordAudit } from '../../utils/audit.js'
 import { customerActorRef } from './portal.service.js'
 import { portalScope } from '../../middlewares/portal-auth.middleware.js'
-import { STATUSES, isTerminal } from '../../utils/ticket-status.js'
+import { isTerminal } from '../../utils/ticket-status.js'
+import { labelMap } from '../config/label.service.js'
 import { elapsedBusinessMinutes } from '../../utils/elapsed-time.js'
 
 const NOT_FOUND = {
@@ -45,15 +46,30 @@ const NOT_FOUND = {
 // `owningTeam` is absent because Team is not built (decision 20, extended to
 // this surface by decision 35). FR-003 requires it, so this response does not
 // yet satisfy FR-003 in full and the gap is recorded rather than filled.
-const publicTicket = (t) => ({
+const publicTicket = (t, labels) => ({
   _id: t._id,
   reference: t.reference,
   subject: t.subject,
   status: t.status,
-  // §8: the customer-facing label comes from 002 §3's Status entity, which
-  // carries label_ar and label_en. The code's status map has no labels yet
-  // (remaining.md A1), so the key is sent and the client renders what it can.
-  statusLabel: STATUSES[t.status]?.label ?? null,
+  // §8: "Customer-facing status labels | Required | Required | Sourced from
+  // spec 002 status labels, not re-authored here." They come from the
+  // TicketLabel collection through labelMap() — the same source /ticket/meta
+  // reads — so an administrator's edit reaches the customer without a release.
+  //
+  // BOTH LANGUAGES ARE SENT AND THE SERVER NEVER PICKS ONE. Constitution I
+  // admits no fallback, so choosing here would mean choosing on behalf of a
+  // customer whose language this code does not have. The client renders the
+  // one its language service is in.
+  //
+  // ⚠ THIS READ `STATUSES[t.status]?.label` UNTIL 2026-09-27, AND THAT WAS
+  // ALWAYS NULL. utils/ticket-status.js has never carried a label — it holds
+  // pausesSla, terminal and requiresResolutionFields and nothing else. So every
+  // portal response sent statusLabel: null, both portal screens fell through to
+  // their `?? t.status` fallback, and an Arabic customer read "resolved". The
+  // labels arrived on 2026-09-14 with 010 FR-011 and this call site was never
+  // moved onto them. Nothing failed, because nothing asserted it — portal.test.js
+  // now does, which is what stops the regression repeating.
+  statusLabel: labels.status[t.status] ?? null,
   priority: t.priority,
   category: t.category,
   createdAt: t.createdAt,
@@ -87,13 +103,17 @@ export const listMyTickets = async (req, res, next) => {
       filter.status = { $in: String(req.query.status).split(',').map(s => s.trim()) }
     }
 
-    const [tickets, total] = await Promise.all([
+    const [tickets, total, labels] = await Promise.all([
       Ticket.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),
-      Ticket.countDocuments(filter)
+      Ticket.countDocuments(filter),
+      labelMap()
     ])
 
     return res.json({
-      tickets: tickets.map(publicTicket),
+      // NOT `tickets.map(publicTicket)`: map passes (element, INDEX, array), so
+      // the row number would arrive as `labels` and every label read would throw
+      // on a number. Written out rather than point-free for that reason.
+      tickets: tickets.map(t => publicTicket(t, labels)),
       total,
       page,
       limit
@@ -145,7 +165,7 @@ export const getMyTicket = async (req, res, next) => {
       .sort({ sentAt: 1 })
 
     return res.json({
-      ticket: publicTicket(ticket),
+      ticket: publicTicket(ticket, await labelMap()),
       messages: messages.map(publicMessage)
     })
   } catch (err) { return next(err) }
@@ -296,7 +316,7 @@ export const submitTicket = async (req, res, next) => {
     } finally { await session.endSession() }
 
     const created = await Ticket.findById(ticketId)
-    return res.status(201).json({ ticket: publicTicket(created) })
+    return res.status(201).json({ ticket: publicTicket(created, await labelMap()) })
   } catch (err) { return next(err) }
 }
 

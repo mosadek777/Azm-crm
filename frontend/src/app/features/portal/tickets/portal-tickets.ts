@@ -29,6 +29,25 @@ export class PortalTickets {
   protected readonly tickets = signal<PortalTicket[]>([]);
   protected readonly loading = signal(true);
 
+  /**
+   * The customer-facing status label — 008 FR-003, §8, constitution I.
+   *
+   * NO FALLBACK BETWEEN LANGUAGES. The server sends both and never chooses, so
+   * this only ever picks the one the interface is in. A status key with no
+   * configured label renders the same visible marker LanguageService.translate
+   * uses for a missing dictionary key — never the raw key, because a raw key is
+   * exactly the defect this replaced: an Arabic customer reading `resolved`.
+   *
+   * Duplicated from the detail screen deliberately, following the `label()`
+   * idiom already used by branches, departments, users and the staff thread. A
+   * shared pipe would be the change to make when a fifth caller appears.
+   */
+  protected statusLabel(t: PortalTicket): string {
+    const label = t.statusLabel;
+    if (!label) return `⟦missing label: ${t.status}⟧`;
+    return this.i18n.lang() === 'ar' ? label.ar : label.en;
+  }
+
   constructor() {
     this.api.myTickets().subscribe({
       next: response => {

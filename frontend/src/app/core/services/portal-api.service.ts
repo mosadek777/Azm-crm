@@ -10,6 +10,7 @@
 
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { LocalizedText } from '../models/user.model';
 
 const API = 'http://localhost:3000';
 
@@ -24,9 +25,13 @@ export interface PortalTicket {
   reference: string;
   subject: string;
   status: string;
-  // Null until the status labels exist in code (remaining.md A1). 002 §3's
-  // Status entity defines label_ar and label_en; the code's map has neither yet.
-  statusLabel: string | null;
+  // BILINGUAL, both languages always present — 008 §8, constitution I. The
+  // server sends the pair and never chooses between them, so the screen renders
+  // the language it is in and there is no fallback anywhere in the path.
+  //
+  // Still nullable, and deliberately: a status key with no configured label is
+  // possible in principle, and the screens say so visibly rather than blanking.
+  statusLabel: LocalizedText | null;
   priority: string;
   category: string;
   createdAt: string;

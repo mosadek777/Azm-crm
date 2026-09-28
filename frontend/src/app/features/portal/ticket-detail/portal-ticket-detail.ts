@@ -81,6 +81,21 @@ export class PortalTicketDetail {
   protected readonly loading = signal(true);
   protected readonly notFound = signal(false);
 
+  /**
+   * The customer-facing status label — 008 FR-003, §8, constitution I.
+   *
+   * NO FALLBACK BETWEEN LANGUAGES. The server sends both and never chooses, so
+   * this only ever picks the one the interface is in. A status key with no
+   * configured label renders the same visible marker LanguageService.translate
+   * uses for a missing dictionary key — never the raw key, because a raw key is
+   * exactly the defect this replaced: an Arabic customer reading `resolved`.
+   */
+  protected statusLabel(t: PortalTicket): string {
+    const label = t.statusLabel;
+    if (!label) return `⟦missing label: ${t.status}⟧`;
+    return this.i18n.lang() === 'ar' ? label.ar : label.en;
+  }
+
   // FR-004. There is no visibility control, and its absence is the point: a
   // customer reply is always visible to both sides and the route has no code
   // path that could make it internal.

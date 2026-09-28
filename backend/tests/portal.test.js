@@ -104,6 +104,44 @@ chk('no message carries an author name (002 [CLARIFY-6], decision 29)', JSON.str
 chk('no assignee is disclosed', 'assignedAgentId' in (portalView.body?.ticket ?? {}), false)
 chk('a message says only whether it is theirs or ours', portalView.body?.messages?.every(m => ['you', 'support'].includes(m.from)), true)
 
+console.log('\n--- FR-003 / §8: the customer-facing status label, in both languages ---')
+//
+// THE CHECK THAT WOULD HAVE CAUGHT THE ORIGINAL DEFECT, and did not exist.
+// publicTicket read `STATUSES[t.status]?.label` from the day it was written.
+// utils/ticket-status.js has never carried a label, so the expression was
+// always undefined, every response sent `statusLabel: null`, and both portal
+// screens fell through to their `?? t.status` fallback — an Arabic customer
+// read "resolved". Nothing went red, because every check in this suite asserted
+// things AROUND the label and never the label itself.
+const label = portalView.body?.ticket?.statusLabel
+chk('a label is sent at all — this is the field that was null', label === null, false)
+chk('Arabic is present and non-empty', typeof label?.ar === 'string' && label.ar.length > 0, true)
+chk('English is present and non-empty', typeof label?.en === 'string' && label.en.length > 0, true)
+// Constitution I: a language-neutral key is not a label. Asserted two ways,
+// because echoing the key back is the shape a careless "fix" would take.
+chk('the label is not the key echoed back', label?.en === portalView.body?.ticket?.status, false)
+chk('it is the configured Arabic label', label?.ar, 'جديدة')
+chk('the key is still sent beside it, language-neutral', portalView.body?.ticket?.status, 'new')
+
+// The LIST is the other surface a customer reads, and it regressed identically.
+// Asserting the detail alone would leave half the defect in place.
+const labelledList = (await call('GET', '/portal/ticket', { token: ct })).body?.tickets ?? []
+chk('the list returns rows at all — otherwise every() below is vacuous', labelledList.length > 0, true)
+chk('and every row carries both languages', labelledList.every(t => !!t.statusLabel?.ar && !!t.statusLabel?.en), true)
+
+// READ FROM THE CONFIGURATION, NOT FROM A SECOND CONSTANT. This is what
+// separates a real fix from moving the hardcoded value to a different file:
+// 010 FR-011 requires an administrator's edit to land "with no release
+// required", so the customer's very next read must show it.
+const relabelled = await call('PATCH', '/config/labels/status/new', { token: root, body: { label: { ar: 'مستلمة', en: 'Received' } } })
+chk('an administrator may edit the label', relabelled.status, 200)
+const afterEdit = await call('GET', `/portal/ticket/${myTicket._id}`, { token: ct })
+chk("the customer's next read shows the edit, in English", afterEdit.body?.ticket?.statusLabel?.en, 'Received')
+chk('and in Arabic', afterEdit.body?.ticket?.statusLabel?.ar, 'مستلمة')
+chk('the KEY did not move with it (002 §8: the key is stable)', afterEdit.body?.ticket?.status, 'new')
+// Restored, so no later check in this file depends on the order it ran in.
+await call('PATCH', '/config/labels/status/new', { token: root, body: { label: { ar: 'جديدة', en: 'New' } } })
+
 // spec 002's FR-034, not 008's — this suite covers 008, so the cross-spec
 // reference is qualified. 008 has no FR-034.
 console.log('\n--- spec 002 FR-034 / constitution III: no duration is computed ---')
