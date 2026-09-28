@@ -31,11 +31,27 @@
       }
     </p>
 
-    <!-- User-authored content: single language, direction detected per message
-         by the browser rather than forced (spec 012 AS-05). `whitespace-pre-wrap`
-         so the line breaks somebody typed survive — they did on the portal and
-         were collapsed on the staff side, which is one of the differences this
-         component removes. -->
-    <p class="m-0 whitespace-pre-wrap text-sm text-surface-900">{{ body() }}</p>
+    <!-- User-authored content: single language, and its direction is the
+         MESSAGE's, not the interface's.
+
+         `dir="auto"` is what makes that true, and it is load-bearing rather
+         than decorative. 008 AS-10: "a ticket thread containing both Arabic and
+         English messages renders each message in its own direction."
+
+         ⚠ THIS COMMENT USED TO CLAIM THE BEHAVIOUR WITHOUT IMPLEMENTING IT —
+         it said direction was "detected per message by the browser rather than
+         forced", and no dir attribute existed anywhere in this component, so
+         every message simply inherited the page. Browsers do NOT detect
+         direction on their own; `auto` is the opt-in, and it resolves from the
+         first strongly-directional character. Measured before the fix, at
+         1400px: an Arabic reply inside the English interface computed
+         direction:ltr and hung its full stop on the left; an English reply
+         inside the Arabic interface computed direction:rtl and did the same
+         with its question mark. Both are the exact defect AS-10 names.
+
+         `whitespace-pre-wrap` so the line breaks somebody typed survive — they
+         did on the portal and were collapsed on the staff side, which is one of
+         the differences this component removes. -->
+    <p dir="auto" class="m-0 whitespace-pre-wrap text-sm text-surface-900">{{ body() }}</p>
   </article>
 </li>

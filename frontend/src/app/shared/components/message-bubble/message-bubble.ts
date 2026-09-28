@@ -22,7 +22,15 @@
 //
 // THE SIDE RULE IS THE SAME ON BOTH: the customer's words at the START edge,
 // the organisation's at the END edge. Expressed with logical properties, so the
-// whole conversation mirrors in Arabic with no second stylesheet.
+// whole conversation mirrors in Arabic with no second stylesheet. Verified by
+// measurement in both languages: in English the customer's bubble sits at x=157
+// and ours at x=1243; in Arabic those swap exactly.
+//
+// DIRECTION IS PER MESSAGE, NOT PER PAGE. The body carries `dir="auto"` — see
+// the template, where the whole reason is written down. A thread mixing Arabic
+// and English renders each message in its own direction (008 AS-10), which is
+// independent of which SIDE the message sits on: side is who wrote it,
+// direction is what script they wrote in.
 //
 // COLOUR IS NEVER THE ONLY SIGNAL. The two sides differ by side, background,
 // border AND a named label. An internal note additionally carries a start-rule
