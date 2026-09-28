@@ -1556,6 +1556,148 @@
       ],
       "status": "not started",
       "description": "ANALYSED IN FULL, NOT BUILT. docs/decisions-pending.md section 28 goes through all twenty-five requirements of spec 009 and says which are buildable today and which are not, with the reason for each.\n\nBUILDABLE: ticket volume by period and by branch, department, category, priority or status; backlog as a point-in-time count; top categories with period-on-period change; branches and departments side by side. Plus the cross-cutting requirements that apply to whatever is built — filtering, drill-down to the list that reproduces each figure, bilingual metric definitions, retired dimension values kept as their own marked row, data freshness, and the caller scope on every aggregate. No cell in any of it reads unavailable.\n\nNOT BUILDABLE, fourteen of the twenty-five: anything whose headline figure is a duration or a breach state. SLA compliance, per-agent performance, satisfaction, the executive dashboard, first-contact resolution, channel comparison, knowledge deflection, scheduled reports, the report builder, threshold alerts, the wallboard, forecasting, the per-customer SLA report, and the pause-proportion report.\n\nTHE RULE THAT DECIDES THE SPLIT, from the project owner: a report showing unavailable where the number should be looks broken rather than blocked, so those are not shipped at all rather than shipped with empty columns.\n\nTHREE JUDGEMENT CALLS ARE ARGUED IN SECTION 28 and should be read before starting: why backlog ageing buckets are NOT built even though calendar age looks safe to compute; why there is no per-agent breakdown anywhere (009 CLARIFY-5 is an employment question that blocks the permission matrix, and grouping by person would mean inventing an answer); and why volume is not a duration.\n\nA DRAFT OF THE SERVICE WAS WRITTEN AND REVERTED on 2026-09-16 because it was wired to nothing — no route, no test, no screen — and the project stopped. It is in git history if wanted. One warning if it is recovered: its resolvePeriod helper had an unfinished placeholder that read every branch regardless of the caller scope. Harmless there because it only chose a timezone, but it must not be copied forward."
+    },
+    {
+      "key": "portal-status-names-are-codes",
+      "name": "Status names show as internal codes on the staff screens",
+      "tags": [
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "A request has a status, and each status has a proper name in Arabic and English that an administrator can edit. The staff ticket list and ticket page ignore those names and print the internal code instead — an Arabic-speaking agent reads \"pending_supplier\" rather than \"بانتظار المورِّد\".\n\nThe customer half of this was the same defect and was worse, because it faced people outside the organisation: the customer portal printed \"resolved\" to a customer reading Arabic. That half was fixed on 27 September and is covered by an automated check, including one that confirms an administrator's edit reaches a customer's very next page load.\n\nThe staff half is display work only. The proper names are already on the response the screens receive; the templates simply do not read them."
+    },
+    {
+      "key": "portal-search-and-filter",
+      "name": "Customers cannot search or filter their own requests",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "done",
+      "description": "A customer can see the list of their requests, open and closed, and can open any one of them. Until 27 September they could not search it and could not narrow it — fine at five requests and unusable at fifty, when finding what happened last time without telephoning is the whole point of the portal.\n\nBuilt and demonstrated in both languages: a search box that matches the subject anywhere in it and a reference from its start, and a status filter offering only the statuses that customer actually has — a filter that can only ever return nothing is not a filter. Both narrow on the server rather than in the browser.\n\nThe search behaves exactly as the staff one does, on purpose. Two search implementations over one set of records is how the two sides of the product come to disagree about what matches.\n\nTwo confidentiality checks were written by deliberately breaking the code first and confirming they went red: one where a search reaches past the customer it belongs to, and one where the list of available filters is built from everybody's requests rather than that customer's — a smaller leak, and the kind nobody notices.\n\nNot included: matching Arabic text written with and without diacritics, which is a known gap on both sides of the product and is tracked on its own card."
+    },
+    {
+      "key": "portal-confirm-closure",
+      "name": "The customer confirms a resolved request is finished",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "done",
+      "description": "When support marks a request resolved, that is our opinion, not the customer's. Closing it is the customer's to confirm, and until 27 September they had no way to do it — a resolved request sat on the customer's screen offering no action at all and saying nothing about why.\n\nBuilt and demonstrated in both languages: a resolved request now explains its state and offers one action, and confirming it closes the request. It is the only way a request reaches \"closed\" anywhere in the product, because automatic closure after a grace period was deliberately not built — a grace period counted in working days needs the working-hours calendar, which is still an open question with the client.\n\nThe action is deliberately narrow. It carries no parameters, so it can move a request from resolved to closed and cannot express any other change.\n\nTwo things a customer still cannot do from that screen are tracked separately: reopening a closed request, and rating the experience."
+    },
+    {
+      "key": "portal-withdraw-a-request",
+      "name": "Customers cannot withdraw a request they no longer need",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "Somebody raises a request, sorts it out themselves an hour later, and has no way to tell us. An agent then spends time on work that nobody needs any more.\n\nWithdrawing cancels the request and tells the agent holding it. It is available only before the request is resolved — once we have said it is fixed, the customer confirms or reopens rather than withdraws, which is a different action and is tracked separately.\n\nOne detail that is specified and easy to miss: if an agent is part-way through writing a reply when the customer withdraws, the withdrawal still succeeds and the agent's half-written reply is preserved rather than thrown away.\n\nNothing blocks this. It has simply never been scheduled, and it had no card."
+    },
+    {
+      "key": "portal-profile-self-service",
+      "name": "Customers cannot see or correct their own details",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "A customer can sign in, but cannot see what we hold about them and cannot correct any of it. A changed telephone number means telephoning us to have an agent type it in — which is one more contact of exactly the kind the portal is meant to remove, and it is also how records go stale.\n\nWhat they should be able to see and change: their own contact details, which language they want to be addressed in, and how they prefer to be contacted. Every change is recorded against their record and attributed to them, so it is visible afterwards who changed what and when — the same trail a staff edit leaves.\n\nHalf of it exists already: the portal reads the customer's own record on every page. Nothing can be edited."
+    },
+    {
+      "key": "portal-organisation-visibility",
+      "name": "A corporate contact cannot see their colleagues' requests",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "Where a company deals with us through several people, one of them typically needs to see everything their organisation has raised rather than only what they personally submitted. Today every customer sees strictly their own requests and there is no way to grant more.\n\nIt is a permission staff grant, never something a customer can turn on, and it defaults to off. Revoking it has to take effect immediately: a request that was visible must disappear from the list and stop opening, not linger until the next sign-in.\n\nThe reading half is already written and deliberately unreachable — the rule that widens what a customer sees is in place and nothing can currently switch it on, so there is no path by which it could widen anything by accident. What is missing is the grant itself and the screen staff would use.",
+      "blocker": "Two questions for the client, neither of them technical. Who decides which colleagues a contact may see — us, or somebody at their end? And may that visibility cross branches, where an organisation deals with more than one of ours? The second one decides whether a staff member can grant something wider than their own remit, which is a rule we will not invent."
+    },
+    {
+      "key": "portal-notification-preferences",
+      "name": "Customers cannot choose which updates they get, or where",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "A customer should be able to say which events they want to hear about and on which channel — email but not SMS, replies but not every status change. Today there is no such screen and no such setting.\n\nOne rule matters more than the rest and is easy to get wrong: a channel the customer has not consented to must not be OFFERED as a preference at all. Not shown and disabled, not shown and refused on save — absent, so nobody can turn on a channel we are not permitted to use.\n\nThis is distinct from the separate card about actually delivering those updates. That one is about sending; this one is about the customer's ability to choose, and neither exists.",
+      "blocker": "No message channel exists yet — there is nothing to express a preference between, and no delivery for a preference to govern. Also partly waiting on the privacy and consent questions already with the client, because consent is what decides which channels may be offered."
+    },
+    {
+      "key": "portal-ticket-summary-export",
+      "name": "Customers cannot download or print a request",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "Somebody who needs a record of a request for their own files — to forward internally, to attach to an expense claim, to keep — has no way to get one out of the portal except by selecting the page and copying it.\n\nThe export must contain only what the customer is already allowed to see. No internal note and no staff identity may appear in it, which makes it one more surface the confidentiality rule has to hold on, and it needs its own check rather than relying on the checks covering the screen.\n\nTwo details that are specified and are usually got wrong: the document reads right-to-left for an Arabic customer, and a thread mixing the two languages keeps each message in its own direction inside that document. Attachment names in Arabic must survive intact."
+    },
+    {
+      "key": "portal-announcements",
+      "name": "No way to tell customers about a known problem",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "When something is broken for everybody, every affected customer raises their own request about it, and each one is handled individually. A notice on the portal would stop most of those being raised at all.\n\nStaff publish a notice with a display period, optionally aimed at one branch or department, and customers see it whether or not they are signed in.\n\nOne rule to build in from the start rather than retrofit: a notice published in only one language is not shown to customers reading the other, and the person publishing is warned at the time. A half-translated outage notice is worse than none, because the customers who cannot read it are the ones who then telephone.",
+      "blocker": "Partly waiting on the client, together with portal branding: which domain the portal lives on, who controls it, and whether a public service-status page is wanted for launch. The in-portal notice could be built before those are answered; the status page could not."
+    },
+    {
+      "key": "portal-complaint-path",
+      "name": "A complaint goes into the same queue as a routine question",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "Somebody who is seriously unhappy has no way to say so when they raise a request. Their complaint is queued behind routine questions and reaches whoever picks it up next, with nothing marking it as the thing that most needs a manager's attention.\n\nThat is the case where slow handling does the most damage, and it is currently the case with the least attention designed into it.",
+      "blocker": "A question for the client, and the answer changes the size of the work considerably. Is a complaint a distinct kind of request with its own handling times and its own escalation path, or is it an ordinary request carrying a flag? The first is a subsystem; the second is a field and a filter."
+    },
+    {
+      "key": "reopen-window-start-contradiction",
+      "name": "Two specifications disagree about when a request can be reopened",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "The customer portal specification says a customer replying to a RESOLVED request reopens it. The ticket specification says the window runs from CLOSED, and that was settled in writing earlier this month at fourteen calendar days from closure. Both cannot be right.\n\nThey give a customer a different product. They also disagree about how long the customer has, and read literally the first gives an unlimited window: nothing moves a request from resolved to closed except the customer confirming, so a resolved request can sit there indefinitely.\n\nWHAT THE SOFTWARE DOES TODAY IS A THIRD THING, and it is the reason this is a card rather than a note. A customer replying to a resolved request has their message accepted, the request does not change state, and they are told nothing. It is not either specified behaviour — it is the absence of both, and from the outside it looks like it worked. A customer writing \"this is still not fixed\" gets silence.\n\nLetting the customer confirm closure, built on 27 September, narrows this: somebody satisfied now has a proper action. Somebody dissatisfied still hits the third behaviour.",
+      "blocker": "A question for the client, and it is about support policy rather than software: how long after we say a request is fixed may a customer tell us it is not? Either answer means amending a specification, so neither should be chosen by the delivery team on its own."
+    },
+    {
+      "key": "portal-category-names-are-english-only",
+      "name": "The request form offers Arabic customers an English-only list",
+      "tags": [
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "A customer raising a request has to choose what it is about from a short list. That list is hard-coded English — \"Billing / Refund\", \"Technical\", \"Account\" — and is shown unchanged to a customer using the portal in Arabic.\n\nIt is the one remaining place in the customer portal where somebody is shown English they did not ask for, and it is on the form every new request goes through.\n\nIt has NOT been patched by writing our own Arabic for those five values, deliberately. Inventing the names would put guessed wording in front of customers and would also put it into the data that the categories migration has to map, making that job worse. The fix is the real list, from the people who use it.",
+      "blocker": "Waiting on the client, as part of the categories question already sent to them. That document now asks explicitly for every category name in both languages, given by somebody whose Arabic is native, and explains that this defect is why it is not optional."
+    },
+    {
+      "key": "portal-confirm-closure-notification",
+      "name": "Nobody is told when a customer closes their own request",
+      "tags": [
+        "backend"
+      ],
+      "status": "not started",
+      "description": "A customer can now confirm that a resolved request is finished, which closes it. The agent who did the work is not told that their work was accepted.\n\nIt is recorded — the request's history shows the closure and names the customer as the person who caused it — so nothing is lost. But an agent has to go and look, and the most useful moment to know is when it happens.\n\nThis is deliberately not built rather than overlooked. The list of events that generate a notification is fixed and written down, and a customer closing a request is not among them; neither specification asks for one. Adding a new kind of notification would mean inventing a requirement, which this project does not do at the keyboard. If it is wanted, it is a small change to the specification first and a small change to the code after."
+    },
+    {
+      "key": "ticket-merge",
+      "name": "Duplicate requests cannot be merged, linked or split",
+      "tags": [
+        "backend",
+        "frontend"
+      ],
+      "status": "not started",
+      "description": "When the same customer raises the same problem twice — by telephone and again through the portal — there are two requests and no way to join them. Both get worked, the customer is answered twice, and the request count overstates the real workload.\n\nThree related things are all missing:\n\nMERGING folds one request into another. Both conversations interleave in true date order, each message keeps a note of which request it came from, and the reference the customer already quoted still finds the surviving request rather than failing. That last part matters: a reference we have given somebody must never stop working.\n\nLINKING records that two requests are related, duplicates of one another, or that one is waiting on the other, without folding them together.\n\nSPLITTING takes selected messages out of a request into a new one, for when somebody raises three unrelated problems in one message.\n\nTwo things elsewhere are waiting on the linking half. Reopening a request after the window has passed is specified to create a NEW request joined to the old one, and it cannot without links. And a customer viewing a request that gets merged while they are looking at it is supposed to follow to the surviving one — today there is nothing to follow to.\n\nThis had no card at all, while the project's own coverage register has been citing one by name for months — the reference pointed at nothing. Found on 28 September while checking that every board reference in the codebase resolves."
     }
   ],
   "retiredIds": []
