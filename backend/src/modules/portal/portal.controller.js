@@ -138,4 +138,24 @@ router.post('/ticket', authenticatePortal, portalticketservice.submitTicket)
  */
 router.post('/ticket/:id/message', authenticatePortal, portalticketservice.replyToTicket)
 
+/**
+ * @swagger
+ * /portal/ticket/{id}/confirm-closure:
+ *   post:
+ *     summary: Confirm that a resolved request is finished (spec 002 FR-031; 002 §9 "Close: confirm only")
+ *     description: >
+ *       The ONLY route in the product that reaches status `closed`. Decision 9
+ *       removed automatic closure until spec 005 exists, so closure happens on
+ *       explicit customer confirmation and nowhere else. Takes no body: there is
+ *       no status parameter, so this endpoint cannot move a ticket anywhere but
+ *       from `resolved` to `closed`.
+ *     tags: [Portal]
+ *     parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+ *     responses:
+ *       200: { description: 'Closed. The audit entry is written in the same transaction and attributed to the customer (008 FR-020)' }
+ *       401: { description: Sign-in required }
+ *       404: { description: 'Not found, or belongs to another customer (AS-02) — recorded as a security event' }
+ *       409: { description: 'The request is not `resolved`, so there is nothing to confirm. Reopening (008 FR-009) and withdrawal (008 FR-014) are separate actions and neither is built' }
+ */
+router.post('/ticket/:id/confirm-closure', authenticatePortal, portalticketservice.confirmClosure)
 export default router

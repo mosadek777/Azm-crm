@@ -223,6 +223,62 @@ chk("cannot reply on another customer's ticket", foreignReply.status, 404)
 chk('the refusal is the same 404 as a read', JSON.stringify(foreignReply.body), JSON.stringify(foreign.body))
 chk('and nothing was written to it', (await call('GET', `/ticket/${theirTicket._id}`, { token: sara })).body?.messages?.every(m => !m.body.includes('let me in')), true)
 
+console.log('\n--- 002 FR-031: the customer confirms closure (002 §9 "Close: confirm only") ---')
+//
+// The only path to `closed` in the product: decision 9 removed automatic
+// closure until spec 005 exists, so if this route is wrong nothing else closes
+// a ticket. Every refusal below is paired with the success that proves the
+// endpoint works at all.
+const closable = (await call('POST', '/ticket', { token: sara, body: { customerId: mine._id, subject: 'Ready to close', description: 'Fixed.', category: 'Billing', priority: 'normal' } })).body.ticket
+
+// REFUSED BEFORE IT IS RESOLVED. This is the check that makes the 200 below
+// mean something: without it, a route that closed anything from any status
+// would pass the success case just as happily.
+const tooEarly = await call('POST', `/portal/ticket/${closable._id}/confirm-closure`, { token: ct })
+chk('a `new` request cannot be confirmed closed', tooEarly.status, 409)
+chk('...and the refusal names the status it is actually in', tooEarly.body?.status, 'new')
+chk('...and the ticket did NOT move', (await call('GET', `/ticket/${closable._id}`, { token: sara })).body?.ticket?.status, 'new')
+
+// §11 on this write path too, before it is reachable by status: another
+// customer's ticket is not-found, byte-identical to a genuinely absent one.
+await call('PATCH', `/ticket/${theirTicket._id}/status`, { token: sara, body: { status: 'in_progress' } })
+await call('PATCH', `/ticket/${theirTicket._id}/status`, { token: sara, body: { status: 'resolved' } })
+const foreignClose = await call('POST', `/portal/ticket/${theirTicket._id}/confirm-closure`, { token: ct })
+chk("cannot confirm closure on another customer's ticket", foreignClose.status, 404)
+chk('...and the refusal is the same 404 body as a read', JSON.stringify(foreignClose.body), JSON.stringify({ message: { ar: 'غير موجود', en: 'Not found' } }))
+chk('...and THEIR ticket is untouched — a 404 returned after the write would look identical here', (await call('GET', `/ticket/${theirTicket._id}`, { token: sara })).body?.ticket?.status, 'resolved')
+
+// NOW the happy path.
+await call('PATCH', `/ticket/${closable._id}/status`, { token: sara, body: { status: 'in_progress' } })
+await call('PATCH', `/ticket/${closable._id}/status`, { token: sara, body: { status: 'resolved' } })
+chk('staff resolved it (control — the fixture is in the state under test)', (await call('GET', `/ticket/${closable._id}`, { token: sara })).body?.ticket?.status, 'resolved')
+
+const confirmed = await call('POST', `/portal/ticket/${closable._id}/confirm-closure`, { token: ct })
+chk('the customer may confirm closure of their own resolved request', confirmed.status, 200)
+chk('and it IS closed', confirmed.body?.ticket?.status, 'closed')
+chk('the staff read agrees', (await call('GET', `/ticket/${closable._id}`, { token: sara })).body?.ticket?.status, 'closed')
+chk('the response carries the customer-facing label, not the key', confirmed.body?.ticket?.statusLabel?.ar, 'مغلقة')
+
+// FR-020 / constitution II: attributed to the CUSTOMER and distinguishable
+// from a staff action. The prefix is the whole mechanism, so it is asserted
+// rather than the entry merely existing.
+const closeHistory = (await call('GET', `/ticket/${closable._id}`, { token: sara })).body?.history ?? []
+const closeEntry = closeHistory.find(h => h.action === 'ticket.status_changed' && h.after?.status === 'closed')
+chk('a status-change entry was written for the closure', !!closeEntry, true)
+chk('...attributed to the customer, not to a user', String(closeEntry?.actorRef ?? '').startsWith('customer:'), true)
+chk('...naming that it was a confirmation', closeEntry?.after?.closedBy, 'customer_confirmation')
+chk('...and recording the transition used (002 §10)', closeEntry?.after?.transition, 'resolved->closed')
+
+// A closed ticket is terminal: the reply route must now refuse it. This is the
+// pairing that proves closure actually took effect on behaviour, not just on a
+// field.
+const afterClose = await call('POST', `/portal/ticket/${closable._id}/message`, { token: ct, body: { body: 'one more thing' } })
+chk('a closed request accepts no reply (002 §3)', afterClose.status, 409)
+// 008 FR-009 reopen is NOT built, and the window runs from `closed` (002
+// FR-022, decision 10) — so this is the correct behaviour today and the check
+// pins it, rather than leaving the gap undocumented.
+chk('confirming twice is refused — it is no longer resolved', (await call('POST', `/portal/ticket/${closable._id}/confirm-closure`, { token: ct })).status, 409)
+
 console.log('\n--- FR-020: the portal actions are attributed to the customer ---')
 const created = await call('GET', `/ticket/${newId}`, { token: sara })
 chk('the ticket has a creation entry', created.body?.history?.some(h => h.action === 'ticket.created'), true)

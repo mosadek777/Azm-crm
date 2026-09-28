@@ -37,6 +37,34 @@
       emptyKey="conversation.emptyPortal" />
   </div>
 
+  <!-- 002 FR-031 — the customer confirms closure. This is the ONLY path to
+       status `closed` anywhere in the product: decision 9 removed automatic
+       closure until spec 005 exists, and 002 §9 gives the customer column
+       "Close: confirm only".
+
+       NOT `bg-primary-600`. The loud colour is budgeted to one primary action
+       per view (see the frontend-design skill), and on this screen that is the
+       reply Send button. This is a tint — primary-50 ground, primary-800 text —
+       which is what the budget prescribes for a second emphasis. -->
+  @if (isResolved()) {
+    <section class="mt-5 rounded-xl border border-primary-200 bg-primary-50 p-4">
+      <h2 class="m-0 mb-1 text-sm font-semibold text-primary-900">
+        {{ 'portal.resolvedHeading' | translate: i18n.lang() }}
+      </h2>
+      <p class="m-0 mb-3 max-w-2xl text-sm text-primary-900/80">
+        {{ 'portal.resolvedExplain' | translate: i18n.lang() }}
+      </p>
+      <button type="button" [disabled]="confirming()"
+        class="rounded-lg border border-primary-300 bg-surface-0 px-4 py-2 text-sm font-semibold
+               text-primary-800 hover:bg-primary-100 disabled:opacity-60 disabled:cursor-default
+               motion-safe:transition-colors
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+        (click)="confirmClosure()">
+        {{ (confirming() ? 'portal.confirmingClosure' : 'portal.confirmClosure') | translate: i18n.lang() }}
+      </button>
+    </section>
+  }
+
   @if (canReply()) {
     <form (ngSubmit)="sendReply()" class="mt-5 bg-white border border-surface-200 rounded-xl p-4">
       <!-- The card spans the page measure so its edges line up with the header;

@@ -29,7 +29,7 @@ import { nextTicketReference } from '../../DB/models/counter.model.js'
 import { recordAudit } from '../../utils/audit.js'
 import { customerActorRef } from './portal.service.js'
 import { portalScope } from '../../middlewares/portal-auth.middleware.js'
-import { isTerminal } from '../../utils/ticket-status.js'
+import { STATUSES, isTerminal, canTransition, reachableFrom } from '../../utils/ticket-status.js'
 import { labelMap } from '../config/label.service.js'
 import { elapsedBusinessMinutes } from '../../utils/elapsed-time.js'
 
@@ -450,5 +450,156 @@ export const replyToTicket = async (req, res, next) => {
 
     const created = await Message.findById(messageId)
     return res.status(201).json({ message: publicMessage(created) })
+  } catch (err) { return next(err) }
+}
+
+
+// ---------------------------------------------------------------------------
+// 002 FR-031 — the customer confirms closure
+// ---------------------------------------------------------------------------
+//
+// FR-031 (SHOULD): "Transition from `resolved` to `closed` MUST occur on
+// explicit customer confirmation, or automatically after the configured grace
+// period, per [CLARIFY-2]."
+//
+// [CLARIFY-2] was resolved 2026-09-07 (decision 9) and the requirement is
+// HALF-COVERED by that decision, deliberately:
+//
+//   - the CONFIRMATION path is in scope, and is this endpoint;
+//   - the GRACE-PERIOD path is deferred, because a grace period stated in
+//     working days is a business duration and constitution III routes every
+//     duration through the spec 005 engine, which does not exist.
+//
+// So there is no auto-close anywhere in this codebase, and this route is the
+// only way a ticket reaches `closed`. That is why it exists on the portal
+// rather than in the staff module: 002 §9 gives the customer column "Close:
+// confirm only", and until this route there was no customer who could confirm
+// — which is what docs/portal-plan.md §5.3 meant by "blocked on there being a
+// customer who can confirm, which is the portal itself".
+//
+// WHAT THIS ROUTE DOES NOT DO, and each absence is a requirement, not an
+// oversight:
+//
+//   REOPEN        — 008 FR-009. The window runs from `closed`, not from
+//                   `resolved` (002 FR-022, AS-11, decision 10), so reopening
+//                   is an action on a CLOSED ticket and does not belong here.
+//                   Not built; board card `ticket-reopen`.
+//   WITHDRAW      — 008 FR-014 and AS-12: "given the ticket is already
+//                   resolved, withdrawal is not offered." Refusing it here is
+//                   the specified behaviour rather than a gap.
+//   RATE          — 008 FR-008, blocked on 008 [CLARIFY-3]: the satisfaction
+//                   scale and the delay are an open client question, and
+//                   inventing a scale would make the data incomparable across
+//                   the change point (009 FR-005 reports it as a mean).
+export const confirmClosure = async (req, res, next) => {
+  try {
+    const scope = await portalScope(req)
+    const ticket = mongoose.isValidObjectId(req.params.id)
+      ? await Ticket.findOne({ _id: req.params.id, ...scope })
+      : null
+
+    // AS-02, exactly as the read and the reply do it: someone else's ticket is
+    // not-found, never forbidden, and the attempt is a security event.
+    if (!ticket) {
+      await recordAudit({
+        actorRef: customerActorRef(req.customer._id),
+        action: 'portal.cross_customer_access_attempted',
+        entityType: 'Ticket',
+        entityId: String(req.params.id),
+        after: { requestedTicketId: String(req.params.id), attempted: 'confirm_closure' },
+        severity: 'high',
+        req,
+        session: null
+      })
+      return res.status(404).json({ message: NOT_FOUND })
+    }
+
+    // FR-031 names ONE transition and this route offers only that one. There is
+    // no `status` parameter to supply, so this endpoint cannot be used to move
+    // a ticket anywhere else — the same construction as the reply route having
+    // no `visibility` parameter.
+    if (ticket.status !== 'resolved') {
+      return res.status(409).json({
+        message: {
+          ar: 'لا يمكن تأكيد الإغلاق إلا على طلب تم حله',
+          en: `Closure can only be confirmed on a resolved request — this one is "${ticket.status}"`
+        },
+        status: ticket.status
+      })
+    }
+
+    // Belt and braces against the graph and the rule drifting apart. Decision
+    // 22's graph already carries resolved -> closed; if somebody edits it out,
+    // this refuses rather than writing a status the graph forbids.
+    if (!canTransition(ticket.status, 'closed')) {
+      return res.status(409).json({
+        message: {
+          ar: `الانتقال من "${ticket.status}" إلى "closed" غير مسموح`,
+          en: `Transition from "${ticket.status}" to "closed" is not defined`
+        },
+        from: ticket.status,
+        reachableStatuses: reachableFrom(ticket.status)
+      })
+    }
+
+    const before = { status: ticket.status, followUpAt: ticket.followUpAt ?? null }
+    const actorRef = customerActorRef(req.customer._id)
+
+    const session = await mongoose.startSession()
+    try {
+      await session.withTransaction(async () => {
+        // FR-020 and constitution II: written in the SAME transaction as the
+        // mutation, and attributed to the customer — actorId stays null because
+        // a customer is not a User, and actorRef carries the `customer:` prefix
+        // that makes a portal action distinguishable from a staff one.
+        await recordAudit({
+          actorRef,
+          action: 'ticket.status_changed',
+          entityType: 'Ticket',
+          entityId: ticket._id,
+          before,
+          after: {
+            status: 'closed',
+            transition: `${ticket.status}->closed`,
+            // 002 §10 records a reason "where required". None is required for a
+            // confirmation, but WHO closed it and on what authority is the
+            // whole point of this entry, so it is stated rather than left to be
+            // inferred from the actorRef alone.
+            reason: null,
+            closedBy: 'customer_confirmation',
+            requirement: '002 FR-031',
+            followUpAt: null,
+            pausesSla: STATUSES.closed?.pausesSla ?? null
+          },
+          req,
+          session
+        })
+
+        ticket.status = 'closed'
+        // `closed` does not pause a clock — decision 14 stores null for a
+        // terminal status — so a follow-up date cannot survive the move.
+        ticket.followUpAt = null
+        await ticket.save({ session })
+
+        // ⚠ THE ASSIGNED AGENT IS NOT NOTIFIED, and that is a recorded gap
+        // rather than a decision that nobody should be told.
+        //
+        // 004 FR-013 enumerates the notification kinds exhaustively —
+        // "assignment, mention, customer reply, escalation, task due, SLA
+        // threshold, delivery failure and chat offer" — and a closure
+        // confirmation is not among them. 002 FR-031 requires no notification
+        // either, and 008 §10's audit table does not list one. So every source
+        // is silent, and adding a ninth kind here would be inventing a
+        // requirement at the keyboard, which constitution VII forbids.
+        //
+        // The audit entry above IS the record, and it names the actor. If the
+        // client wants the agent told, that is a spec amendment to 004 FR-013
+        // and a new kind in notification.model.js. Board card:
+        // `portal-confirm-closure-notification`.
+      })
+    } finally { await session.endSession() }
+
+    const closed = await Ticket.findById(ticket._id)
+    return res.json({ ticket: publicTicket(closed, await labelMap()) })
   } catch (err) { return next(err) }
 }

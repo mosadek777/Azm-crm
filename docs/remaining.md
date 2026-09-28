@@ -86,7 +86,9 @@ are not duplicated here. Summarised for ordering only.
 | P5 | Submit a ticket (`D1`) | `008 FR-002`, `AS-04` | `P3`, `A2` | **ADD** | 1–1.5 | 2–3 |
 | P6 | List and detail, internal content excluded (`D2`) | `008 FR-003`, `FR-005`, `FR-019`, `AS-06` | `P3`, `A1`, `R2` for the owning team | **ADD** | 2 | 3–4 |
 | P7 | Customer reply (`D3`) | `008 FR-004`, `AS-07`; constitution VI | `P6` | **ADD** | 1 | 1–1.5 |
-| P8 | Reopen, withdraw, confirm closure | `008 FR-009`, `FR-014`; `002 FR-022`, `FR-031` | `P6` | **ADD** | 1.5 | 1 |
+| P8a | **Confirm closure** — `002 FR-031` | `002 FR-031` (SHOULD, half-covered by decision 9: the confirmation path is in scope, the grace-period path deferred to spec `005`) | `P6` | **DONE 2026-09-27.** `POST /portal/ticket/:id/confirm-closure` — the only path to `closed` in the product. No body, so it cannot express another transition | — | — |
+| P8b | Reopen — `008 FR-009`, `002 FR-022` | `008 FR-009`; `002 FR-022`, decision 10 (14 calendar days **from `closed`**) | `related_to` ticket linking, unbuilt. ⚠ AND `decisions-pending.md` §31 — `008 E-08` and `002 FR-022` disagree on when the window starts, and today's code does a third thing | **ADD** | 1.5 | 1 |
+| P8c | Withdraw — `008 FR-014` | `008 FR-014` (MAY), `AS-12`, `E-14`. Not offered once resolved — `AS-12` says so explicitly | `P6` | **ADD** | 1 | 0.5 |
 | P9 | Feedback | `008 FR-008`, `AS-08`; `009 FR-005` | `008 [CLARIFY-3]` — **open** | **ADD** | 1.5 | 1 |
 
 `P6` is the one to review hardest: `008 FR-019` is a **MUST** that *"no internal

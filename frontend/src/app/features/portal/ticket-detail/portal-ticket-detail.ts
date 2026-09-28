@@ -130,6 +130,66 @@ export class PortalTicketDetail implements OnDestroy {
     });
   }
 
+  // ── 002 FR-031: THE CUSTOMER CONFIRMS CLOSURE ────────────────────────────
+  //
+  // Offered only on `resolved`, because that is the only transition FR-031
+  // names and the only one the route accepts.
+  //
+  // WHAT IS NOT OFFERED HERE, and why each one is absent rather than forgotten:
+  //
+  //   REOPEN (008 FR-009)   — not applicable to a RESOLVED request. The window
+  //                           runs from `closed`, not from `resolved`: 002
+  //                           FR-022, AS-11 and decision 10 all say so, and 002
+  //                           §3 was amended to agree. It is an action on a
+  //                           closed ticket, and it is not built — board card
+  //                           `ticket-reopen`.
+  //                           ⚠ 008 E-08 contradicts this, saying a reply to a
+  //                           `resolved` ticket within the window reopens it.
+  //                           The contradiction is recorded in
+  //                           decisions-pending.md §31 and deliberately NOT
+  //                           resolved here.
+  //   WITHDRAW (008 FR-014) — specified as unavailable once resolved. AS-12:
+  //                           "given the ticket is already resolved,
+  //                           withdrawal is not offered." Its absence IS the
+  //                           requirement.
+  //   RATE (008 FR-008)     — blocked on 008 [CLARIFY-3]: the scale and the
+  //                           delay are an open client question, and a invented
+  //                           scale would make the data incomparable across the
+  //                           change point (009 FR-005 reports it as a mean).
+  //                           Nothing is said about it ON THE SCREEN, because a
+  //                           customer was never offered it and telling them
+  //                           about our open questions is not honesty, it is
+  //                           noise. It is recorded here and on the board.
+  protected readonly isResolved = computed(() => this.ticket()?.status === 'resolved');
+  protected readonly confirming = signal(false);
+
+  protected confirmClosure(): void {
+    if (this.confirming()) return;
+    this.confirming.set(true);
+
+    this.api.confirmClosure(this.id).subscribe({
+      next: response => {
+        // The server is the authority on the resulting status; the screen takes
+        // what it was given rather than assuming `closed`. The reply box and
+        // this panel both disappear on the next render, because both read the
+        // status off the same signal.
+        this.ticket.set(response.ticket);
+        this.confirming.set(false);
+        this.toast.success('toast.closureConfirmed');
+      },
+      error: (error: HttpErrorResponse) => {
+        this.confirming.set(false);
+        const body = error.error as ApiRefusal | null;
+        const fallback = { ar: 'تعذر تأكيد الإغلاق', en: 'Could not confirm closure' };
+        // Shown in the same place a reply refusal is shown — one refusal slot
+        // on the screen, so two controls cannot argue about whose error is on
+        // display.
+        this.replyRefusal.set(body?.message ?? fallback);
+        this.toast.fromHttpError(error, fallback);
+      }
+    });
+  }
+
   // ── FR-021 / AD-19 AT THE NFR-003 INTERVAL ────────────────────────────────
   //
   // The portal thread did not poll at all until 2026-09-27, while the staff

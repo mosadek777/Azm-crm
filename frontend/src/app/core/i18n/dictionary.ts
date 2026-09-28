@@ -828,6 +828,33 @@ export const DICTIONARY: Translations = {
   'portal.cancel': { ar: 'إلغاء', en: 'Cancel' },
   // 008 E-08 (reopen on reply) and E-07 (reply to a cancelled ticket) are not
   // built — piece F3 — so a closed request refuses rather than guessing which.
+  // 002 FR-031 — the customer confirms closure. The only path to `closed` in
+  // the product (decision 9 removed automatic closure until spec 005 exists).
+  // FR-005 — "list, SEARCH and FILTER all their own requests, open and closed".
+  // Both controls send to the server; neither narrows anything in the browser.
+  'portal.searchLabel': { ar: 'ابحث في طلباتك', en: 'Search your requests' },
+  'portal.searchPlaceholder': {
+    ar: 'ابحث بالموضوع أو رقم الطلب…',
+    en: 'Search by subject or reference…'
+  },
+  'portal.allStatuses': { ar: 'كل الحالات', en: 'All statuses' },
+  'portal.clearFilters': { ar: 'مسح البحث', en: 'Clear' },
+  // Distinct from `portal.none`: "you have no requests" is wrong, and slightly
+  // alarming, when the customer has twenty and has mistyped a search.
+  'portal.noMatches': {
+    ar: 'لا توجد طلبات تطابق بحثك.',
+    en: 'No requests match your search.'
+  },
+  'portal.resolvedHeading': {
+    ar: 'تم حل هذا الطلب',
+    en: 'This request has been resolved'
+  },
+  'portal.resolvedExplain': {
+    ar: 'إذا انتهت المشكلة، أكّد ذلك وسنغلق الطلب. وإذا لم تنتهِ، اكتب ردًا أدناه وسيعود إلينا.',
+    en: 'If the problem is sorted, confirm it and we will close the request. If it is not, reply below and it comes straight back to us.'
+  },
+  'portal.confirmClosure': { ar: 'تأكيد الإغلاق', en: 'Confirm and close' },
+  'portal.confirmingClosure': { ar: 'جارٍ التأكيد…', en: 'Confirming…' },
   'portal.closedNoReply': {
     ar: 'هذا الطلب مغلق ولا يقبل ردودًا. أنشئ طلبًا جديدًا إذا عادت المشكلة.',
     en: 'This request is closed and accepts no reply. Raise a new request if the problem returns.'
@@ -853,6 +880,7 @@ export const DICTIONARY: Translations = {
   'toast.customerSaved': { ar: 'تم حفظ بيانات العميل', en: 'Customer saved' },
   'toast.requestSubmitted': { ar: 'تم إرسال طلبك', en: 'Your request has been submitted' },
   'toast.replySent': { ar: 'تم إرسال ردك', en: 'Your reply has been sent' },
+  'toast.closureConfirmed': { ar: 'تم إغلاق الطلب بتأكيدك', en: 'Closed, as you confirmed' },
   // The only client-authored failure text in the app: used when the response
   // carries no bilingual refusal at all, which means the request never reached
   // the server. Everything else renders what the server said.

@@ -72,6 +72,18 @@ export class PortalApiService {
     return this.http.post<{ message: PortalMessage }>(`${API}/portal/ticket/${id}/message`, { body });
   }
 
+  /**
+   * 002 FR-031 — the customer confirms a resolved request is finished.
+   *
+   * NO BODY, deliberately. The route carries no status parameter, so this can
+   * only ever move a ticket from `resolved` to `closed` — the same shape as
+   * `reply()` having no visibility parameter. A client cannot ask for a
+   * different transition because there is nowhere to put one.
+   */
+  confirmClosure(id: string) {
+    return this.http.post<{ ticket: PortalTicket }>(`${API}/portal/ticket/${id}/confirm-closure`, {});
+  }
+
   myTicket(id: string) {
     return this.http.get<{
       ticket: PortalTicket; messages: PortalMessage[];
