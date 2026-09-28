@@ -8,11 +8,61 @@
   </a>
 </div>
 
+<!-- FR-005's other two verbs. Both go to the SERVER: they narrow inside the
+     `customer = session` predicate rather than beside it, so neither can widen
+     what comes back. A client-side filter here would be a second place for the
+     rule to live and the weaker of the two.
+
+     `flex-wrap` and `min-w-0` so the row stacks on a phone instead of pushing
+     the page wider than the window. -->
+<div class="mb-4 flex flex-wrap items-center gap-3">
+  <label for="portal-search" class="sr-only">
+    {{ 'portal.searchLabel' | translate: i18n.lang() }}
+  </label>
+  <!-- `dir="auto"` — the term is user-authored, so somebody typing Arabic into
+       the English interface sees it laid out right-to-left as they type, the
+       same rule the message box and the bubbles follow. -->
+  <input id="portal-search" type="search" dir="auto"
+    [ngModel]="query()" (ngModelChange)="onSearch($event)"
+    [placeholder]="'portal.searchPlaceholder' | translate: i18n.lang()"
+    class="min-w-0 flex-1 rounded-lg border border-surface-300 bg-white px-3 py-2 text-sm text-start
+           focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25" />
+
+  <!-- Only statuses this customer actually has, with the administrator-authored
+       labels, both from the server. A filter that can only ever return nothing
+       is not a filter. -->
+  @if (statuses().length > 1) {
+    <label for="portal-status" class="sr-only">
+      {{ 'portal.status' | translate: i18n.lang() }}
+    </label>
+    <select id="portal-status" [ngModel]="status()" (ngModelChange)="onStatus($event)"
+      class="rounded-lg border border-surface-300 bg-white px-3 py-2 text-sm
+             focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25">
+      <option value="">{{ 'portal.allStatuses' | translate: i18n.lang() }}</option>
+      @for (s of statuses(); track s.key) {
+        <option [value]="s.key">{{ filterLabel(s) }}</option>
+      }
+    </select>
+  }
+
+  @if (filtered()) {
+    <button type="button" (click)="clear()"
+      class="rounded-md px-2 py-1 text-sm text-surface-600 underline hover:bg-surface-100
+             motion-safe:transition-colors
+             focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
+      {{ 'portal.clearFilters' | translate: i18n.lang() }}
+    </button>
+  }
+</div>
+
 @if (loading()) {
   <p class="text-surface-500">{{ 'portal.loading' | translate: i18n.lang() }}</p>
 } @else if (tickets().length === 0) {
+  <!-- Two different empty states, because they mean different things. "You have
+       no requests" is wrong and slightly alarming when the customer has twenty
+       and has simply mistyped a search. -->
   <p class="text-surface-500 bg-white border border-surface-200 rounded-xl p-6 text-center">
-    {{ 'portal.none' | translate: i18n.lang() }}
+    {{ (filtered() ? 'portal.noMatches' : 'portal.none') | translate: i18n.lang() }}
   </p>
 } @else {
   <!-- Wide content scrolls inside its own container so the page never scrolls
@@ -35,7 +85,11 @@
               <a [routerLink]="['/portal/tickets', t._id]" dir="ltr"
                  class="text-primary-700 hover:underline font-medium">{{ t.reference }}</a>
             </td>
-            <td class="px-4 py-3 text-surface-900">{{ t.subject }}</td>
+            <!-- A subject is user-authored and single-language, so its direction
+                 is its own rather than the interface's — the same rule the message
+                 bubbles follow. Without this an Arabic subject in the English
+                 list hangs its punctuation on the wrong side. -->
+            <td dir="auto" class="px-4 py-3 text-surface-900">{{ t.subject }}</td>
             <td class="px-4 py-3">
               <app-tag [tone]="t.status | statusTone" [raw]="t.status">
                 {{ statusLabel(t) }}

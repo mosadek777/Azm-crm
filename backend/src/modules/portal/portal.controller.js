@@ -64,11 +64,12 @@ router.get('/me', authenticatePortal, portalservice.me)
  *     summary: The customer's own tickets, open and closed (spec 008 FR-005)
  *     tags: [Portal]
  *     parameters:
- *       - { name: status, in: query, schema: { type: string }, description: 'Comma-separated status keys' }
+ *       - { name: q, in: query, schema: { type: string }, description: 'Search term, minimum 3 characters. Matches the subject anywhere and the reference from its start. Narrows within the caller own requests and cannot reach past them' }
+ *       - { name: status, in: query, schema: { type: string }, description: 'Comma-separated status keys. Unrecognised keys are ignored rather than returning an empty list' }
  *       - { name: page, in: query, schema: { type: integer, default: 1 } }
  *       - { name: limit, in: query, schema: { type: integer, default: 25, maximum: 100 } }
  *     responses:
- *       200: { description: 'Only the caller''s own tickets (§11). Another customer''s ticket is absent from the list and the count (AS-02)' }
+ *       200: { description: 'Only the caller''s own tickets (§11). Another customer''s ticket is absent from the list, the count and the SEARCH RESULTS (AS-02). Also returns filters.statuses — the statuses this customer actually has, with bilingual labels, so the screen holds no list of its own' }
  *       401: { description: Sign-in required }
  */
 router.get('/ticket', authenticatePortal, portalticketservice.listMyTickets)
@@ -158,4 +159,5 @@ router.post('/ticket/:id/message', authenticatePortal, portalticketservice.reply
  *       409: { description: 'The request is not `resolved`, so there is nothing to confirm. Reopening (008 FR-009) and withdrawal (008 FR-014) are separate actions and neither is built' }
  */
 router.post('/ticket/:id/confirm-closure', authenticatePortal, portalticketservice.confirmClosure)
+
 export default router

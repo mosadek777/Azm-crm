@@ -279,6 +279,67 @@ chk('a closed request accepts no reply (002 §3)', afterClose.status, 409)
 // pins it, rather than leaving the gap undocumented.
 chk('confirming twice is refused — it is no longer resolved', (await call('POST', `/portal/ticket/${closable._id}/confirm-closure`, { token: ct })).status, 409)
 
+console.log('\n--- FR-005: list, SEARCH and FILTER — and neither reaches past the caller ---')
+//
+// The list existed; search and filter did not. Both are new query paths into a
+// scoped collection, which makes them the two places a scope predicate is most
+// easily lost — so every check below is paired: it narrows correctly AND it
+// cannot reach the other customer.
+
+const all = await call('GET', '/portal/ticket', { token: ct })
+chk('the unfiltered list is not empty — every narrowing below needs a baseline', all.body?.total > 0, true)
+const baseline = all.body.total
+
+// ── SEARCH ────────────────────────────────────────────────────────────────
+const hit = await call('GET', '/portal/ticket?q=laptop', { token: ct })
+chk('a search matches the subject anywhere in it', hit.body?.total > 0, true)
+chk('...and it NARROWED — otherwise the term was ignored and this proves nothing', hit.body.total < baseline, true)
+chk('...and every row returned actually matches', (hit.body.tickets ?? []).every(t => /laptop/i.test(t.subject)), true)
+
+const byRef = await call('GET', `/portal/ticket?q=${myTicket.reference}`, { token: ct })
+chk('a search matches a reference from its start', byRef.body?.total, 1)
+chk('...and it is the right one', byRef.body?.tickets?.[0]?.reference, myTicket.reference)
+
+chk('a term under three characters is ignored rather than matching everything', (await call('GET', '/portal/ticket?q=la', { token: ct })).body?.total, baseline)
+chk('a term that matches nothing returns an empty list, not an error', (await call('GET', '/portal/ticket?q=zzzznothing', { token: ct })).body?.total, 0)
+// A regex metacharacter must be escaped, not interpreted. Unescaped, `.*`
+// matches every subject and this would silently return the whole list.
+chk('a regex metacharacter is escaped, not executed', (await call('GET', '/portal/ticket?q=.%2A.%2A', { token: ct })).body?.total, 0)
+
+// ── SEARCH CANNOT REACH ANOTHER CUSTOMER ──────────────────────────────────
+//
+// The term below DOES match the other customer's ticket. The control is the
+// staff read: if staff cannot find it either, the fixture is wrong and a zero
+// here would mean nothing.
+const staffFinds = await call('GET', '/ticket?q=Somebody', { token: sara })
+chk('CONTROL — staff can find the other customer\u2019s ticket by this exact term', (staffFinds.body?.tickets ?? []).some(t => t.reference === theirTicket.reference), true)
+const portalFinds = await call('GET', '/portal/ticket?q=Somebody', { token: ct })
+chk('the customer searching the SAME term finds nothing', portalFinds.body?.total, 0)
+chk('...and their reference appears nowhere in the response', JSON.stringify(portalFinds.body).includes(theirTicket.reference), false)
+
+// ── FILTER ────────────────────────────────────────────────────────────────
+const closedOnly = await call('GET', '/portal/ticket?status=closed', { token: ct })
+chk('filtering by status returns rows', closedOnly.body?.total > 0, true)
+chk('...and every one of them has that status', (closedOnly.body?.tickets ?? []).every(t => t.status === 'closed'), true)
+chk('...and it narrowed', closedOnly.body.total < baseline, true)
+chk('an unrecognised status is IGNORED, not applied — an empty list reads to a customer as "you have no requests"', (await call('GET', '/portal/ticket?status=not_a_status', { token: ct })).body?.total, baseline)
+
+// ── THE FILTER OPTIONS ARE SCOPED TOO ─────────────────────────────────────
+//
+// A facet computed over the whole collection would tell a customer which
+// statuses exist on OTHER customers' tickets. It is a smaller disclosure than a
+// ticket, and it is still one, and it is the kind that is never noticed.
+const facet = all.body?.filters?.statuses ?? []
+chk('the filter options are sent', facet.length > 0, true)
+chk('...each with both languages, never a bare key', facet.every(s => !!s.label?.ar && !!s.label?.en), true)
+const mineStatuses = new Set((all.body.tickets ?? []).map(t => t.status))
+chk('...and every option is a status this customer actually holds', facet.every(f => mineStatuses.has(f.key)), true)
+// theirTicket is `resolved` and no ticket of this customer's is. If the facet
+// were unscoped, `resolved` would appear here.
+chk("CONTROL — the other customer's ticket really is `resolved`", (await call('GET', `/ticket/${theirTicket._id}`, { token: sara })).body?.ticket?.status, 'resolved')
+chk('...and no ticket of THIS customer is', (all.body.tickets ?? []).some(t => t.status === 'resolved'), false)
+chk('so `resolved` must NOT be offered as a filter — it would be a fact about somebody else', facet.some(s => s.key === 'resolved'), false)
+
 console.log('\n--- FR-020: the portal actions are attributed to the customer ---')
 const created = await call('GET', `/ticket/${newId}`, { token: sara })
 chk('the ticket has a creation entry', created.body?.history?.some(h => h.action === 'ticket.created'), true)

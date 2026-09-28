@@ -89,6 +89,7 @@ are not duplicated here. Summarised for ordering only.
 | P8a | **Confirm closure** — `002 FR-031` | `002 FR-031` (SHOULD, half-covered by decision 9: the confirmation path is in scope, the grace-period path deferred to spec `005`) | `P6` | **DONE 2026-09-27.** `POST /portal/ticket/:id/confirm-closure` — the only path to `closed` in the product. No body, so it cannot express another transition | — | — |
 | P8b | Reopen — `008 FR-009`, `002 FR-022` | `008 FR-009`; `002 FR-022`, decision 10 (14 calendar days **from `closed`**) | `related_to` ticket linking, unbuilt. ⚠ AND `decisions-pending.md` §31 — `008 E-08` and `002 FR-022` disagree on when the window starts, and today's code does a third thing | **ADD** | 1.5 | 1 |
 | P8c | Withdraw — `008 FR-014` | `008 FR-014` (MAY), `AS-12`, `E-14`. Not offered once resolved — `AS-12` says so explicitly | `P6` | **ADD** | 1 | 0.5 |
+| P10 | **Search and filter my requests** — `FR-005`'s second and third verbs | `008 FR-005` (MUST) | `P6` | **DONE 2026-09-27.** Same search shape as the staff list, deliberately — one implementation over one collection. The server also returns the statuses the customer actually holds, so the control offers no filter that can only return nothing. Two scope mutants asserted: dropping the predicate on the search path, and computing the status facet unscoped | — | — |
 | P9 | Feedback | `008 FR-008`, `AS-08`; `009 FR-005` | `008 [CLARIFY-3]` — **open** | **ADD** | 1.5 | 1 |
 
 `P6` is the one to review hardest: `008 FR-019` is a **MUST** that *"no internal

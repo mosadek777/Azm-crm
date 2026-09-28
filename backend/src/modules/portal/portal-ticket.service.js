@@ -29,7 +29,7 @@ import { nextTicketReference } from '../../DB/models/counter.model.js'
 import { recordAudit } from '../../utils/audit.js'
 import { customerActorRef } from './portal.service.js'
 import { portalScope } from '../../middlewares/portal-auth.middleware.js'
-import { STATUSES, isTerminal, canTransition, reachableFrom } from '../../utils/ticket-status.js'
+import { STATUSES, STATUS_KEYS, isTerminal, canTransition, reachableFrom } from '../../utils/ticket-status.js'
 import { labelMap } from '../config/label.service.js'
 import { elapsedBusinessMinutes } from '../../utils/elapsed-time.js'
 
@@ -91,6 +91,22 @@ const publicMessage = (m) => ({
 })
 
 // FR-005: "list, search and filter all their own requests, open and closed".
+//
+// All three verbs, and the last two arrived on 2026-09-27 — the screen listed
+// and did neither. That is fine at five requests and unusable at fifty, and
+// finding last time's request without telephoning is the whole point of the
+// portal.
+//
+// SEARCH AND FILTER ARE THE SAME SHAPE THE STAFF LIST USES (ticket.service.js
+// `listTickets`), deliberately: same minimum length, same escaping, same
+// subject-contains / reference-prefix split. Two search implementations over
+// one collection is how the two interfaces come to disagree about what matches.
+//
+// ⚠ NEITHER WIDENS SCOPE. The predicate is the BASE of the query and every
+// condition below narrows it — `portalScope(req)` first, spread into `filter`,
+// and nothing after it touches `customerId`. A search term that matched another
+// customer's ticket still cannot reach it, because the customerId clause is
+// ANDed with the `$or`, not replaced by it. AS-02 is asserted on this path.
 export const listMyTickets = async (req, res, next) => {
   try {
     const scope = await portalScope(req)
@@ -99,24 +115,65 @@ export const listMyTickets = async (req, res, next) => {
     const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 25))
 
     const filter = { ...scope }
+
+    // Validated against the ratified keys rather than passed through. An
+    // unrecognised status previously reached the query and returned an empty
+    // list, which reads to a customer as "you have no requests" rather than as
+    // "that is not a status".
     if (req.query.status) {
-      filter.status = { $in: String(req.query.status).split(',').map(s => s.trim()) }
+      const wanted = String(req.query.status).split(',')
+        .map(s => s.trim()).filter(s => STATUS_KEYS.includes(s))
+      if (wanted.length) filter.status = { $in: wanted }
     }
 
-    const [tickets, total, labels] = await Promise.all([
+    // Three characters, as the staff list requires: a one- or two-character
+    // term matches most of the collection, so it is not a search, and running
+    // it teaches somebody that search is broken.
+    //
+    // ⚠ ARABIC MATCHING IS NAIVE HERE, exactly as it is on the staff side. A
+    // term written with diacritics does not match text stored without them, and
+    // alef variants (أ إ ا) are distinct to this regex. Board card
+    // `search-arabic-diacritics` covers both interfaces; it is NOT
+    // solved here, because solving it in one of the two is how they diverge.
+    if (req.query.q && String(req.query.q).trim().length >= 3) {
+      const term = String(req.query.q).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      filter.$or = [
+        { subject: new RegExp(term, 'i') },
+        { reference: new RegExp('^' + term, 'i') }
+      ]
+    }
+
+    const [tickets, total, labels, presentStatuses] = await Promise.all([
       Ticket.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),
       Ticket.countDocuments(filter),
-      labelMap()
+      labelMap(),
+      // The filter's OPTIONS, computed over the customer's whole scope rather
+      // than over the filtered result or the current page. Two reasons, and the
+      // first is a real bug avoided: computed over the filtered result, picking
+      // a status would remove every other option from the control and strand
+      // the customer on it. Computed over the page, a status would vanish from
+      // the control at page two.
+      //
+      // Only statuses the customer ACTUALLY HAS are offered. A filter that can
+      // only ever return nothing is not a filter, and the ten ratified keys
+      // include several a customer will never see on their own requests.
+      Ticket.distinct('status', scope)
     ])
 
     return res.json({
-      // NOT `tickets.map(publicTicket)`: map passes (element, INDEX, array), so
-      // the row number would arrive as `labels` and every label read would throw
-      // on a number. Written out rather than point-free for that reason.
       tickets: tickets.map(t => publicTicket(t, labels)),
       total,
       page,
-      limit
+      limit,
+      // Sent so the screen never holds its own copy of the status list, and so
+      // the labels on the control and the labels on the rows cannot disagree —
+      // both come from this one read.
+      filters: {
+        statuses: presentStatuses
+          .filter(key => STATUS_KEYS.includes(key))
+          .sort((a, b) => STATUS_KEYS.indexOf(a) - STATUS_KEYS.indexOf(b))
+          .map(key => ({ key, label: labels.status[key] ?? null }))
+      }
     })
   } catch (err) { return next(err) }
 }
@@ -452,7 +509,6 @@ export const replyToTicket = async (req, res, next) => {
     return res.status(201).json({ message: publicMessage(created) })
   } catch (err) { return next(err) }
 }
-
 
 // ---------------------------------------------------------------------------
 // 002 FR-031 — the customer confirms closure

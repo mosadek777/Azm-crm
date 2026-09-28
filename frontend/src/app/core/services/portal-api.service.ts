@@ -39,6 +39,12 @@ export interface PortalTicket {
   sla: PortalSla;
 }
 
+/** A status the signed-in customer actually has, with its bilingual label. */
+export interface PortalStatusFilter {
+  key: string;
+  label: LocalizedText | null;
+}
+
 export interface PortalMessage {
   _id: string;
   body: string;
@@ -51,12 +57,29 @@ export interface PortalMessage {
 export class PortalApiService {
   private readonly http = inject(HttpClient);
 
-  myTickets(page = 1, limit = 25) {
+/**
+   * FR-005 — list, search and filter.
+   *
+   * `q` and `status` NARROW within the caller's own requests; they cannot widen
+   * past them. The server applies the customer predicate as the base of the
+   * query and every filter on top of it, and portal.test.js asserts that a
+   * search matching another customer's ticket still returns nothing — with the
+   * staff read as the control, so a zero there cannot pass vacuously.
+   *
+   * An empty term or status is omitted from the request rather than sent empty,
+   * so the server sees the same shape it would for an unfiltered list.
+   */
+  myTickets(opts: { page?: number; limit?: number; q?: string; status?: string } = {}) {
+    let params = new HttpParams()
+      .set('page', String(opts.page ?? 1))
+      .set('limit', String(opts.limit ?? 25));
+    if (opts.q?.trim()) params = params.set('q', opts.q.trim());
+    if (opts.status) params = params.set('status', opts.status);
+
     return this.http.get<{
       tickets: PortalTicket[]; total: number; page: number; limit: number;
-    }>(`${API}/portal/ticket`, {
-      params: new HttpParams().set('page', String(page)).set('limit', String(limit))
-    });
+      filters: { statuses: PortalStatusFilter[] };
+    }>(`${API}/portal/ticket`, { params });
   }
 
   // FR-002. The body is deliberately these three fields and nothing else: the
