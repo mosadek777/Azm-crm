@@ -2585,8 +2585,8 @@ skipping a character, which is the right failure of the two.
 
 **The loop supersedes the earlier "runs once on load" rule.** The two cannot
 both hold — a loop cannot also be gated on having played — so the module-scope
-`played` set is gone. Returning to the route runs the three passes again, which
-is what an on-arrival effect does.
+`played` set is gone. Returning to the route starts it again, which is what a
+loop does.
 
 Three things about it are load-bearing.
 
@@ -2638,38 +2638,75 @@ verified by sampling at +1.5s and again four seconds later and finding the same
 full, static line. This is a JS-driven reveal, so it cannot use the
 `motion-safe:` variant and checks `matchMedia` instead.
 
-### CLOSED: three passes, then it stops — and the residual, stated
+### ⚠ KNOWINGLY UNMET: WCAG 2.2.2 (Pause, Stop, Hide)
 
-**Decision: the product owner's.** The headline types, holds and deletes
-**three times**, then settles on the finished line and schedules no further
-frames. There is no pause control.
+**Decision: the product owner's, in their words —** *"a known accessibility
+violation accepted on the sign-in screen for visual effect, after the mechanism
+the standard asks for was built and rejected. Not an oversight."*
 
-The reasoning, as given: the effect lands when someone arrives, the page is
-static well before anyone is typing a password into the form, and a stop button
-beside a sign-in form is more clutter than the animation is worth. Stopping on
-its own removes the need for the control.
+The headline loop runs **continuously**. It starts automatically, never ends,
+and sits beside the sign-in form. There is no control to pause, stop or hide
+it. That is precisely the case WCAG 2.2.2 covers, and the criterion is not met.
 
-Measured, over a 20-second in-page trace:
+**What is NOT negotiable, and stays:** `prefers-reduced-motion: reduce` stops
+the animation completely and removes the caret with it. It is what keeps the
+readers most affected covered while the page-level control is absent. Verified:
+the full line, static, caret gone, at +1.5s and still at +5.5s.
 
-| | reaches full at | motion ends | static thereafter |
-|---|---|---|---|
-| Arabic (22 graphemes) | 0.20s, 3.94s, 7.67s | **7.67s** | 12.3s of the 20 |
-| English (28 graphemes) | 0.33s, 4.34s, 8.38s | **8.38s** | 11.6s of the 20 |
+### How this was arrived at — three reversals, recorded so the history is legible
 
-**The residual, stated plainly rather than papered over: this does not bring
-the motion under WCAG 2.2.2's five-second threshold.** The criterion asks for a
-pause mechanism when motion starts automatically, lasts more than five seconds
-and sits alongside other content. At 7.67–8.38s it still does. **Two passes
-would be about 4.8s and would satisfy it by duration** — that trade was put on
-the table and declined, because two passes reads as a glitch rather than as an
-effect.
+The shape of this decision is unusual enough to be worth keeping, because a
+later reader finding an accessibility violation in a repository this careful
+will reasonably assume it is a mistake. It is not.
 
-So the item is closed as an **accepted, bounded risk with a known cost**, not
-as conformance. What it buys over the perpetual loop is the thing the criterion
-is actually protecting: nothing is moving beside the form while anybody uses
-it. If this product is ever held to a formal WCAG 2.1 AA audit, `CYCLES = 2` in
-`shared/components/typewriter/typewriter.ts` is the one-character change that
-settles it.
+| | Position | Outcome |
+|---|---|---|
+| 1 | Perpetual loop, no control | 2.2.2 raised as an open item with two ways to close it |
+| 2 | **Stop after three passes** | Motion bounded to 7.67s (ar) / 8.38s (en), then static for good. Recorded as an accepted bounded risk — it still exceeded the five-second threshold, and two passes at ~4.8s would have satisfied it by duration |
+| 3 | **Build the control** | A pause/play toggle: `<button>`, keyboard reachable, `aria-pressed`, labelled in both languages, stopping the typing AND the caret blink. Verified: text frozen at 28/28, caret opacity constant at 1, `aria-pressed` flipping to `true`, label switching to Play |
+| 4 | **Remove the control, keep the loop** | Where it now stands. The mechanism was built and working before it was rejected, which is the difference between this and an oversight |
+
+**The control is deleted, not disabled.** `shared/components/motion-toggle` and
+`shared/components/typewriter/headline-motion.ts` are gone, along with the
+`motion.pause`/`motion.play` strings. Restoring it means writing it again from
+scratch.
+
+> **Correction, 2026-09-28.** An earlier draft of this paragraph added *"the
+> commit history holds the working version if that is ever wanted"*. **It does
+> not.** `motion-toggle` and `headline-motion.ts` were written, verified and
+> deleted inside one working tree and were never committed — `git log --all`
+> for either path returns nothing. Nothing anywhere holds that code. The table
+> above, describing what it did and that it was verified working, is the only
+> record that survives, which is the reason to keep the table.
+
+**Do not "fix" this by adding a control back** without reading this section
+first. A future contributor spotting the violation and quietly closing it would
+be undoing a decision, not repairing a defect.
+
+### The caret
+
+530ms on, 530ms off while the line holds or rests; solid while characters are
+arriving or leaving, because a real cursor does not blink mid-keystroke. Since
+the loop never ends, it blinks for as long as the screen is open — which is the
+point: the line is decorative, the cursor says the thing is live.
+
+Measured rather than looked at, because a screenshot cannot tell a blinking
+cursor from a solid one: sampled opacity alternates `0` and `1`, with a mean
+half-period of **533ms (en) and 536ms (ar)** against the 530ms target, and every
+frame sampled mid-type or mid-delete reads opacity `1`.
+
+**It has no directional property at all.** The caret is an inline box in the
+text flow, placed before the first hidden grapheme, so it lands at the end of
+the revealed text in both languages on its own — measured at a 0.0px gap, to
+the **left** of the text in Arabic and the right in English. Absolute
+positioning would have needed a measured offset every frame and a directional
+property to hang it on, which is a specificity contest waiting to happen.
+
+Inserting a box mid-string is exactly the kind of thing that breaks an Arabic
+shaping run, so it was measured before being written: the headline with a caret
+inside the joined word `محادثة` renders 387.25px against 385.02px plain — its
+own 2px plus 0.23px. Shaping survives it.
+
 
 ### The headlines are length-constrained to one line
 
@@ -2701,7 +2738,6 @@ produces horizontal scroll** — it degrades by wrapping, and because height is
 computed from the complete string the wrap does not destabilise anything. 390px
 is this project's stated floor, so this is on spec; shortening further to hold
 360px is available if the floor moves.
-
 
 ---
 
