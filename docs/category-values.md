@@ -84,6 +84,41 @@ And two questions about the tree as a whole:
    everything under *Complaint* starting as high. This is optional and can be
    added later.
 
+### 7. Every name, in Arabic **and** in English
+
+This one is not optional and it cannot be added later, so it is called out
+separately rather than folded into the list above.
+
+**We need both languages for every group and every leaf**, given by someone whose
+Arabic is native. We will not translate them ourselves: a category name is a
+label your team reads dozens of times a day and a customer picks from, and a
+developer's guess at the Arabic for *Duplicate charge* is the kind of thing that
+looks fine to us and reads as wrong to everybody who uses it.
+
+It is also a rule the product enforces rather than a preference. Every
+administrator-authored label in this system carries both languages and the
+system **refuses to save one on its own** — that is how status and priority
+labels already work, and categories will be no different.
+
+> **⚠ Why this is urgent rather than tidy.** It is not a future requirement — it
+> is a live defect today, on the screen customers use.
+>
+> Because category is still free text, the request form offers a short hard-coded
+> English list — *Billing / Refund*, *Technical*, *Account*, *Logistics*,
+> *Contracts*. **An Arabic-speaking customer is shown an English list and has to
+> pick from it.** That breaches `008 FR-002` and `008 §8`, which require category
+> names in the submission form in both languages, and it is the one remaining
+> place in the customer portal where a customer sees English they did not ask
+> for.
+>
+> We have deliberately **not** patched it by writing our own Arabic for those
+> five values. Inventing names now would put guessed text in front of customers
+> *and* make this migration worse, because those guesses would be in the data we
+> are about to map. The honest fix is the real list, from you, once.
+>
+> Recorded against `008 FR-002` in `docs/remaining.md`; board card
+> `portal-category-names-are-english-only`.
+
 ---
 
 ## What happens to existing tickets

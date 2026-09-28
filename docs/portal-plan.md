@@ -8,8 +8,9 @@ Written 2026-09-08, after auditing this flow against `specs/` and `stories/`:
 4. Agent marks it resolved
 5. Customer sees it is resolved
 
-**Approve pieces from §6 one at a time.** Nothing in §6 is started. The two
-prerequisites already done are marked as such.
+**⚠ Superseded in part — see the note in §1.** This was written before the
+portal was built, and its status tables (§1, §2, §6) describe 2026-09-08, not
+today. Its REASONING (§3, §4, §5) still holds.
 
 Read `state.md` for what exists and `next-steps.md` for debt in what exists.
 This file covers only the customer-facing flow above.
@@ -18,7 +19,20 @@ This file covers only the customer-facing flow above.
 
 ## 1. The short version
 
-**The customer side is entirely unbuilt** — no account, no screen, no route, no
+> ## ⚠ THIS FILE IS A PLAN FROM 2026-09-08 AND ITS §1 IS NOW WRONG
+>
+> It was written BEFORE the portal was built and has not been re-derived since.
+> Pieces `B1`–`B3`, `C2`–`C4`, `D1`–`D3` and `F3`'s confirm-closure half are
+> **built**. The audit of 2026-09-27 went requirement by requirement against the
+> code rather than against this file.
+>
+> **Read `docs/state.md` and `docs/remaining.md` for what exists**, and
+> `tools/tasks.json` for what is carded. What is still worth reading here is §3
+> (requirements no spec owns), §4 (where the original flow contradicted the
+> specs) and §5 (the decisions and their evidence) — those are reasoning, and
+> they have not gone stale the way the status table has.
+
+**The customer side was entirely unbuilt when this was written** — no account, no screen, no route, no
 way in. Staff authentication resolves against the `User` collection only; a
 `Customer` has no credentials and no session. The one nuance: `ContactPoint`
 already carries a `verifiedAt` column, so the data model anticipates

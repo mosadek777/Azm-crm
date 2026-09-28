@@ -7,17 +7,37 @@ thirteen specs. Updated at the end of every step.
 carries the things that are not discoverable from the code, and the five that
 have each cost somebody a morning.
 
-**Last updated:** 2026-09-14 · **after:** spec `004` closed as far as it goes,
-the conversation unified across staff and portal, `010 FR-011`'s first two
-configuration surfaces, and role changes in place · **43 ratified decisions** ·
+**Last updated:** 2026-09-27 · **after:** the customer portal audited against spec 008 requirement by requirement, and the five smallest gaps closed — customer-facing status labels, per-message direction, the portal thread polling, the customer confirming closure, and one shared composer. Previously: an external design system audited
+rather than adopted (`docs/design-system.md`), Latin case and tracking removed
+from text that renders in Arabic (§29), and both sign-in screens rebuilt on a
+photograph with a glass card (§30) · **43 ratified decisions** ·
 constitution 0.4.0
 
 ---
 
 ## NEXT ACTION
 
-Four items, in this order. The first is not a feature and is the most valuable.
+Five items. The first is not a feature and is the most valuable.
 
+0. **The customer portal was audited against spec `008` on 2026-09-27**,
+   requirement by requirement, and the result is in this file's Portal row plus
+   thirteen new board cards. Five gaps were closed in that pass; what remains is
+   carded rather than remembered. Three findings are worth carrying forward:
+   - **A cleared blocker was still being cited.** `publicTicket` read
+     `STATUSES[status]?.label`, which has never existed, so the portal sent a
+     null status label and both customer screens printed the raw key — an Arabic
+     customer read `resolved`. The labels it needed had existed since
+     2026-09-14. **Nothing failed, because nothing asserted it.** Now asserted,
+     including that an administrator's edit reaches the customer's next read.
+   - **A comment claimed behaviour the markup did not implement.**
+     `message-bubble.html` said direction was "detected per message by the
+     browser"; no `dir` attribute existed anywhere, so every message inherited
+     the page and `008 AS-10` was violated in both directions. One attribute.
+   - **`004 FR-021` was read as a staff requirement.** It says "an open list or
+     conversation". The portal thread never polled, so a customer watching the
+     screen never saw a reply arrive. ⚠ The poller also gated every tick on the
+     STAFF session, so a portal poll would have been registered and silently
+     never fired — it now asks both audiences.
 1. ~~Role changes for an existing user~~ — **BUILT 2026-09-14.** Decision 43
    (project owner): a user may not be left holding zero roles, so the last
    revocation is refused as `E-01` refuses removing the last administrator.
@@ -62,7 +82,7 @@ Express 5, ES modules, MongoDB `rs0` single-node replica set. Modules under
 | Customer | `001 FR-001`–`FR-004` (decision 16), `FR-010`, `FR-020`, `AS-01`–`AS-04`, `E-05`, `E-06` |
 | Ticket | `002 FR-001`, `FR-002`, `FR-007`–`FR-010`, `FR-013`, `FR-014`, `FR-021`, `FR-033`, `FR-034`, `AS-01`, `AS-03`, `AS-05`–`AS-07`, `E-11`, `E-12`, `E-16` |
 | **Agent workspace** | `004` — see the table below. Closed as far as it can go |
-| Portal | `008 FR-001` (decision-31 password shortcut), `FR-002`–`FR-005`, `FR-019`/`AS-06` internal content excluded **in the query**, `AS-02` 404 not 403, `FR-020` |
+| Portal | `008 FR-001` (decision-31 password shortcut), `FR-002`, `FR-004`, `FR-005` **in full — list, search and filter** (2026-09-27), `FR-019`/`AS-06` internal content excluded **in the query**, `AS-02` 404 not 403, `FR-020`. `FR-003`: the customer-facing **status label** now renders from the configuration collection in both languages (2026-09-27) — timing and owning team still absent, so it stays an **uncovered MUST**. `002 FR-031` **customer confirms closure** — the only path to `closed` in the product |
 | API docs | `/api-docs` Swagger UI, `docs/openapi.json`, Postman collection with auto-token-save |
 
 ### Spec 004 — the honest count
@@ -116,7 +136,7 @@ individual agent (decision 29).
 
 | | |
 |---|---|
-| `npm test` (backend) | **15 suites**, exit 0. Counted per file the last time it was measured: scope 28 · customer 35 · ticket 68 · portal 79 · security 45 · actor 23 · config 38 · draft 45 · notification 50 · quick-reply 57 · role-assignment 47 · task 51 · team-queue 41 · workspace 27 · story-002 61 |
+| `npm test` (backend) | **17 suites**, exit 0 (2026-09-27; the count below predates `audit-actions` and `polling` and the portal suite has since grown). Counted per file the last time it was measured: scope 28 · customer 35 · ticket 68 · portal 79 · security 45 · actor 23 · config 38 · draft 45 · notification 50 · quick-reply 57 · role-assignment 47 · task 51 · team-queue 41 · workspace 27 · story-002 61 |
 | `npm run audit:reconcile` | 0 orphaned, 0 unaudited, 0 unchecked models |
 | atomicity proofs | no orphaned audit entry survives an injected fault; rollback verified |
 | `ng build` | exit 0 |
@@ -276,6 +296,7 @@ Nobody wrote a `[CLARIFY]` for these, so the gate cannot see them.
 | `004 §9` and `002 §9` disagree on who may assign an unassigned ticket | **RESOLVED by recording, not by code** — §21. The team queue's "self only" for an agent is **presentation, not enforcement**: `002 FR-010` is a MUST that an agent may self-assign any unassigned ticket in scope, so the endpoint answers to `002` |
 | `004 FR-007` vs `004 §9` on shared quick replies | **RESOLVED** — tightened to MGR+, §19 |
 | `001 FR-004`'s shared-contact-point conflict | **RESOLVED** by decision 16, §11 |
+| **`008 E-08` and `002 FR-022` disagree on when the reopen window starts** — `E-08` says from `resolved`, `002`/decision 10 says from `closed` | **OPEN**, found 2026-09-27. ⚠ The code does a THIRD thing: a reply to a resolved ticket is accepted, changes nothing and says nothing. Needs the client — it is a support-policy question. `decisions-pending.md` §31 |
 
 ---
 

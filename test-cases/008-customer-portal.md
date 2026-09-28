@@ -115,7 +115,7 @@ sign-on is not built either.
 - **Step 7 is refused, and the refusal names each field that was not permitted.**
   Silently ignoring them would let a customer believe they had set a priority.
 
-**Status:** ⚠ **Partial.** Automated — `backend/tests/portal.test.js`, sections
+**Status:** ✅ **Automated.** `backend/tests/portal.test.js`, sections
 *"FR-002 / AS-04: the customer submits a request"* and *"002 §9: a customer may
 not set what is not theirs"*, which asserts all four forbidden fields are
 refused **by name**, and includes a valid submission afterwards so the refusals
@@ -149,13 +149,28 @@ cannot pass vacuously.
 - Step 5: the two need not be identical, but the customer's version must not
   misrepresent the internal one.
 
-**Status:** ⚠ **Partial.** Automated: status is shown, and timing is **read**
-from the shared duration component rather than computed in the portal —
-`backend/tests/portal.test.js`, *"spec 002 FR-034 / constitution III: no
-duration is computed"*. It currently reports unavailable, correctly, because the
+**Status:** ⚠ **Partial.** Automated — and step 2 was the weak one until
+2026-09-27.
+
+⚠ **This case previously read "status is shown" and passed, while the screen
+showed the raw key `resolved` to a customer reading Arabic.** "Shown" is true
+of a key; the requirement is a CUSTOMER-FACING LABEL, and the case did not say
+so plainly enough to fail. Both were fixed together: the portal now renders the
+bilingual label from the configuration collection, and `portal.test.js` asserts
+that a label is sent, that both languages are non-empty, that it is not the key
+echoed back, and that an administrator's edit reaches the customer's very next
+read. Seven of those checks go red if the defect is reintroduced — verified by
+reintroducing it.
+
+Timing is **read** from the shared duration component rather than computed in
+the portal — `backend/tests/portal.test.js`, *"spec 002 FR-034 / constitution
+III: no duration is computed"*. It reports unavailable, correctly, because the
 service-level engine is not built.
+
 **Missing:** **the owning team.** No team concept exists in the system, so the
-field cannot be shown. Recorded as a ratified deviation.
+field cannot be shown. Recorded as a ratified deviation. `FR-003` therefore
+remains an **uncovered MUST** — one of its three parts is now covered, which is
+not the same as the requirement being met.
 
 ---
 
@@ -250,8 +265,28 @@ out of scope is NOT FOUND, never forbidden"*, which asserts the two refusal
 bodies are identical and that a malformed identifier is also a 404 rather than
 an error. The list check explicitly asserts the list is **not empty**, so the
 "only their own" check cannot pass vacuously.
-**Missing:** step 7 — **search and filter are not built** in the portal. The
-list is complete but unsearchable.
+
+**Step 7 was built 2026-09-27** and is automated in the same file, section
+*"FR-005: list, SEARCH and FILTER — and neither reaches past the caller"* — 22
+checks. Each narrowing is asserted to have actually NARROWED against a recorded
+baseline, because a term that is silently ignored returns the full list and
+would otherwise pass as "search works".
+
+The two that matter most are confidentiality, and both were verified by
+reintroducing the fault:
+
+- **Search cannot reach past the caller.** The term used DOES match the other
+  customer's request, and the staff read is asserted first as the control — so
+  a zero on the portal side cannot pass because the fixture was wrong. Dropping
+  the scope predicate on the search path turns two checks red.
+- **The filter OPTIONS are scoped too.** They are built from the statuses this
+  customer holds, not from the collection. Building them unscoped would tell a
+  customer which statuses exist on other people's requests — a smaller
+  disclosure than a request, and still one. Unscoping it turns two checks red.
+
+**Not covered:** matching Arabic written with and without diacritics, and alef
+variants. Naive on both interfaces and deliberately not solved on one of them —
+board card `search-arabic-diacritics`.
 
 ---
 
@@ -381,6 +416,48 @@ question for the client.
 That is the gap worth knowing about, because from the outside it looks like it
 worked.
 
+---
+
+## CP-09b — Confirming that a resolved request is finished
+
+> *As a* **customer** *I want to* **confirm that a resolved request really is
+> finished** *so that* **it closes because I said so, not because a timer said
+> so.**
+
+**Requirement:** `002 FR-031` (Should — half-covered by decision 9: the
+confirmation path is in scope, the grace-period path is deferred until spec
+`005` exists)
+
+**Preconditions**
+- A request belonging to the signed-in customer, in status `resolved`.
+
+**Steps**
+1. Open the request in the portal, in Arabic.
+2. Read what the screen says about its state.
+3. Confirm closure.
+4. Check the status, the reply box, and the request's history.
+5. Try to confirm a second time.
+6. Try the same action on a request that is not resolved.
+7. Try it on another customer's resolved request.
+
+**Expected result**
+- Step 2 explains the state and offers exactly one action — and says that
+  replying instead will bring the request back to us.
+- Step 4: the status becomes closed and shows its customer-facing label; the
+  reply box is gone; the history carries a closure entry attributed to the
+  **customer**, distinguishable from a staff action.
+- Step 5 is refused — it is no longer resolved.
+- Step 6 is refused, naming the status it is actually in, and nothing moves.
+- Step 7 is **not found**, byte-identical to a request that does not exist, and
+  their request is untouched.
+
+**Status:** ✅ **Automated** — `backend/tests/portal.test.js`, *"002 FR-031: the
+customer confirms closure"*, 17 checks including every refusal above and the
+audit attribution. Verified in the browser in Arabic end to end: chip `تم الحل`
+→ `مغلقة`, panel and reply box gone, and the server agreeing.
+
+**Not covered:** the grace-period half of `FR-031`, deliberately — a grace
+period in working days is a business duration and needs spec `005`.
 
 ---
 
