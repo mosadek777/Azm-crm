@@ -17,7 +17,7 @@
 // Two of those four are requirements this screen does not yet satisfy. They are
 // recorded in docs/portal-plan.md rather than papered over with a placeholder.
 
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
@@ -30,13 +30,14 @@ import { StatusTonePipe } from '../../../shared/pipes/status-tone.pipe';
 import { Tag } from '../../../shared/components/tag/tag';
 import { ToastService } from '../../../core/notifications/toast.service';
 import { Conversation, ConversationMessage } from '../../../shared/components/conversation/conversation';
+import { PollingService } from '../../../core/polling/polling.service';
 
 @Component({
   selector: 'app-portal-ticket-detail',
   imports: [FormsModule, RouterLink, DatePipe, TranslatePipe, StatusTonePipe, Conversation, Tag],
   templateUrl: './portal-ticket-detail.html'
 })
-export class PortalTicketDetail {
+export class PortalTicketDetail implements OnDestroy {
   private readonly toast = inject(ToastService);
   private readonly api = inject(PortalApiService);
   protected readonly i18n = inject(LanguageService);
@@ -127,6 +128,51 @@ export class PortalTicketDetail {
         this.loading.set(false);
       }
     });
+  }
+
+  // ── FR-021 / AD-19 AT THE NFR-003 INTERVAL ────────────────────────────────
+  //
+  // The portal thread did not poll at all until 2026-09-27, while the staff
+  // thread beside it polled every five seconds on the same requirement. A
+  // customer sitting on this screen watched a conversation that could not
+  // change: support replied, and nothing arrived until they reloaded the page.
+  //
+  // `004 FR-021` is not written about staff — it says "an open list or
+  // conversation", and this is the open conversation the customer is looking
+  // at. `NFR-003`'s five seconds is ratified, so it is read from the service
+  // rather than chosen here.
+  private readonly polling = inject(PollingService);
+  private readonly stopPolling = this.polling.register(
+    () => this.pollRefresh(), this.polling.intervals.realtimeMs);
+
+  /**
+   * The poll.
+   *
+   * ⚠ IT TOUCHES NEITHER THE DRAFT NOR THE REFUSAL, which is the whole
+   * difference between this and the constructor's first load. A customer
+   * half-way through typing a reply is exactly the person this screen is for,
+   * and clearing their sentence every five seconds would make the feature a
+   * net loss — the same rule the staff thread's `pollRefresh()` follows, and
+   * for the same reason.
+   *
+   * A 404 mid-session is not treated as "not found" here either. The ticket was
+   * readable a moment ago; a transient failure must not replace a live thread
+   * with the not-found panel. A genuine loss of access shows up on the next
+   * navigation, which re-runs the constructor's load.
+   */
+  protected pollRefresh(): void {
+    this.api.myTicket(this.id).subscribe({
+      next: response => {
+        this.ticket.set(response.ticket);
+        this.messages.set(response.messages);
+      },
+      error: () => { /* keep what is on screen; see above */ }
+    });
+  }
+
+  ngOnDestroy(): void {
+    // The poll outlives the screen unless it is unregistered here.
+    this.stopPolling();
   }
 
   protected sendReply() {

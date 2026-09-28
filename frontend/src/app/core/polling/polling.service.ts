@@ -43,6 +43,7 @@
 
 import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 import { AuthService } from '../auth/services/auth.service';
+import { PortalAuthService } from '../auth/services/portal-auth.service';
 import { POLLING } from './polling.config';
 
 type Job = { fn: () => void; intervalMs: number };
@@ -50,6 +51,28 @@ type Job = { fn: () => void; intervalMs: number };
 @Injectable({ providedIn: 'root' })
 export class PollingService {
   private readonly auth = inject(AuthService);
+
+  /**
+   * ── TWO AUDIENCES, ONE POLLER ──────────────────────────────────────────
+   *
+   * This service used to gate every tick on the STAFF session alone. A portal
+   * screen could register a poll and it would never fire once, silently: a
+   * customer is not a User and holds no staff session, so `auth.isSignedIn()`
+   * is permanently false for them. The timer ran, the job was skipped, and
+   * nothing anywhere said so.
+   *
+   * The gate is about whether there is a LIVE SESSION to spend requests on, and
+   * this application has two kinds. Both are asked. It is not a widening of
+   * anything: a poll is an ordinary request that carries its own token and
+   * meets its own predicate server-side — the portal's `customer = session`
+   * for a portal screen, `utils/scope.js` for a staff one. Neither audience
+   * can reach the other's data by being polled for, because neither token is
+   * accepted by the other's routes (portal.test.js asserts both directions).
+   */
+  private readonly portalAuth = inject(PortalAuthService);
+
+  /** Either audience having a live session is a reason to poll. */
+  private readonly sessionLive = () => this.auth.isSignedIn() || this.portalAuth.isSignedIn();
 
   private readonly jobs = new Map<symbol, Job>();
   private readonly timers = new Map<number, ReturnType<typeof setInterval>>();
@@ -113,12 +136,12 @@ export class PollingService {
     // Signed out is not a reason to keep asking. The interceptor would sign the
     // user out on the first 401 anyway, but polling a dead session produces a
     // burst of them rather than one.
-    if (!this.visible() || !this.auth.isSignedIn()) return;
+    if (!this.visible() || !this.sessionLive()) return;
     for (const job of this.jobs.values()) if (job.intervalMs === intervalMs) job.fn();
   }
 
   private runAll(): void {
-    if (!this.auth.isSignedIn()) return;
+    if (!this.sessionLive()) return;
     for (const job of this.jobs.values()) job.fn();
   }
 
