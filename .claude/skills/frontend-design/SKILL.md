@@ -80,7 +80,8 @@ are not fills and are not budgeted.
 | Shared easing | `cubic-bezier(0.16, 1, 0.3, 1)` |
 | Toast entry | 220ms — `--animate-toast-in` in `styles.css` |
 | Colour and opacity transitions | Tailwind default, 150ms |
-| Sign-in headline | type 28ms/grapheme (cap 1000ms) → hold 2200ms → delete 18ms/grapheme (cap 700ms) → rest 500ms, **× 3 then stop** |
+| Sign-in headline | type 28ms/grapheme (cap 1000ms) → hold 2200ms → delete 18ms/grapheme (cap 700ms) → rest 500ms, **looping indefinitely** |
+| Sign-in caret | 530ms on, 530ms off while holding or resting; solid while typing or deleting |
 | Everything else | none |
 
 - **Every transition goes through `motion-safe:`**, which compiles to
@@ -108,11 +109,18 @@ are not fills and are not budgeted.
   right failure, a skipped character is not.
 - **On the dark sign-in surface the text accent is `text-primary-400`.**
   `primary-700` is the accent for text on light surfaces and disappears here.
-- **Motion that starts on its own must end on its own.** WCAG 2.2.2 wants a
-  pause control for anything that starts automatically, runs past five seconds
-  and sits beside other content. A bounded animation that settles needs no
-  control. If you add one that cannot settle, it needs the control — say so
-  rather than shipping it quietly.
+- **Motion that starts on its own must end on its own, or carry a control.**
+  WCAG 2.2.2 wants a pause/stop/hide mechanism for anything that starts
+  automatically, runs past five seconds and sits beside other content. A
+  bounded animation that settles needs no control; an unbounded one does.
+  **Never ship an unbounded one quietly** — either build the control or get the
+  violation accepted on the record, by name, by whoever owns the product.
+
+  ⚠ **The sign-in headline is the one place this is knowingly broken.** It
+  loops indefinitely with no control, as an accepted violation recorded in
+  `decisions-pending.md` §30 — after the control was built, verified and
+  rejected. It is the exception that proves the rule, not a precedent. Do not
+  cite it to justify a second one, and do not "fix" it without reading §30.
 - **No animation library.** `@angular/animations` and `@angular/cdk` were both
   declared dependencies imported nowhere in `src`; both are removed. If an
   enter/exit genuinely needs one, Angular 22 ships `animate.enter` /
@@ -163,6 +171,51 @@ adding the ring is a keyboard user losing their place on the page.
 **Why never colour alone.** `Active`/`Inactive`, the `.chip--internal` label and
 the `.refusal` border-plus-text all say it in words. Colour is reinforcement,
 never the message.
+
+## The silent conflict — one mechanism, four instances
+
+**The mechanism: two rules both apply, weigh the same, and the winner is decided
+by emission order rather than by intent. Nothing errors. Nothing warns. The
+class is in the DOM and the property is simply not the one you wrote.**
+
+This is the single most expensive fault in this frontend's history. It has
+appeared four times, wearing four different costumes, and each time it was
+found by accident rather than by a failing check:
+
+| # | Costume | What tied | Symptom |
+|---|---|---|---|
+| 1 | static `class` beside bound `[class]` | `lg:w-auto` vs `lg:w-60`, both (0,1,0) | the sidebar rendered 155px wide |
+| 2 | breakpoint vs direction variant | `lg:translate-x-0` vs `rtl:translate-x-full` | the sidebar sat outside the viewport at desktop RTL |
+| 3 | `routerLinkActive` adding to resting classes | `text-primary-700` vs `text-surface-600`, resolved by `@theme` declaration order | the active nav state never appeared at all |
+| 4 | **`rtl:` compiles to a ZERO-SPECIFICITY `:where()`** | `lg:rtl:…` vs `lg:…`, both (0,1,0) | would have put the auth gradient on the wrong side in Arabic |
+
+**Instance 4 is the one to internalise, because it is counter-intuitive.**
+`rtl:` *looks* like it should win — it is more specific in English. Tailwind
+emits it as
+`:where(:dir(rtl), [dir="rtl"], [dir="rtl"] *)`, and **`:where()` contributes
+zero specificity by definition**. So a direction variant cannot override
+anything. It can only *add* a rule that ties.
+
+**The defence, in order:**
+
+1. **Prefer absent over overridden.** Emit one rule per state, mutually
+   exclusive, so there is nothing to arbitrate — `max-lg:` / `ltr:lg:` /
+   `rtl:lg:`, or omitting a `before:` bar entirely rather than setting it to
+   `opacity-0`.
+2. **One `computed()` per decision**, returning the whole class string, never a
+   static class plus a bound override.
+3. **When in doubt, compile it and look at the emitted selector.** Every one of
+   the four would have been caught in a minute by reading the CSS instead of
+   reasoning about the class names:
+
+```
+node -e "const p=require('postcss'),t=require('@tailwindcss/postcss');
+p([t()]).process('@import \"tailwindcss\";@source inline(\"YOUR CLASSES\");',
+{from:'x'}).then(r=>console.log(r.css))" | grep -A2 'your-utility'
+```
+
+**A rule that does not error and does not apply is worse than one that throws.**
+If a state "just doesn't show up", suspect this before suspecting your logic.
 
 ## RTL — absolutes, not preferences
 
