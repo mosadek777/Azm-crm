@@ -1,0 +1,70 @@
+<!-- One composer, rendered identically for staff and for the customer.
+
+     ⚠ THERE IS NO VISIBILITY CONTROL IN THIS FILE, and there must never be
+     one. See message-composer.ts for the whole reason: 008 FR-019 forbids the
+     portal ever offering an internal-note option, and this component keeps that
+     true by having no such markup rather than by hiding it behind a flag. A
+     caller that needs the control projects it into [composer-actions]. -->
+<section class="rounded-xl border border-surface-200 bg-surface-0 p-4">
+  <div [class]="innerClass()">
+
+    <!-- Staff only: draft expired / reassigned / stale (004 FR-015, E-02, E-12,
+         AS-09). The portal has no drafts and projects nothing here. -->
+    <ng-content select="[composer-banners]" />
+
+    @if (labelKey(); as key) {
+      <label for="composer-body" class="m-0 text-sm text-surface-700">
+        {{ key | translate: i18n.lang() }}
+      </label>
+    }
+
+    <!-- `text-start` so the caret and the text begin at the reader's start edge
+         in both directions.
+
+         `dir="auto"` because the VALUE is user-authored and single-language:
+         somebody writing Arabic into the English interface should see it laid
+         out right-to-left as they type, which is the same rule the bubble
+         applies to the message once it has been sent (008 AS-10). The two
+         agreeing matters — a reply that reflows the moment it is sent reads as
+         a bug. -->
+    <textarea id="composer-body" name="composerBody" rows="3"
+      [ngModel]="value()" (ngModelChange)="value.set($event)"
+      (blur)="blurred.emit()"
+      dir="auto"
+      [placeholder]="placeholderKey() ? (placeholderKey()! | translate: i18n.lang()) : ''"
+      class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm text-start
+             focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25"></textarea>
+
+    <!-- Staff only: the autosave indicator and the discard control. -->
+    <ng-content select="[composer-meta]" />
+
+    <!-- Staff only: mentions (004 FR-009) and quick replies (004 FR-006). -->
+    <ng-content select="[composer-tools]" />
+
+    @if (refusalText(); as message) {
+      <!-- Rendered as the server sent it. The border AND the text carry the
+           meaning, so nothing here is signalled by colour alone. -->
+      <p role="alert"
+         class="m-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        {{ message }}
+      </p>
+    }
+
+    <div class="flex flex-wrap items-center gap-2">
+      <!-- Staff only: the customer-visible / internal selector, projected by
+           the caller that has one. The portal projects nothing, so on the
+           portal this slot renders nothing at all — there is no control here
+           to disable, hide or accidentally reveal. -->
+      <ng-content select="[composer-actions]" />
+
+      <button type="button" [disabled]="!sendable()"
+        class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white
+               hover:bg-primary-700 disabled:cursor-default disabled:opacity-60
+               motion-safe:transition-colors
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+        (click)="onSend()">
+        {{ (busy() ? sendingKey() : sendKey()) | translate: i18n.lang() }}
+      </button>
+    </div>
+  </div>
+</section>

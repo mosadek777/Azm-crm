@@ -219,194 +219,201 @@
       emptyKey="conversation.emptyStaff"
       [showVisibility]="true" />
 
-    <!-- THE COMPOSER is its own card now. It used to live inside the thread
-         card, which is why the two threads could not share a shell. -->
     @if (!t.terminal && canWrite()) {
-      <section class="rounded-xl border border-surface-200 bg-surface-0 p-4">
-        <div class="flex flex-col gap-3">
-          <!-- ── DRAFT PRESERVATION (004 FR-015). Everything said here is the
-               SERVER's answer: it decided whether the draft expired, whether
-               the thread moved under it, and who owns the ticket now. ── -->
+      <!-- THE COMPOSER is the shared one — see message-composer.ts. The card,
+           the textarea, the refusal and the Send button are its; everything
+           below is staff-only and is PROJECTED into it.
 
-          @if (draftExpired()) {
-            <!-- E-12: "discarded; the agent is TOLD on return rather than shown
-                 stale text." The telling is the half that matters. -->
-            <p class="m-0 rounded-lg border-s-4 border-surface-400 bg-surface-100 px-3 py-2 text-sm text-surface-700"
-               role="status">
-              {{ 'draft.expired' | translate: i18n.lang() }}
-              @if (draftRetentionDays(); as days) {
-                <span class="ltr">({{ days }})</span>
-              }
-            </p>
-          }
+           ⚠ THE VISIBILITY SELECTOR IS PROJECTED, NOT CONFIGURED. The shared
+           component has no visibility markup and no flag that would produce
+           any: 008 FR-019 forbids the portal ever offering an internal-note
+           option, and the guarantee is kept by the control existing only here,
+           on the staff screen that owns it. Do not move this select into the
+           shared component behind a boolean. -->
+      <app-message-composer
+        [value]="reply()"
+        (valueChange)="onReplyInput($event)"
+        placeholderKey="ticket.reply"
+        sendKey="ticket.sendMessage"
+        sendingKey="ticket.sendMessage"
+        [busy]="busy()"
+        [canSend]="!!visibility()"
+        (blurred)="flushDraft()"
+        (send)="send()">
 
-          @if (draftReassignedTo(); as owner) {
-            <!-- E-02: the draft is preserved and the agent is told they no
-                 longer own the ticket, with the new owner named. -->
-            <p class="m-0 rounded-lg border-s-4 border-amber-500 bg-amber-50 px-3 py-2 text-sm text-amber-900"
-               role="status">
-              {{ 'draft.reassigned' | translate: i18n.lang() }}
-              <span class="font-medium">{{ owner }}</span>
-            </p>
-          }
+        <!-- ── DRAFT PRESERVATION (004 FR-015). Everything said here is the
+             SERVER's answer: it decided whether the draft expired, whether the
+             thread moved under it, and who owns the ticket now. ── -->
+        <div composer-banners class="flex flex-col gap-3">
+        @if (draftExpired()) {
+          <!-- E-12: "discarded; the agent is TOLD on return rather than shown
+               stale text." The telling is the half that matters. -->
+          <p class="m-0 rounded-lg border-s-4 border-surface-400 bg-surface-100 px-3 py-2 text-sm text-surface-700"
+             role="status">
+            {{ 'draft.expired' | translate: i18n.lang() }}
+            @if (draftRetentionDays(); as days) {
+              <span class="ltr">({{ days }})</span>
+            }
+          </p>
+        }
 
-          @if (draftStale()) {
-            <!-- AS-09: restored AND flagged. The draft is still shown — the
-                 agent decides whether their words still fit, not the system. -->
-            <p class="m-0 rounded-lg border-s-4 border-amber-500 bg-amber-50 px-3 py-2 text-sm text-amber-900"
-               role="status">
-              {{ 'draft.stale' | translate: i18n.lang() }}
-            </p>
-          }
+        @if (draftReassignedTo(); as owner) {
+          <!-- E-02: the draft is preserved and the agent is told they no
+               longer own the ticket, with the new owner named. -->
+          <p class="m-0 rounded-lg border-s-4 border-amber-500 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+             role="status">
+            {{ 'draft.reassigned' | translate: i18n.lang() }}
+            <span class="font-medium">{{ owner }}</span>
+          </p>
+        }
 
-          <!-- NFR-004: saved every ≤10s of typing AND on blur. The interval is
-               the server's, delivered with the draft. -->
-          <textarea rows="3" [ngModel]="reply()" (ngModelChange)="onReplyInput($event)"
-            (blur)="flushDraft()"
-            [placeholder]="'ticket.reply' | translate: i18n.lang()"
-            class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm text-start
-                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25"></textarea>
+        @if (draftStale()) {
+          <!-- AS-09: restored AND flagged. The draft is still shown — the
+               agent decides whether their words still fit, not the system. -->
+          <p class="m-0 rounded-lg border-s-4 border-amber-500 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+             role="status">
+            {{ 'draft.stale' | translate: i18n.lang() }}
+          </p>
+        }
+        </div>
 
-          @if (reply().trim()) {
-            <div class="flex flex-wrap items-center gap-3 text-xs text-surface-500">
-              <span>{{ (draftSaving() ? 'draft.saving' : 'draft.saved') | translate: i18n.lang() }}</span>
-              <button type="button"
-                class="rounded-md px-2 py-0.5 text-xs text-surface-600 underline
-                       hover:bg-surface-100 motion-safe:transition-colors
-                       focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-                (click)="discardDraft()">
-                {{ 'draft.discard' | translate: i18n.lang() }}
-              </button>
-            </div>
-          }
-
-          <!-- ── MENTIONS (004 FR-009, AD-09) ────────────────────────────────
-               INTERNAL NOTES ONLY. FR-009 says "mention a colleague in an
-               internal note", and a colleague's name on a customer-visible
-               reply is the disclosure decision 29 already closed for the
-               assigned agent. The server refuses it either way.
-
-               DECISION 39 is stated on the screen: only colleagues who already
-               hold scope on this ticket, and the mention notifies rather than
-               grants. An agent who cannot find someone in the list needs the
-               reason, or they read it as the picker being broken. -->
-          @if (mentionsAllowed()) {
-            <div class="flex flex-col gap-2 rounded-lg border border-surface-200 bg-surface-50 p-3">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="text-xs font-semibold text-surface-700">
-                  {{ 'mention.heading' | translate: i18n.lang() }}
-                </span>
-                @if (mentionable().length === 0) {
-                  <span class="text-xs text-surface-500">
-                    {{ 'mention.none' | translate: i18n.lang() }}
-                  </span>
-                } @else {
-                  <select name="mentionPicker" [ngModel]="''" (ngModelChange)="addMention($event)"
-                    class="rounded-lg border border-surface-300 bg-surface-0 px-2.5 py-1.5 text-xs
-                           focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200">
-                    <option value="">{{ 'mention.add' | translate: i18n.lang() }}</option>
-                    @for (c of unmentioned(); track c.userId) {
-                      <option [value]="c.userId">{{ c.displayName }}</option>
-                    }
-                  </select>
-                }
-              </div>
-
-              @if (mentionedNames().length) {
-                <ul class="m-0 flex list-none flex-wrap gap-2 p-0">
-                  @for (c of mentionedNames(); track c.userId) {
-                    <li class="flex items-center gap-1.5 rounded-full bg-primary-100 px-2.5 py-1
-                               text-xs font-medium text-primary-900">
-                      <span>{{ c.displayName }}</span>
-                      <button type="button"
-                        class="rounded-full px-1 text-primary-800 hover:bg-primary-200
-                               motion-safe:transition-colors
-                               focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-                        [attr.aria-label]="('mention.remove' | translate: i18n.lang()) + ' ' + c.displayName"
-                        (click)="removeMention(c.userId)">×</button>
-                    </li>
-                  }
-                </ul>
-              }
-
-              <p class="m-0 text-xs text-surface-500">
-                {{ 'mention.rule' | translate: i18n.lang() }}
-              </p>
-            </div>
-          } @else if (visibility() === 'customer') {
-            <p class="m-0 text-xs text-surface-500">
-              {{ 'mention.internalOnly' | translate: i18n.lang() }}
-            </p>
-          }
-          <!-- QUICK REPLIES (004 FR-006, AD-06). The SERVER substitutes: it
-               chooses the body by the CUSTOMER's preferred language and refuses
-               rather than inserting an unresolved placeholder. Nothing is
-               substituted here, so there is one place those rules live. -->
-          @if (quickReplies().length) {
-            <div class="flex flex-col gap-2">
-              <div class="flex flex-wrap items-center gap-2">
-                <button type="button"
-                  class="rounded-md border border-surface-300 px-2.5 py-1.5 text-sm text-surface-700
-                         hover:bg-surface-100 motion-safe:transition-colors
-                         focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-                  [attr.aria-expanded]="pickerOpen()"
-                  (click)="pickerOpen.set(!pickerOpen())">
-                  {{ 'quickReply.insert' | translate: i18n.lang() }}
-                </button>
-                @if (insertedLanguage(); as lang) {
-                  <!-- Said rather than left to puzzle over: an Arabic template
-                       coming out in English is the customer's preference, not a
-                       fault. FR-006 chooses by the customer, not the agent. -->
-                  <span class="text-xs text-surface-500">
-                    {{ 'quickReply.languageNote' | translate: i18n.lang() }}
-                    <span class="ltr">({{ lang }})</span>
-                  </span>
-                }
-              </div>
-
-              @if (pickerOpen()) {
-                <ul class="m-0 flex max-h-56 list-none flex-col gap-1 overflow-y-auto rounded-lg
-                           border border-surface-200 bg-surface-50 p-2">
-                  @for (q of quickReplies(); track q._id) {
-                    <li>
-                      <button type="button" [disabled]="inserting() === q._id"
-                        class="flex w-full flex-col items-start gap-0.5 rounded-md px-2 py-1.5
-                               text-start text-sm hover:bg-surface-0 disabled:opacity-50
-                               motion-safe:transition-colors
-                               focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-                        (click)="insertQuickReply(q)">
-                        <span class="font-medium text-surface-900">{{ label(q.name) }}</span>
-                        <span class="line-clamp-2 text-xs text-surface-500">{{ label(q.body) }}</span>
-                      </button>
-                    </li>
-                  }
-                </ul>
-              }
-            </div>
-          }
-
-          <div class="flex flex-wrap items-center gap-2">
-            <!-- Deliberately blank by default — FR-014 has no safe default. -->
-            <select [ngModel]="visibility()" (ngModelChange)="visibility.set($event)"
-              class="rounded-lg border border-surface-300 bg-surface-0 px-3 py-2 text-sm
-                     focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25">
-              <option value="">{{ 'ticket.chooseVisibility' | translate: i18n.lang() }}</option>
-              <!-- 002 §9: an administrator may annotate and may not speak to
-                   the customer. Not offered when the server would refuse it. -->
-              @if (canReplyToCustomer()) {
-                <option value="customer">{{ 'ticket.customerVisible' | translate: i18n.lang() }}</option>
-              }
-              <option value="internal">{{ 'ticket.internal' | translate: i18n.lang() }}</option>
-            </select>
-            <button type="button" [disabled]="!reply().trim() || !visibility() || busy()"
-              class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white
-                     hover:bg-primary-700 disabled:opacity-60 disabled:cursor-default transition-colors"
-              (click)="send()">
-              {{ 'ticket.sendMessage' | translate: i18n.lang() }}
+        <div composer-meta>
+        @if (reply().trim()) {
+          <div class="flex flex-wrap items-center gap-3 text-xs text-surface-500">
+            <span>{{ (draftSaving() ? 'draft.saving' : 'draft.saved') | translate: i18n.lang() }}</span>
+            <button type="button"
+              class="rounded-md px-2 py-0.5 text-xs text-surface-600 underline
+                     hover:bg-surface-100 motion-safe:transition-colors
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+              (click)="discardDraft()">
+              {{ 'draft.discard' | translate: i18n.lang() }}
             </button>
           </div>
+        }
         </div>
-      </section>
+
+        <div composer-tools class="flex flex-col gap-3">
+        <!-- ── MENTIONS (004 FR-009, AD-09) ────────────────────────────────
+             INTERNAL NOTES ONLY. FR-009 says "mention a colleague in an
+             internal note", and a colleague's name on a customer-visible
+             reply is the disclosure decision 29 already closed for the
+             assigned agent. The server refuses it either way.
+
+             DECISION 39 is stated on the screen: only colleagues who already
+             hold scope on this ticket, and the mention notifies rather than
+             grants. An agent who cannot find someone in the list needs the
+             reason, or they read it as the picker being broken. -->
+        @if (mentionsAllowed()) {
+          <div class="flex flex-col gap-2 rounded-lg border border-surface-200 bg-surface-50 p-3">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs font-semibold text-surface-700">
+                {{ 'mention.heading' | translate: i18n.lang() }}
+              </span>
+              @if (mentionable().length === 0) {
+                <span class="text-xs text-surface-500">
+                  {{ 'mention.none' | translate: i18n.lang() }}
+                </span>
+              } @else {
+                <select name="mentionPicker" [ngModel]="''" (ngModelChange)="addMention($event)"
+                  class="rounded-lg border border-surface-300 bg-surface-0 px-2.5 py-1.5 text-xs
+                         focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200">
+                  <option value="">{{ 'mention.add' | translate: i18n.lang() }}</option>
+                  @for (c of unmentioned(); track c.userId) {
+                    <option [value]="c.userId">{{ c.displayName }}</option>
+                  }
+                </select>
+              }
+            </div>
+
+            @if (mentionedNames().length) {
+              <ul class="m-0 flex list-none flex-wrap gap-2 p-0">
+                @for (c of mentionedNames(); track c.userId) {
+                  <li class="flex items-center gap-1.5 rounded-full bg-primary-100 px-2.5 py-1
+                             text-xs font-medium text-primary-900">
+                    <span>{{ c.displayName }}</span>
+                    <button type="button"
+                      class="rounded-full px-1 text-primary-800 hover:bg-primary-200
+                             motion-safe:transition-colors
+                             focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                      [attr.aria-label]="('mention.remove' | translate: i18n.lang()) + ' ' + c.displayName"
+                      (click)="removeMention(c.userId)">×</button>
+                  </li>
+                }
+              </ul>
+            }
+
+            <p class="m-0 text-xs text-surface-500">
+              {{ 'mention.rule' | translate: i18n.lang() }}
+            </p>
+          </div>
+        } @else if (visibility() === 'customer') {
+          <p class="m-0 text-xs text-surface-500">
+            {{ 'mention.internalOnly' | translate: i18n.lang() }}
+          </p>
+        }
+        <!-- QUICK REPLIES (004 FR-006, AD-06). The SERVER substitutes: it
+             chooses the body by the CUSTOMER's preferred language and refuses
+             rather than inserting an unresolved placeholder. Nothing is
+             substituted here, so there is one place those rules live. -->
+        @if (quickReplies().length) {
+          <div class="flex flex-col gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button"
+                class="rounded-md border border-surface-300 px-2.5 py-1.5 text-sm text-surface-700
+                       hover:bg-surface-100 motion-safe:transition-colors
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                [attr.aria-expanded]="pickerOpen()"
+                (click)="pickerOpen.set(!pickerOpen())">
+                {{ 'quickReply.insert' | translate: i18n.lang() }}
+              </button>
+              @if (insertedLanguage(); as lang) {
+                <!-- Said rather than left to puzzle over: an Arabic template
+                     coming out in English is the customer's preference, not a
+                     fault. FR-006 chooses by the customer, not the agent. -->
+                <span class="text-xs text-surface-500">
+                  {{ 'quickReply.languageNote' | translate: i18n.lang() }}
+                  <span class="ltr">({{ lang }})</span>
+                </span>
+              }
+            </div>
+
+            @if (pickerOpen()) {
+              <ul class="m-0 flex max-h-56 list-none flex-col gap-1 overflow-y-auto rounded-lg
+                         border border-surface-200 bg-surface-50 p-2">
+                @for (q of quickReplies(); track q._id) {
+                  <li>
+                    <button type="button" [disabled]="inserting() === q._id"
+                      class="flex w-full flex-col items-start gap-0.5 rounded-md px-2 py-1.5
+                             text-start text-sm hover:bg-surface-0 disabled:opacity-50
+                             motion-safe:transition-colors
+                             focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                      (click)="insertQuickReply(q)">
+                      <span class="font-medium text-surface-900">{{ label(q.name) }}</span>
+                      <span class="line-clamp-2 text-xs text-surface-500">{{ label(q.body) }}</span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        }
+        </div>
+
+        <ng-container composer-actions>
+          <!-- Deliberately blank by default — FR-014 has no safe default. -->
+          <select [ngModel]="visibility()" (ngModelChange)="visibility.set($event)"
+            class="rounded-lg border border-surface-300 bg-surface-0 px-3 py-2 text-sm
+                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25">
+            <option value="">{{ 'ticket.chooseVisibility' | translate: i18n.lang() }}</option>
+            <!-- 002 §9: an administrator may annotate and may not speak to
+                 the customer. Not offered when the server would refuse it. -->
+            @if (canReplyToCustomer()) {
+              <option value="customer">{{ 'ticket.customerVisible' | translate: i18n.lang() }}</option>
+            }
+            <option value="internal">{{ 'ticket.internal' | translate: i18n.lang() }}</option>
+          </select>
+        </ng-container>
+      </app-message-composer>
     }
 
     <!-- History: the append-only audit log, read not rebuilt (constitution II) -->

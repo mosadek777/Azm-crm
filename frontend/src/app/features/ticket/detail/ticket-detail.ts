@@ -31,10 +31,11 @@ import {
 import { ToastService } from '../../../core/notifications/toast.service';
 import { PollingService } from '../../../core/polling/polling.service';
 import { Conversation, ConversationMessage } from '../../../shared/components/conversation/conversation';
+import { MessageComposer } from '../../../shared/components/message-composer/message-composer';
 
 @Component({
   selector: 'app-ticket-detail',
-  imports: [FormsModule, TranslatePipe, StatusTonePipe, ActionTonePipe, Conversation, Tag, DatePipe, CustomerContext, TicketTasks],
+  imports: [FormsModule, TranslatePipe, StatusTonePipe, ActionTonePipe, Conversation, MessageComposer, Tag, DatePipe, CustomerContext, TicketTasks],
   templateUrl: './ticket-detail.html'
 })
 export class TicketDetail implements OnDestroy {

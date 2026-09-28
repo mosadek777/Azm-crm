@@ -18,7 +18,6 @@
 // recorded in docs/portal-plan.md rather than papered over with a placeholder.
 
 import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -30,11 +29,12 @@ import { StatusTonePipe } from '../../../shared/pipes/status-tone.pipe';
 import { Tag } from '../../../shared/components/tag/tag';
 import { ToastService } from '../../../core/notifications/toast.service';
 import { Conversation, ConversationMessage } from '../../../shared/components/conversation/conversation';
+import { MessageComposer } from '../../../shared/components/message-composer/message-composer';
 import { PollingService } from '../../../core/polling/polling.service';
 
 @Component({
   selector: 'app-portal-ticket-detail',
-  imports: [FormsModule, RouterLink, DatePipe, TranslatePipe, StatusTonePipe, Conversation, Tag],
+  imports: [RouterLink, DatePipe, TranslatePipe, StatusTonePipe, Conversation, MessageComposer, Tag],
   templateUrl: './portal-ticket-detail.html'
 })
 export class PortalTicketDetail implements OnDestroy {
@@ -97,9 +97,12 @@ export class PortalTicketDetail implements OnDestroy {
     return this.i18n.lang() === 'ar' ? label.ar : label.en;
   }
 
-  // FR-004. There is no visibility control, and its absence is the point: a
-  // customer reply is always visible to both sides and the route has no code
-  // path that could make it internal.
+  // FR-004. There is no visibility control, and its absence is structural at
+  // three levels rather than asserted at one: the shared composer has no such
+  // markup to render, the API service method takes no such argument, and the
+  // route has no such parameter to accept. A customer reply is always visible
+  // to both sides because there is nowhere, on any of the three, to say
+  // otherwise.
   protected readonly draft = signal('');
   protected readonly sending = signal(false);
   protected readonly replyRefusal = signal<LocalizedText | null>(null);
@@ -129,6 +132,8 @@ export class PortalTicketDetail implements OnDestroy {
       }
     });
   }
+
+
 
   // ── 002 FR-031: THE CUSTOMER CONFIRMS CLOSURE ────────────────────────────
   //
